@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClinicalX: Interactive Dashboard v4.4 (Full Functionality)</title>
+    <title>ClinicalX: Interactive Dashboard v5.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -155,6 +155,9 @@
     <div id="scenarioModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
         <div class="modal-content rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
             <div class="modal-header flex justify-between items-center p-5 border-b">
+                <button id="modal-back-btn" class="hidden text-gray-500 hover:text-indigo-500 transition-colors p-2 mr-2" title="Back">
+                    <i data-lucide="arrow-left" class="h-6 w-6"></i>
+                </button>
                 <h3 id="modalTitle" class="text-2xl font-bold flex-1 pr-4"></h3>
                 <div class="flex items-center">
                     <button id="modal-edit-btn" class="author-control text-gray-500 hover:text-indigo-500 transition-colors p-2" title="Edit Scenario">
@@ -463,6 +466,23 @@
                             <p>“Do you have a sense of what might be underneath the anger? Often there’s pain or fear hiding under it. If not, that's okay too. We can still work with the feeling itself.”</p>
                             <p>“To help focus your energy, we could explore the <a class="intervention-link" data-id="circles-of-control">Circles of Control</a> to see what parts of this situation you have power over.”</p>
                         `
+                    },
+                    {
+                        id: "medical-trauma",
+                        title: "Medical Trauma / Hospitalization",
+                        content: `
+                            <h3>Validate the Experience</h3>
+                            <p>“It makes so much sense that you're feeling [anxious/scared/angry] after your experience at the hospital. Medical settings can be incredibly stressful and disempowering, and what you went through sounds really difficult.”</p>
+                            <p>“Feeling a loss of control, being in pain, or not feeling heard by medical staff are all experiences that can be traumatic. Your feelings about it are completely valid.”</p>
+                            <h3>Grounding in Present Safety</h3>
+                            <p>“Let's take a moment to notice that you are not in the hospital right now. You are here with me, and you are safe. Can you feel your feet on the floor? That's you, grounded in the present moment.”</p>
+                            <h3>Processing the Feelings (Gently)</h3>
+                            <p>“What part of that experience is sticking with you the most right now? The physical pain? The fear? The way you were treated?”</p>
+                            <p>“It’s okay to be angry about what happened. It’s okay to be sad. You don't have to be 'strong' about it. Let's give those feelings some space.”</p>
+                            <h3>Empowerment and Future Planning</h3>
+                            <p>“Thinking about future appointments, what is one thing that might help you feel a little more in control? Maybe it’s writing down your questions beforehand, or bringing a trusted friend or family member with you as an advocate.”</p>
+                            <p>“You have the right to ask questions, to get a second opinion, and to be treated with respect. Remembering that can be a source of strength.”</p>
+                        `
                     }
                 ]
             },
@@ -494,14 +514,16 @@
                         `
                     },
                     {
-                        id: "shame-self-hatred-guilt",
-                        title: "Shame, Self-Hatred, or Guilt",
+                        id: "shame-spiral",
+                        title: "Shame Spiral / Internalized Guilt",
                         content: `
-                            <h3>Validating and Normalizing</h3>
-                            <p>“It sounds like you’re holding yourself to an impossible standard. Whatever you did, or think you did, it doesn’t make you worthless or evil. It makes you human.”</p>
-                            <h3>Practicing Self-Compassion</h3>
-                            <p>“Think about what you would say to a close friend if they were feeling exactly what you’re feeling. You deserve that same kindness. What if you tried talking to yourself in that gentle way, maybe saying something like, ‘It’s okay to feel this. I’m here for you’?”</p>
-                            <p>“We can also try to create some distance from these thoughts using a skill like <a class="intervention-link" data-id="act-defusion">ACT Defusion</a>, like noticing 'I'm having the thought that...' to separate yourself from the thought.”</p>
+                            <h3>Interrupt the Spiral</h3>
+                            <p>“I can hear that harsh inner critic getting really loud right now, telling you that you're a bad person. Let's pause that voice for just a second. I'm not that voice, and you are not that voice. You are the person who is hearing it.”</p>
+                            <p>“Shame wants you to believe that a mistake you made defines your entire worth. That’s a lie that shame tells. Let's separate what you *did* from who you *are*.”</p>
+                            <h3>Practice Self-Compassion</h3>
+                            <p>“If your best friend told you they did the exact same thing, would you tell them they are worthless? Or would you offer them kindness? You deserve that same kindness. Let's try a <a class="intervention-link" data-id="self-compassion">Self-Compassion</a> break together.”</p>
+                            <h3>Action-Oriented Closure</h3>
+                            <p>“Instead of staying stuck in this loop of self-blame, what is one small, kind action you can take for yourself in the next hour? It doesn't fix everything, but it's a step out of the spiral.”</p>
                         `
                     },
                     {
@@ -535,33 +557,39 @@
                         `
                     },
                     {
-                        id: "eating-disorder-moderate",
-                        title: "Eating Disorder (Moderate)",
+                        id: "body-image-distress",
+                        title: "Body Image Distress",
                         content: `
-                            <h3>Addressing the Topic Gently</h3>
-                            <p>“You mentioned some concerns around eating and body image. I know that can be really sensitive to talk about, and I want you to know I’m here to support you, not judge you. A lot of people struggle with this, and you’re not alone.”</p>
-                            <h3>Offering Assurance</h3>
-                            <p>“I know this is scary, but you’re not alone in it. We care about you, and we want you to be healthy and happy. You deserve to nourish your body and to live without this burden.”</p>
+                            <h3>Validate the Feeling</h3>
+                            <p>“It sounds incredibly painful to feel so at odds with your own body. In a world that constantly sends messages about how we 'should' look, it makes sense that these feelings of distress come up. Your feelings are valid.”</p>
+                            <h3>Shift from Appearance to Function</h3>
+                            <p>“For just a moment, let's try to shift our focus from what your body *looks* like to what it *does* for you. Can we thank your legs for carrying you here today? Can we thank your lungs for breathing for you? This isn't about ignoring your distress, but about expanding your view of your body beyond just an ornament.”</p>
+                            <h3>Action-Oriented Closure</h3>
+                            <p>“What is one kind thing you can do *for* your body in the next 24 hours? Not to change it, but to care for it. Maybe it's a gentle stretch, a nourishing meal, or simply resting when it's tired.”</p>
                         `
                     },
                     {
-                        id: "neurodivergent-challenges",
-                        title: "Neurodivergent Challenges (ADHD/Autism Spectrum)",
+                        id: "financial-anxiety",
+                        title: "Financial Anxiety / Resource Scarcity",
                         content: `
-                            <h3>Coping with Sensory Overload</h3>
-                            <p>“It sounds like your senses are getting overwhelmed right now. Are the lights or sounds bothering you? It's okay to dim the lights, wear headphones, or use a hoodie to feel more comfortable. Please do what you need to regulate.”</p>
-                            <h3>Encouraging Self-Acceptance</h3>
-                            <p>“I know you sometimes feel like you’re ‘too weird’ or ‘broken’ because of how your brain works. You’re not. Your brain is different, and while that can be hard, it can also be powerful. You see the world in a unique way.”</p>
+                            <h3>Validate the Stress</h3>
+                            <p>“Money worries are one of the most real and intense stressors there is. It makes perfect sense that you're feeling [anxious/overwhelmed/scared]. This isn't just in your head; it's a real-world problem, and it's heavy.”</p>
+                            <h3>Focus on Control</h3>
+                            <p>“When finances feel out of control, it can be paralyzing. Let's use the <a class="intervention-link" data-id="circles-of-control">Circles of Control</a> tool. We can't control the economy, but what is one small thing within your control right now? Maybe it's reviewing your bank statement, making a list of expenses, or researching one resource. Let's find one concrete step.”</p>
+                            <h3>Problem-Solving Approach</h3>
+                            <p>“Let's break this down with <a class="intervention-link" data-id="coping-problem-solving">Structured Problem-Solving</a>. What is the most immediate financial challenge? Let's brainstorm some small, potential actions without judgment.”</p>
                         `
                     },
                     {
-                        id: "off-topic-distractible",
-                        title: "Off-Topic / Distractible (Difficulty Staying Focused)",
+                        id: "parenting-stress",
+                        title: "Parenting Stress / Caregiver Fatigue",
                         content: `
-                            <h3>Kindly Refocusing</h3>
-                            <p>“I notice we jumped to a different topic just now. That’s okay – our brains do that sometimes, especially when we hit something uncomfortable. Let’s gently steer back to what we were talking about earlier, because I think it was important.”</p>
-                            <h3>Prioritizing</h3>
-                            <p>“I can see you have a lot on your mind. Since we have limited time, let’s prioritize. What’s the most important thing you want to focus on today? We can even write it down to help us remember.”</p>
+                            <h3>Validate the Exhaustion</h3>
+                            <p>“Being a parent is an incredibly demanding job, and it sounds like you're feeling completely burnt out. It is absolutely okay to feel touched-out, exhausted, and even resentful sometimes. It doesn't make you a bad parent; it makes you a human parent.”</p>
+                            <h3>Permission to Have Needs</h3>
+                            <p>“You can't pour from an empty cup. It sounds like your own needs have been on the back burner for a long time. What is one small thing—even just for 10 minutes—that you could do for yourself this week to recharge, just a little?”</p>
+                            <h3>Self-Compassion for Imperfection</h3>
+                            <p>“There is no such thing as a perfect parent. The goal is to be a 'good enough' parent. Let's practice some <a class="intervention-link" data-id="self-compassion">Self-Compassion</a> for the moments you feel you're not living up to your own expectations.”</p>
                         `
                     }
                 ]
@@ -577,6 +605,8 @@
                             <p>“It makes complete sense that you’re feeling anxious given what’s happening in the world. These are heavy times, and your feelings are a very understandable response.”</p>
                             <h3>Focusing on What You Can Control</h3>
                             <p>“Let's think about the <a class="intervention-link" data-id="circles-of-control">Circles of Control</a>. We can’t single-handedly solve these big issues, but we can control our own actions. What is one small, concrete action you could take in your own life that might help you feel a little less helpless?”</p>
+                            <h3>Action-Oriented Closure</h3>
+                            <p>“It's easy to feel powerless, but remember that your choices matter in your own sphere. Let's commit to one small action this week—whether it's limiting news intake or engaging in a local community effort—to reclaim a sense of agency.”</p>
                         `
                     },
                     {
@@ -660,7 +690,7 @@
                         title: "Life Transitions",
                         content: `
                             <h3>Normalizing the Anxiety</h3>
-                            <p>“Big changes, even exciting ones, can be really unsettling. It’s totally normal to feel anxious or unsure when you’re stepping into a new phase of life. You’re stepping into the unknown.”</p>
+                            <p>“Big changes, even exciting ones, can be really unsettling. It’s totally normal to feel anxious or unsure when you’re entering a new phase of life. You’re stepping into the unknown.”</p>
                             <h3>Drawing on Past Strengths</h3>
                             <p>“Remember that even though the situation is new, you’re bringing all your skills and wisdom with you. Think about other transitions you’ve navigated in the past. What helped you then? You’ve done hard things before.”</p>
                         `
@@ -967,6 +997,7 @@
             modal: document.getElementById('scenarioModal'),
             modalTitle: document.getElementById('modalTitle'),
             modalBody: document.getElementById('modalBody'),
+            modalBackBtn: document.getElementById('modal-back-btn'),
             closeModal: document.getElementById('closeModal'),
             modalFavoriteBtn: document.getElementById('modal-favorite-btn'),
             modalEditBtn: document.getElementById('modal-edit-btn'),
@@ -1004,7 +1035,7 @@
             currentView: 'zones',
             currentZone: null,
             favorites: [],
-            scratchpadNote: "", // New state for the persistent note
+            scratchpadNote: "", 
             recentlyViewed: [],
             customContent: {},
             isAuthorMode: false,
@@ -1012,17 +1043,24 @@
             currentOpenScenario: null,
             confirmCallback: null,
             saveTimeout: null,
+            contentMap: new Map(),
+            modalHistory: [],
         };
 
         const relatedScenariosMap = {
             'acute-anxiety-panic-attack': ['tipp-skill', 'trauma-reaction-flashback', 'psychoed-stress-response'],
             'self-harm-urges': ['tipp-skill', 'radical-acceptance', 'self-compassion'],
-            'shame-self-hatred-guilt': ['self-compassion', 'act-defusion', 'psychoed-thoughts-not-facts'],
+            'shame-spiral': ['self-compassion', 'act-defusion', 'psychoed-thoughts-not-facts'],
             'enmeshed-dependent-relationships': ['boundary-setting', 'dear-man', 'struggling-to-identify-express-needs'],
             'conflict-in-group-or-with-staff': ['dear-man', 'nvc-framework', 'boundary-setting'],
+            'financial-anxiety': ['coping-problem-solving', 'hopelessness-despair', 'circles-of-control'],
+            'parenting-stress': ['self-compassion', 'boundary-setting', 'radical-acceptance'],
+            'medical-trauma': ['trauma-reaction-flashback', 'grounding-54321', 'psychoed-stress-response'],
+            'body-image-distress': ['self-compassion', 'psychoed-thoughts-not-facts', 'coping-gratitude'],
         };
 
         let userDocRef;
+        let debouncedSaveState;
 
         async function initFirebase() {
             const firebaseConfig = {
@@ -1057,15 +1095,19 @@
 
         function initApp(db, docRef) {
             userDocRef = docRef;
+            initializeDataMap();
+            debouncedSaveState = debounce(saveStateToFirestore, 1500);
+
             onSnapshot(docRef, (doc) => {
                 const data = doc.data() || {};
                 state.favorites = data.favorites || [];
-                state.scratchpadNote = data.scratchpadNote || ""; // Load scratchpad note
+                state.scratchpadNote = data.scratchpadNote || "";
                 state.recentlyViewed = data.recentlyViewed || [];
                 state.theme = data.theme || 'dark';
                 state.customContent = data.customContent || {};
+                initializeDataMap(); // Re-initialize map if custom content changes
 
-                dom.scratchpadTextarea.value = state.scratchpadNote; // Populate textarea
+                dom.scratchpadTextarea.value = state.scratchpadNote;
                 applyTheme();
                 renderAll();
             }, (error) => {
@@ -1075,6 +1117,16 @@
             updateTimerDisplay();
             setupEventListeners();
             lucide.createIcons();
+        }
+
+        function initializeDataMap() {
+            state.contentMap.clear();
+            const allContent = getAllContent();
+            for (const category in allContent) {
+                allContent[category].forEach(item => {
+                    state.contentMap.set(item.id, item);
+                });
+            }
         }
 
         function getAllContent() {
@@ -1095,12 +1147,7 @@
         }
 
         function findScenarioById(id) {
-            const allContent = getAllContent();
-            for (const category in allContent) {
-                const found = allContent[category].find(item => item.id === id);
-                if (found) return found;
-            }
-            return null;
+            return state.contentMap.get(id) || null;
         }
 
         async function saveStateToFirestore() {
@@ -1108,11 +1155,12 @@
             try {
                 await setDoc(userDocRef, {
                     favorites: state.favorites,
-                    scratchpadNote: state.scratchpadNote, // Save scratchpad note
+                    scratchpadNote: state.scratchpadNote,
                     recentlyViewed: state.recentlyViewed,
                     theme: state.theme,
                     customContent: state.customContent
                 }, { merge: true });
+                showToast("Changes saved", true);
             } catch (error) {
                 console.error("Error saving state to Firestore: ", error);
                 showToast("Error: Could not save changes.");
@@ -1149,6 +1197,24 @@
             });
         }
 
+        function renderGenericView(viewEl, categoryName) {
+            viewEl.innerHTML = '';
+            const container = document.createElement('div');
+            container.className = 'relative';
+            container.appendChild(createAddButton(categoryName));
+            
+            const allContent = getAllContent();
+            const items = allContent[categoryName] || [];
+            
+            const gridEl = document.createElement('div');
+            gridEl.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4';
+            items.forEach(item => {
+                gridEl.appendChild(createScenarioCard(item));
+            });
+            container.appendChild(gridEl);
+            viewEl.appendChild(container);
+        }
+
         function renderToolkit() {
             dom.toolkitView.innerHTML = '';
             const container = document.createElement('div');
@@ -1174,56 +1240,16 @@
             dom.toolkitView.appendChild(container);
         }
 
-        function renderScripts() {
-            dom.scriptsView.innerHTML = '';
-            const container = document.createElement('div');
-            container.className = 'relative';
-            container.appendChild(createAddButton('Session Scripts'));
-
-            const allContent = getAllContent();
-            const items = allContent['Session Scripts'] || [];
-            renderCardList(dom.scriptsView, items);
-        }
-
-        function renderMi() {
-            dom.miView.innerHTML = '';
-            const container = document.createElement('div');
-            container.className = 'relative';
-            container.appendChild(createAddButton('MI'));
-            const allContent = getAllContent();
-            const items = allContent['MI'] || [];
-            renderCardList(dom.miView, items);
-        }
-
-        function renderCoping() {
-            dom.copingView.innerHTML = '';
-            const container = document.createElement('div');
-            container.className = 'relative';
-            container.appendChild(createAddButton('Coping Skills'));
-            const allContent = getAllContent();
-            const items = allContent['Coping Skills'] || [];
-            renderCardList(dom.copingView, items);
-        }
-
-        function renderPsychoed() {
-            dom.psychoedView.innerHTML = '';
-            const container = document.createElement('div');
-            container.className = 'relative';
-            container.appendChild(createAddButton('Psychoeducation'));
-            const allContent = getAllContent();
-            const items = allContent['Psychoeducation'] || [];
-            renderCardList(dom.psychoedView, items);
-        }
-
+        function renderScripts() { renderGenericView(dom.scriptsView, 'Session Scripts'); }
+        function renderMi() { renderGenericView(dom.miView, 'MI'); }
+        function renderCoping() { renderGenericView(dom.copingView, 'Coping Skills'); }
+        function renderPsychoed() { renderGenericView(dom.psychoedView, 'Psychoeducation'); }
         function renderFavorites() { renderCardList(dom.favoritesView, state.favorites.map(findScenarioById).filter(Boolean), "You haven't favorited any scenarios yet."); }
         function renderRecent() { renderCardList(dom.recentView, state.recentlyViewed.map(findScenarioById).filter(Boolean), "You haven't viewed any scenarios recently."); }
         
         function renderCardList(container, items, emptyMessage) {
-            if (!container) {
-                console.error("renderCardList called with a null container.");
-                return;
-            }
-            container.innerHTML = ''; // Clear previous content
+            if (!container) return;
+            container.innerHTML = ''; 
 
             if (items.length === 0 && emptyMessage) {
                 container.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400 p-8">${emptyMessage}</p>`;
@@ -1234,9 +1260,7 @@
             gridEl.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4';
             
             items.forEach(item => {
-                if (item) {
-                    gridEl.appendChild(createScenarioCard(item));
-                }
+                if (item) gridEl.appendChild(createScenarioCard(item));
             });
             container.appendChild(gridEl);
         }
@@ -1251,24 +1275,24 @@
             dom.scenariosDisplay.classList.remove('hidden');
             dom.zoneTitle.textContent = zoneData.title;
             dom.zoneTitle.className = `text-4xl font-bold mb-6 text-${zoneData.color}-600 dark:text-${zoneData.color}-400`;
-            dom.scenariosGrid.innerHTML = '';
-            items.forEach(item => {
-                dom.scenariosGrid.appendChild(createScenarioCard(item));
-            });
+            renderCardList(dom.scenariosGrid, items);
         }
 
         function createScenarioCard(scenario) {
             const isFavorited = state.favorites.includes(scenario.id);
             const card = document.createElement('div');
+            // FIX: Removed fixed height and added justify-between for proper vertical alignment
             card.className = `scenario-card p-4 rounded-lg cursor-pointer flex flex-col justify-between relative`;
             
             let cardContent = `
-                <div class="absolute top-1 right-1 flex space-x-1">
-                    <button class="author-control edit-custom-btn text-gray-400 hover:text-indigo-500 p-1" title="Edit"><i data-lucide="file-pen-line" class="h-4 w-4"></i></button>
-                    <button class="author-control delete-custom-btn text-gray-400 hover:text-red-500 p-1" title="Delete"><i data-lucide="trash-2" class="h-4 w-4"></i></button>
+                <div>
+                    <div class="absolute top-1 right-1 flex space-x-1">
+                        <button class="author-control edit-custom-btn text-gray-400 hover:text-indigo-500 p-1" title="Edit"><i data-lucide="file-pen-line" class="h-4 w-4"></i></button>
+                        <button class="author-control delete-custom-btn text-gray-400 hover:text-red-500 p-1" title="Delete"><i data-lucide="trash-2" class="h-4 w-4"></i></button>
+                    </div>
+                    <h3 class="font-semibold pr-12">${scenario.title}</h3>
+                    ${scenario.snippet ? `<p class="text-sm text-gray-500 dark:text-gray-400 mt-2 search-snippet">${scenario.snippet}</p>` : ''}
                 </div>
-                <h3 class="font-semibold pr-12">${scenario.title}</h3>
-                ${scenario.snippet ? `<p class="text-sm text-gray-500 dark:text-gray-400 mt-2 search-snippet">${scenario.snippet}</p>` : ''}
                 <div class="favorite-star self-end mt-2 text-gray-400 dark:text-gray-600 ${isFavorited ? 'favorited' : ''}">
                     <i data-lucide="star" class="h-5 w-5"></i>
                 </div>`;
@@ -1290,7 +1314,7 @@
                     e.stopPropagation();
                     showConfirmModal("Delete Scenario?", `Are you sure you want to delete "${scenario.title}"?`, () => {
                         delete state.customContent[scenario.id];
-                        saveStateToFirestore();
+                        debouncedSaveState();
                         showToast("Scenario deleted.");
                     });
                 });
@@ -1301,12 +1325,17 @@
             return card;
         }
 
-        function openModal(scenario) {
+        function openModal(scenario, isNavigatingBack = false) {
+            if (!isNavigatingBack) {
+                if (state.currentOpenScenario) {
+                    state.modalHistory.push(state.currentOpenScenario.id);
+                }
+            }
+            
             state.currentOpenScenario = scenario;
             dom.modalTitle.textContent = scenario.title;
             dom.modalBody.innerHTML = scenario.isCustom ? marked.parse(scenario.content) : scenario.content;
             
-            // Add related scenarios
             const relatedIds = relatedScenariosMap[scenario.id];
             if (relatedIds && relatedIds.length > 0) {
                 const relatedContainer = document.createElement('div');
@@ -1320,9 +1349,7 @@
                         const link = document.createElement('button');
                         link.className = 'text-sm bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 py-1 px-3 rounded-full hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors';
                         link.textContent = relatedScenario.title;
-                        link.addEventListener('click', () => {
-                            openModal(relatedScenario); // Re-open modal with new content
-                        });
+                        link.addEventListener('click', () => openModal(relatedScenario));
                         linksList.appendChild(link);
                     }
                 });
@@ -1332,18 +1359,35 @@
 
             dom.modal.classList.remove('hidden');
             dom.modalEditBtn.style.display = scenario.isCustom ? 'flex' : 'none';
+            dom.modalBackBtn.classList.toggle('hidden', state.modalHistory.length === 0);
             updateModalFavoriteButton();
-            addToRecentlyViewed(scenario.id);
+            if (!isNavigatingBack) {
+                addToRecentlyViewed(scenario.id);
+            }
             lucide.createIcons();
         }
 
-        function hideModal() { dom.modal.classList.add('hidden'); state.currentOpenScenario = null; }
+        function navigateModalBack() {
+            if (state.modalHistory.length > 0) {
+                const lastId = state.modalHistory.pop();
+                const lastScenario = findScenarioById(lastId);
+                if (lastScenario) {
+                    openModal(lastScenario, true);
+                }
+            }
+        }
+
+        function hideModal() { 
+            dom.modal.classList.add('hidden'); 
+            state.currentOpenScenario = null;
+            state.modalHistory = []; // Clear history on close
+        }
 
         function toggleFavorite(id) {
             const favIndex = state.favorites.indexOf(id);
             if (favIndex > -1) state.favorites.splice(favIndex, 1);
             else state.favorites.push(id);
-            saveStateToFirestore();
+            debouncedSaveState();
         }
 
         function updateModalFavoriteButton() {
@@ -1353,7 +1397,7 @@
 
         function addToRecentlyViewed(id) {
             state.recentlyViewed = [id, ...state.recentlyViewed.filter(t => t !== id)].slice(0, 8);
-            saveStateToFirestore();
+            debouncedSaveState();
         }
 
         function updateTimerDisplay() {
@@ -1411,36 +1455,33 @@
                 return;
             }
 
-            const allContent = getAllContent();
-            let searchResults = [];
+            const searchResults = [];
+            state.contentMap.forEach(item => {
+                const contentText = item.content.replace(/<[^>]*>/g, ' ').toLowerCase();
+                const titleText = item.title.toLowerCase();
+                let matchIndex = -1;
+                let snippet = '';
 
-            for (const category in allContent) {
-                allContent[category].forEach(item => {
-                    const contentText = item.content.replace(/<[^>]*>/g, ' ').toLowerCase();
-                    const titleText = item.title.toLowerCase();
-                    let matchIndex = -1;
-                    let snippet = '';
+                if (titleText.includes(normalizedQuery)) {
+                    matchIndex = 0; 
+                } else {
+                    matchIndex = contentText.indexOf(normalizedQuery);
+                }
 
+                if (matchIndex !== -1) {
                     if (titleText.includes(normalizedQuery)) {
-                        matchIndex = 0; // Prioritize title matches
+                        snippet = `Matches in title.`;
                     } else {
-                        matchIndex = contentText.indexOf(normalizedQuery);
+                        const start = Math.max(0, matchIndex - 40);
+                        const end = Math.min(contentText.length, matchIndex + normalizedQuery.length + 40);
+                        let rawSnippet = contentText.substring(start, end);
+                        let highlightedSnippet = rawSnippet.replace(new RegExp(normalizedQuery, 'gi'), (match) => `<mark>${match}</mark>`);
+                        snippet = (start > 0 ? '...' : '') + highlightedSnippet + (end < contentText.length ? '...' : '');
                     }
+                    searchResults.push({ ...item, snippet });
+                }
+            });
 
-                    if (matchIndex !== -1) {
-                        if (titleText.includes(normalizedQuery)) {
-                            snippet = `Matches in title.`;
-                        } else {
-                            const start = Math.max(0, matchIndex - 40);
-                            const end = Math.min(contentText.length, matchIndex + normalizedQuery.length + 40);
-                            snippet = (start > 0 ? '...' : '') + 
-                                      contentText.substring(start, end).replace(new RegExp(normalizedQuery, 'gi'), (match) => `<mark>${match}</mark>`) +
-                                      (end < contentText.length ? '...' : '');
-                        }
-                        searchResults.push({ ...item, snippet });
-                    }
-                });
-            }
             const currentViewEl = document.querySelector('.view-content:not(.hidden)');
             renderCardList(currentViewEl, searchResults, `No results found for "${query}".`);
             lucide.createIcons();
@@ -1498,7 +1539,7 @@
         function toggleTheme() {
             state.theme = state.theme === 'dark' ? 'light' : 'dark';
             applyTheme();
-            saveStateToFirestore();
+            debouncedSaveState();
         }
 
         function toggleAuthorMode() {
@@ -1533,7 +1574,7 @@
 
             const id = editingId || `custom_${Date.now()}`;
             state.customContent[id] = { id, title, content, category, isCustom: true };
-            saveStateToFirestore();
+            debouncedSaveState();
             closeEditModal();
             showToast(`Scenario ${editingId ? 'updated' : 'created'}!`);
         }
@@ -1551,14 +1592,12 @@
             state.confirmCallback = null;
         }
 
-        // --- New Notes Widget Logic ---
         function toggleNotesWidget(forceOpen = false) {
             const isHidden = dom.notesWidgetContent.classList.contains('hidden');
             if (forceOpen) {
                 if (isHidden) {
                     dom.notesWidgetContent.classList.remove('hidden');
                     dom.notesWidgetToggle.classList.add('hidden');
-                    // Animate in
                     setTimeout(() => {
                         dom.notesWidgetContent.classList.remove('opacity-0', 'scale-95');
                     }, 10);
@@ -1579,13 +1618,7 @@
 
         function saveScratchpadNote() {
             state.scratchpadNote = dom.scratchpadTextarea.value;
-            // Debounce saving to Firestore
-            clearTimeout(state.saveTimeout);
-            state.saveTimeout = setTimeout(() => {
-                saveStateToFirestore().then(() => {
-                    showToast("Note saved", true);
-                });
-            }, 1000);
+            debouncedSaveState();
         }
 
         function copyScratchpad() {
@@ -1608,6 +1641,15 @@
             document.body.removeChild(textArea);
         }
         
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), delay);
+            };
+        }
+
         function setupEventListeners() {
             dom.tabZones.addEventListener('click', () => switchView('zones'));
             dom.tabToolkit.addEventListener('click', () => switchView('toolkit'));
@@ -1620,6 +1662,7 @@
             dom.backButton.addEventListener('click', () => { dom.scenariosDisplay.classList.add('hidden'); dom.zoneSelection.classList.remove('hidden'); });
             dom.closeModal.addEventListener('click', hideModal);
             dom.modal.addEventListener('click', (e) => { if (e.target === dom.modal) hideModal(); });
+            dom.modalBackBtn.addEventListener('click', navigateModalBack);
             dom.closeEditModal.addEventListener('click', closeEditModal);
             dom.cancelEdit.addEventListener('click', closeEditModal);
             dom.saveEdit.addEventListener('click', saveCustomScenario);
