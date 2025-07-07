@@ -58,6 +58,10 @@
         .author-control { display: none !important; }
         .author-mode-active .author-control { display: flex !important; }
         #author-mode-toggle.active svg { color: #4f46e5; }
+
+        #notes-widget-content {
+            transition: opacity 0.3s, transform 0.3s;
+        }
         
     </style>
 </head>
@@ -108,7 +112,6 @@
                     <button id="tab-coping" class="tab-button flex-shrink-0 py-2 px-4 rounded-full text-sm font-semibold transition-colors">Coping Skills</button>
                     <button id="tab-favorites" class="tab-button flex-shrink-0 py-2 px-4 rounded-full text-sm font-semibold transition-colors">Favorites</button>
                     <button id="tab-recent" class="tab-button flex-shrink-0 py-2 px-4 rounded-full text-sm font-semibold transition-colors">Recent</button>
-                    <button id="tab-notes" class="tab-button flex-shrink-0 py-2 px-4 rounded-full text-sm font-semibold transition-colors">My Notes</button>
                 </div>
             </div>
         </div>
@@ -133,7 +136,6 @@
             <div id="coping-view" class="view-content hidden"></div>
             <div id="favorites-view" class="view-content hidden"></div>
             <div id="recent-view" class="view-content hidden"></div>
-            <div id="notes-view" class="view-content hidden max-w-4xl mx-auto p-6 rounded-2xl overflow-y-auto" style="max-height: 70vh;"></div>
         </div>
     </div>
 
@@ -155,20 +157,6 @@
             </div>
             <div id="modalBody" class="modal-body p-6 overflow-y-auto">
                  <!-- Main content injected here -->
-            </div>
-            <div class="modal-footer p-4 border-t space-y-4">
-                <div>
-                    <label for="notes-phrasing" class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">My Phrasing:</label>
-                    <textarea id="notes-phrasing" rows="2" class="notes-field w-full rounded-lg p-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Alternative ways I like to say this..."></textarea>
-                </div>
-                <div>
-                    <label for="notes-reminders" class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Key Reminders:</label>
-                    <textarea id="notes-reminders" rows="2" class="notes-field w-full Rounded-lg p-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., 'Works well for client X', 'Don't forget to validate first'"></textarea>
-                </div>
-                <div>
-                    <label for="notes-followup" class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Follow-up Actions:</label>
-                    <textarea id="notes-followup" rows="2" class="notes-field w-full rounded-lg p-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., 'Flag for therapist', 'Check in next session'"></textarea>
-                </div>
             </div>
         </div>
     </div>
@@ -213,6 +201,23 @@
     </div>
     
     <div id="toast" class="hidden fixed bottom-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg"></div>
+
+    <!-- Floating Notes Widget -->
+    <div id="notes-widget-container" class="fixed bottom-5 right-5 z-40">
+        <button id="notes-widget-toggle" class="bg-indigo-600 text-white rounded-full p-4 shadow-lg hover:bg-indigo-500 transition-colors flex items-center justify-center">
+            <i data-lucide="notebook" class="h-6 w-6"></i>
+        </button>
+        <div id="notes-widget-content" class="hidden absolute bottom-0 right-0 w-80 h-96 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl flex flex-col origin-bottom-right">
+            <div class="flex justify-between items-center p-3 border-b border-gray-200 dark:border-gray-700">
+                <h4 class="font-semibold text-gray-800 dark:text-gray-200">Session Scratchpad</h4>
+                <button id="notes-widget-close" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600">
+                    <i data-lucide="x" class="h-5 w-5 text-gray-500 dark:text-gray-400"></i>
+                </button>
+            </div>
+            <textarea id="scratchpad-textarea" class="w-full h-full p-3 bg-transparent focus:outline-none resize-none" placeholder="Jot down your session notes here..."></textarea>
+        </div>
+    </div>
+
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -892,7 +897,6 @@
             copingView: document.getElementById('coping-view'),
             favoritesView: document.getElementById('favorites-view'),
             recentView: document.getElementById('recent-view'),
-            notesView: document.getElementById('notes-view'),
             tabZones: document.getElementById('tab-zones'),
             tabToolkit: document.getElementById('tab-toolkit'),
             tabScripts: document.getElementById('tab-scripts'),
@@ -900,7 +904,6 @@
             tabCoping: document.getElementById('tab-coping'),
             tabFavorites: document.getElementById('tab-favorites'),
             tabRecent: document.getElementById('tab-recent'),
-            tabNotes: document.getElementById('tab-notes'),
             zoneSelection: document.getElementById('zone-selection'),
             scenariosDisplay: document.getElementById('scenarios-display'),
             backButton: document.getElementById('backButton'),
@@ -914,7 +917,6 @@
             closeModal: document.getElementById('closeModal'),
             modalFavoriteBtn: document.getElementById('modal-favorite-btn'),
             modalEditBtn: document.getElementById('modal-edit-btn'),
-            notesFields: document.querySelectorAll('.notes-field'),
             timerDisplay: document.getElementById('timer-display'),
             startPauseBtn: document.getElementById('start-pause-btn'),
             resetBtn: document.getElementById('reset-btn'),
@@ -936,19 +938,26 @@
             confirmModalText: document.getElementById('confirmModalText'),
             confirmCancel: document.getElementById('confirmCancel'),
             confirmAction: document.getElementById('confirmAction'),
+            // New notes widget elements
+            notesWidgetContainer: document.getElementById('notes-widget-container'),
+            notesWidgetToggle: document.getElementById('notes-widget-toggle'),
+            notesWidgetContent: document.getElementById('notes-widget-content'),
+            notesWidgetClose: document.getElementById('notes-widget-close'),
+            scratchpadTextarea: document.getElementById('scratchpad-textarea'),
         };
 
         const state = {
             currentView: 'zones',
             currentZone: null,
             favorites: [],
-            notes: {},
+            scratchpadNote: "", // New state for the persistent note
             recentlyViewed: [],
             customContent: {},
             isAuthorMode: false,
             timer: { id: null, timeRemaining: 1200, isPaused: true, initialTime: 1200 },
             currentOpenScenario: null,
             confirmCallback: null,
+            saveTimeout: null,
         };
 
         let userDocRef;
@@ -989,11 +998,12 @@
             onSnapshot(docRef, (doc) => {
                 const data = doc.data() || {};
                 state.favorites = data.favorites || [];
-                state.notes = data.notes || {};
+                state.scratchpadNote = data.scratchpadNote || ""; // Load scratchpad note
                 state.recentlyViewed = data.recentlyViewed || [];
                 state.theme = data.theme || 'dark';
                 state.customContent = data.customContent || {};
 
+                dom.scratchpadTextarea.value = state.scratchpadNote; // Populate textarea
                 applyTheme();
                 renderAll();
             }, (error) => {
@@ -1036,7 +1046,7 @@
             try {
                 await setDoc(userDocRef, {
                     favorites: state.favorites,
-                    notes: state.notes,
+                    scratchpadNote: state.scratchpadNote, // Save scratchpad note
                     recentlyViewed: state.recentlyViewed,
                     theme: state.theme,
                     customContent: state.customContent
@@ -1155,83 +1165,7 @@
 
         function renderFavorites() { renderCardList(dom.favoritesView, state.favorites.map(findScenarioById).filter(Boolean), "You haven't favorited any scenarios yet."); }
         function renderRecent() { renderCardList(dom.recentView, state.recentlyViewed.map(findScenarioById).filter(Boolean), "You haven't viewed any scenarios recently."); }
-
-        function renderNotesView() {
-            dom.notesView.innerHTML = '';
-            const notes = state.notes;
-            const noteKeys = Object.keys(notes).filter(key => notes[key].phrasing || notes[key].reminders || notes[key].followup);
-
-            const header = document.createElement('div');
-            header.className = 'flex justify-between items-center mb-6';
-            header.innerHTML = `<h2 class="text-3xl font-bold">All My Notes</h2>`;
-            if (noteKeys.length > 0) {
-                const clearBtn = document.createElement('button');
-                clearBtn.className = 'bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded-full transition-colors flex items-center space-x-2';
-                clearBtn.innerHTML = `<i data-lucide="trash-2" class="h-5 w-5"></i><span>Clear All Notes</span>`;
-                clearBtn.addEventListener('click', () => {
-                    showConfirmModal("Clear All Notes?", "This will permanently delete all of your notes.", () => {
-                        state.notes = {};
-                        saveStateToFirestore();
-                        showToast("All notes cleared.");
-                    });
-                });
-                header.appendChild(clearBtn);
-            }
-            dom.notesView.appendChild(header);
-
-            if (noteKeys.length === 0) {
-                dom.notesView.innerHTML += `<p class="text-center text-gray-500 dark:text-gray-400 mt-8">You haven't written any notes yet.</p>`;
-                return;
-            }
-
-            const copyBtn = document.createElement('button');
-            copyBtn.className = 'bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded-full transition-colors flex items-center space-x-2 mb-6';
-            copyBtn.innerHTML = `<i data-lucide="clipboard" class="h-5 w-5"></i><span>Copy All Notes</span>`;
-            copyBtn.addEventListener('click', copyAllNotesToClipboard);
-            dom.notesView.appendChild(copyBtn);
-
-            noteKeys.forEach(title => {
-                const noteData = notes[title];
-                const noteEl = document.createElement('div');
-                noteEl.className = 'mb-6 pb-4 border-b border-gray-200 dark:border-gray-700';
-                let content = `<h3 class="text-xl font-semibold text-gray-800 dark:text-gray-200">${title}</h3>`;
-                if (noteData.phrasing) content += `<h4 class="font-semibold mt-3 mb-1 text-gray-600 dark:text-gray-400">My Phrasing:</h4><p class="whitespace-pre-wrap">${noteData.phrasing}</p>`;
-                if (noteData.reminders) content += `<h4 class="font-semibold mt-3 mb-1 text-gray-600 dark:text-gray-400">Key Reminders:</h4><p class="whitespace-pre-wrap">${noteData.reminders}</p>`;
-                if (noteData.followup) content += `<h4 class="font-semibold mt-3 mb-1 text-gray-600 dark:text-gray-400">Follow-up Actions:</h4><p class="whitespace-pre-wrap">${noteData.followup}</p>`;
-                noteEl.innerHTML = content;
-                dom.notesView.appendChild(noteEl);
-            });
-        }
-
-        function copyAllNotesToClipboard() {
-            let textToCopy = `ClinicalX Notes Export - ${new Date().toLocaleString()}\n\n`;
-            const notes = state.notes;
-            Object.keys(notes).forEach(title => {
-                const noteData = notes[title];
-                if (noteData.phrasing || noteData.reminders || noteData.followup) {
-                    textToCopy += `----------------------------------------\n`;
-                    textToCopy += `SCENARIO: ${title}\n`;
-                    textToCopy += `----------------------------------------\n`;
-                    if (noteData.phrasing) textToCopy += `My Phrasing:\n${noteData.phrasing}\n\n`;
-                    if (noteData.reminders) textToCopy += `Key Reminders:\n${noteData.reminders}\n\n`;
-                    if (noteData.followup) textToCopy += `Follow-up Actions:\n${noteData.followup}\n\n`;
-                }
-            });
-
-            const textArea = document.createElement("textarea");
-            textArea.value = textToCopy;
-            textArea.style.position = "fixed"; textArea.style.left = "-9999px";
-            document.body.appendChild(textArea);
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                showToast("All notes copied to clipboard!");
-            } catch (err) {
-                showToast("Failed to copy notes.");
-            }
-            document.body.removeChild(textArea);
-        }
-
+        
         function renderCardList(container, items, emptyMessage) {
             container.innerHTML = '';
             container.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4';
@@ -1310,7 +1244,6 @@
             dom.modal.classList.remove('hidden');
             dom.modalEditBtn.style.display = scenario.isCustom ? 'flex' : 'none';
             updateModalFavoriteButton();
-            loadNotes();
             addToRecentlyViewed(scenario.id);
             lucide.createIcons();
         }
@@ -1327,30 +1260,6 @@
         function updateModalFavoriteButton() {
             if (!state.currentOpenScenario) return;
             dom.modalFavoriteBtn.classList.toggle('favorited', state.favorites.includes(state.currentOpenScenario.id));
-        }
-
-        function loadNotes() {
-            if (!state.currentOpenScenario) return;
-            const notes = state.notes[state.currentOpenScenario.title] || {};
-            dom.notesFields.forEach(f => f.value = '');
-            document.getElementById('notes-phrasing').value = notes.phrasing || '';
-            document.getElementById('notes-reminders').value = notes.reminders || '';
-            document.getElementById('notes-followup').value = notes.followup || '';
-        }
-
-        function saveNote() {
-            if (!state.currentOpenScenario) return;
-            const title = state.currentOpenScenario.title;
-            const phrasing = document.getElementById('notes-phrasing').value.trim();
-            const reminders = document.getElementById('notes-reminders').value.trim();
-            const followup = document.getElementById('notes-followup').value.trim();
-            if (phrasing || reminders || followup) {
-                state.notes[title] = { phrasing, reminders, followup };
-            } else {
-                delete state.notes[title];
-            }
-            saveStateToFirestore();
-            showToast('Note saved!');
         }
 
         function addToRecentlyViewed(id) {
@@ -1447,7 +1356,6 @@
                 case 'coping': renderCoping(); break;
                 case 'favorites': renderFavorites(); break;
                 case 'recent': renderRecent(); break;
-                case 'notes': renderNotesView(); break;
             }
             lucide.createIcons();
         }
@@ -1519,6 +1427,45 @@
             dom.confirmModal.classList.add('hidden');
             state.confirmCallback = null;
         }
+
+        // --- New Notes Widget Logic ---
+        function toggleNotesWidget(forceOpen = false) {
+            const isHidden = dom.notesWidgetContent.classList.contains('hidden');
+            if (forceOpen) {
+                if (isHidden) {
+                    dom.notesWidgetContent.classList.remove('hidden');
+                    dom.notesWidgetToggle.classList.add('hidden');
+                    // Animate in
+                    setTimeout(() => {
+                        dom.notesWidgetContent.classList.remove('opacity-0', 'scale-95');
+                    }, 10);
+                }
+            } else {
+                if (isHidden) {
+                    dom.notesWidgetContent.classList.remove('hidden');
+                    dom.notesWidgetToggle.classList.add('hidden');
+                    setTimeout(() => {
+                        dom.notesWidgetContent.classList.remove('opacity-0', 'scale-95');
+                    }, 10);
+                } else {
+                    dom.notesWidgetContent.classList.add('opacity-0', 'scale-95');
+                    setTimeout(() => {
+                        dom.notesWidgetContent.classList.add('hidden');
+                        dom.notesWidgetToggle.classList.remove('hidden');
+                    }, 300);
+                }
+            }
+        }
+
+        function saveScratchpadNote() {
+            state.scratchpadNote = dom.scratchpadTextarea.value;
+            // Debounce saving to Firestore
+            clearTimeout(state.saveTimeout);
+            state.saveTimeout = setTimeout(() => {
+                saveStateToFirestore();
+                showToast("Note saved!", true);
+            }, 1000);
+        }
         
         function setupEventListeners() {
             dom.tabZones.addEventListener('click', () => switchView('zones'));
@@ -1528,7 +1475,6 @@
             dom.tabCoping.addEventListener('click', () => switchView('coping'));
             dom.tabFavorites.addEventListener('click', () => switchView('favorites'));
             dom.tabRecent.addEventListener('click', () => switchView('recent'));
-            dom.tabNotes.addEventListener('click', () => switchView('notes'));
             dom.backButton.addEventListener('click', () => { dom.scenariosDisplay.classList.add('hidden'); dom.zoneSelection.classList.remove('hidden'); });
             dom.closeModal.addEventListener('click', hideModal);
             dom.modal.addEventListener('click', (e) => { if (e.target === dom.modal) hideModal(); });
@@ -1545,12 +1491,12 @@
                     if (!dom.modal.classList.contains('hidden')) hideModal();
                     if (!dom.editModal.classList.contains('hidden')) closeEditModal();
                     if (!dom.confirmModal.classList.contains('hidden')) hideConfirmModal();
+                    if (!dom.notesWidgetContent.classList.contains('hidden')) toggleNotesWidget();
                 }
             });
             dom.modalFavoriteBtn.addEventListener('click', () => toggleFavorite(state.currentOpenScenario.id));
             dom.modalEditBtn.addEventListener('click', () => openEditModal(state.currentOpenScenario));
             dom.addScenarioToZoneBtn.addEventListener('click', () => openEditModal(null, state.currentZone));
-            dom.notesFields.forEach(field => field.addEventListener('blur', saveNote));
             dom.startPauseBtn.addEventListener('click', startPauseTimer);
             dom.resetBtn.addEventListener('click', resetTimer);
             dom.timerPresetBtns.forEach(btn => btn.addEventListener('click', () => setTimer(parseInt(btn.dataset.time))));
@@ -1569,6 +1515,11 @@
                     if (scenario) openModal(scenario);
                 }
             });
+
+            // New Notes Widget Listeners
+            dom.notesWidgetToggle.addEventListener('click', () => toggleNotesWidget());
+            dom.notesWidgetClose.addEventListener('click', () => toggleNotesWidget());
+            dom.scratchpadTextarea.addEventListener('input', saveScratchpadNote);
         }
 
         document.addEventListener('DOMContentLoaded', initFirebase);
