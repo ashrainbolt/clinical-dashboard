@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClinicalX: Interactive Dashboard v5.4</title>
+    <title>ClinicalX: Interactive Dashboard v5.6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -246,8 +246,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- POPULATED & REVISED DATA ---
         const clinicalData = {
@@ -850,7 +850,7 @@
                     title: "Boundary Setting Scripts",
                     content: `
                         <h3>Foundational Role Setting</h3>
-                        <p><strong>Standard:</strong> “Before we get started—my role isn’t for processing, but to make sure you’re safe and help get you grounded so you can rejoin group. We’ve got about 20 minutes, can you tell me what’s going on?”</p>
+                        <p><strong>Standard:</strong> “Before we get started—my role isn’t for processing, but to make sure you’re safe and help you get grounded so you can rejoin group. We’ve got about 20 minutes, can you tell me what’s going on?”</p>
                         <p><strong>For Distressed Clients:</strong> “I may not be the best person to unpack all of it, but I can offer support, check in on safety, and help you find your footing before heading back to group. What feels most important to say out loud right now?”</p>
                         <h3>Trauma-Dumping Containment</h3>
                         <p><strong>Mid-Session Redirect:</strong> “I really hear that this is painful... but because we only have a few minutes... I want to be careful we don’t go too deep here and leave you feeling more overwhelmed.”</p>
@@ -900,7 +900,7 @@
                     content: `
                         <h3>Gently Bring Awareness to the Present</h3>
                         <p>"Hey, I'm noticing you seem a little distant right now, like you've drifted away. That's a very common way our minds protect us when things get overwhelming. Can you hear my voice?"</p>
-                        <h3>Use Somatic Drop-In Cues</h3>
+                        <h3>Use Somatic Drop-in Cues</h3>
                         <p>"Let's try a small experiment to help you feel more anchored in the room. Can you feel your feet on the floor? Just notice the sensation of the ground underneath you."</p>
                         <p>"Another thing we can try is pressing your palms together firmly. Just notice the pressure and the warmth. This can help remind your body that you're right here, right now."</p>
                         <h3>Offer Reassurance</h3>
@@ -1128,9 +1128,6 @@
         let userDocRef;
         let debouncedSaveState;
 
-        // --- !! DEBUGGING VERSION !! ---
-        // This function temporarily hardcodes the Firebase configuration to diagnose
-        // deployment issues. This is NOT secure for a final production app.
         async function initFirebase() {
             try {
                 // Hardcoded configuration for debugging purposes.
@@ -1150,8 +1147,11 @@
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         const userId = user.uid;
-                        const appId = 'clinical-dashboard-app'; // A static ID for the app
-                        userDocRef = doc(db, 'artifacts', appId, 'users', userId, 'userData');
+                        const appId = "my-dashboard-app-e1d1f"; 
+                        // FIX: A document reference path must have an even number of segments.
+                        // The path was .../userData, which is a collection. It now points to
+                        // a specific document 'appData' inside that collection.
+                        userDocRef = doc(db, 'artifacts', appId, 'users', userId, 'userData', 'appData');
                         
                         initApp(db, userDocRef);
                         
