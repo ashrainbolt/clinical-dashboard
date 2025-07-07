@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClinicalX: Interactive Dashboard v5.0</title>
+    <title>ClinicalX: Interactive Dashboard v5.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,8 +21,8 @@
         .modal-body::-webkit-scrollbar, #notes-view::-webkit-scrollbar, #scratchpad-textarea::-webkit-scrollbar { width: 8px; }
         
         body { background-color: #f3f4f6; color: #1f2937; }
-        .scenario-card, .modal-content, #timer-section, #notes-view, .content-section { background-color: white; border: 1px solid #e5e7eb; }
-        .scenario-card:hover { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); }
+        .scenario-card, .modal-content, #timer-section, #notes-view, .content-section, .resource-card { background-color: white; border: 1px solid #e5e7eb; }
+        .scenario-card:hover, .resource-card:hover { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); }
         .tab-button-container { background-color: #e5e7eb; }
         .tab-button.active { background-color: white; color: #4f46e5; }
         .tab-button { color: #4b5563; }
@@ -34,8 +34,8 @@
         .modal-header, .modal-footer { border-color: #e5e7eb; }
 
         .dark body { background-color: #111827; color: #d1d5db; }
-        .dark .scenario-card, .dark .modal-content, .dark #timer-section, .dark #notes-view, .dark .content-section { background-color: #1f2937; border: 1px solid #374151; }
-        .dark .scenario-card:hover { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2), 0 2px 4px -1px rgba(0,0,0,0.15); }
+        .dark .scenario-card, .dark .modal-content, .dark #timer-section, .dark #notes-view, .dark .content-section, .dark .resource-card { background-color: #1f2937; border: 1px solid #374151; }
+        .dark .scenario-card:hover, .dark .resource-card:hover { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2), 0 2px 4px -1px rgba(0,0,0,0.15); }
         .dark .tab-button-container { background-color: #374151; }
         .dark .tab-button.active { background-color: #4f46e5; color: white; }
         .dark .tab-button { color: #d1d5db; }
@@ -119,9 +119,11 @@
                     <button id="tab-zones" class="tab-button flex-shrink-0 py-2 px-4 rounded-full text-sm font-semibold transition-colors active">Zones</button>
                     <button id="tab-toolkit" class="tab-button flex-shrink-0 py-2 px-4 rounded-full text-sm font-semibold transition-colors">Toolkit</button>
                     <button id="tab-scripts" class="tab-button flex-shrink-0 py-2 px-4 rounded-full text-sm font-semibold transition-colors">Session Scripts</button>
+                    <button id="tab-not-landing" class="tab-button flex-shrink-0 py-2 px-4 rounded-full text-sm font-semibold transition-colors">When It's Not Landing</button>
                     <button id="tab-mi" class="tab-button flex-shrink-0 py-2 px-4 rounded-full text-sm font-semibold transition-colors">MI</button>
                     <button id="tab-coping" class="tab-button flex-shrink-0 py-2 px-4 rounded-full text-sm font-semibold transition-colors">Coping Skills</button>
                     <button id="tab-psychoed" class="tab-button flex-shrink-0 py-2 px-4 rounded-full text-sm font-semibold transition-colors">Psychoed</button>
+                    <button id="tab-resources" class="tab-button flex-shrink-0 py-2 px-4 rounded-full text-sm font-semibold transition-colors">Resources</button>
                     <button id="tab-favorites" class="tab-button flex-shrink-0 py-2 px-4 rounded-full text-sm font-semibold transition-colors">Favorites</button>
                     <button id="tab-recent" class="tab-button flex-shrink-0 py-2 px-4 rounded-full text-sm font-semibold transition-colors">Recent</button>
                 </div>
@@ -144,9 +146,11 @@
             </div>
             <div id="toolkit-view" class="view-content hidden"></div>
             <div id="scripts-view" class="view-content hidden"></div>
+            <div id="not-landing-view" class="view-content hidden"></div>
             <div id="mi-view" class="view-content hidden"></div>
             <div id="coping-view" class="view-content hidden"></div>
             <div id="psychoed-view" class="view-content hidden"></div>
+            <div id="resources-view" class="view-content hidden"></div>
             <div id="favorites-view" class="view-content hidden"></div>
             <div id="recent-view" class="view-content hidden"></div>
         </div>
@@ -242,8 +246,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- POPULATED & REVISED DATA ---
         const clinicalData = {
@@ -596,6 +600,7 @@
             },
             "Green": {
                 title: "💚 Green Zone – Growth & Skill-Building",
+                color: "green",
                 scenarios: [
                     {
                         id: "political-global-events-anxiety",
@@ -864,6 +869,45 @@
                     `
                 }
             ],
+            "When It's Not Landing": [
+                {
+                    id: "not-landing-resistance",
+                    title: "For Resistance / Stonewalling",
+                    content: `
+                        <h3>Acknowledge and Validate the Resistance</h3>
+                        <p>"I notice you're hesitant to talk right now, or maybe what I'm suggesting isn't feeling right. That's completely okay. It sounds like a part of you is putting the brakes on, and I want to respect that. That part is probably trying to protect you in some way."</p>
+                        <h3>Get Curious, Not Confrontational</h3>
+                        <p>"Can we get curious about that hesitation? What does that part of you need right now? Maybe it needs to feel safer, or maybe it's just exhausted. We don't have to push through it."</p>
+                        <h3>Offer Control</h3>
+                        <p>"You are in the driver's seat here. We can talk about something else, we can try a different approach, or we can just sit quietly for a bit. What feels like the best option for you right now?"</p>
+                    `
+                },
+                {
+                    id: "not-landing-looping",
+                    title: "For Looping / Rumination",
+                    content: `
+                        <h3>Gently Interrupt the Pattern</h3>
+                        <p>"I notice we've circled back to this thought a few times. It clearly has a lot of energy and is taking up a lot of space in your mind right now. That must be exhausting."</p>
+                        <h3>Externalize the Loop</h3>
+                        <p>"It's like your brain is stuck on a single track on a record player. My job is to help gently lift the needle. Let's try shifting our focus for just two minutes to something completely different and see what happens. We can try a quick <a class='intervention-link' data-id='grounding-54321'>grounding exercise</a>."</p>
+                        <h3>State the Intention</h3>
+                        <p>"This isn't to dismiss how important that thought feels, but to give your brain a short break from the loop. Sometimes that's all we need to get unstuck."</p>
+                    `
+                },
+                {
+                    id: "not-landing-dissociation",
+                    title: "For Mild Dissociation / 'Checking Out'",
+                    content: `
+                        <h3>Gently Bring Awareness to the Present</h3>
+                        <p>"Hey, I'm noticing you seem a little distant right now, like you've drifted away. That's a very common way our minds protect us when things get overwhelming. Can you hear my voice?"</p>
+                        <h3>Use Somatic Drop-In Cues</h3>
+                        <p>"Let's try a small experiment to help you feel more anchored in the room. Can you feel your feet on the floor? Just notice the sensation of the ground underneath you."</p>
+                        <p>"Another thing we can try is pressing your palms together firmly. Just notice the pressure and the warmth. This can help remind your body that you're right here, right now."</p>
+                        <h3>Offer Reassurance</h3>
+                        <p>"You're safe. You're here with me. We can slow down as much as you need to. There's no rush."</p>
+                    `
+                }
+            ],
             "MI": [
                 {
                     id: "mi-ambivalence",
@@ -963,6 +1007,24 @@
                         <h3>What if emotions were messengers?</h3>
                         <p>“We often label emotions as 'good' or 'bad,' but it can be more helpful to think of them as messengers or signals trying to give us information. For example, anxiety might be signaling a potential threat or something you care about. Sadness might signal a loss. If we can get curious and listen to the message underneath the emotion, we can better understand what we truly need.”</p>
                     `
+                },
+                {
+                    id: "psychoed-spoon-theory",
+                    title: "Spoon Theory for Energy Management",
+                    content: `
+                        <h3>Let's talk about 'Spoon Theory.'</h3>
+                        <p>“This is a helpful metaphor for managing your energy, especially when dealing with chronic illness, pain, or burnout. Imagine you start each day with a certain number of spoons. Each activity—showering, making breakfast, going to work, having a difficult conversation—costs one or more spoons.”</p>
+                        <p>“Healthy people might have what feels like an unlimited supply of spoons, but for you, the number is limited. The goal isn't to force yourself to have more spoons, but to be mindful of how you spend the ones you have. It helps explain why on some days you can do more than others, and why it's so important to rest to get your spoons back.”</p>
+                    `
+                },
+                {
+                    id: "psychoed-tist-framework",
+                    title: "Understanding Our Inner Parts (TIST)",
+                    content: `
+                        <h3>Let's talk about the different parts of you.</h3>
+                        <p>“A helpful way to understand trauma responses is to think of ourselves as having different 'parts.' There's the part that goes on with daily life, trying to function and seem 'normal.' Then, there can be emotional parts that hold the feelings from difficult past experiences—like fear, shame, or anger.”</p>
+                        <p>“When you get triggered, it's often one of these emotional parts getting activated and taking over. The goal isn't to get rid of these parts, but to understand them, listen to their story with compassion, and help them feel safe in the present. Your adult self can learn to be a caring parent to these younger, hurting parts.”</p>
+                    `
                 }
             ]
         };
@@ -974,17 +1036,21 @@
             zonesView: document.getElementById('zones-view'),
             toolkitView: document.getElementById('toolkit-view'),
             scriptsView: document.getElementById('scripts-view'),
+            notLandingView: document.getElementById('not-landing-view'),
             miView: document.getElementById('mi-view'),
             copingView: document.getElementById('coping-view'),
             psychoedView: document.getElementById('psychoed-view'),
+            resourcesView: document.getElementById('resources-view'),
             favoritesView: document.getElementById('favorites-view'),
             recentView: document.getElementById('recent-view'),
             tabZones: document.getElementById('tab-zones'),
             tabToolkit: document.getElementById('tab-toolkit'),
             tabScripts: document.getElementById('tab-scripts'),
+            tabNotLanding: document.getElementById('tab-not-landing'),
             tabMi: document.getElementById('tab-mi'),
             tabCoping: document.getElementById('tab-coping'),
             tabPsychoed: document.getElementById('tab-psychoed'),
+            tabResources: document.getElementById('tab-resources'),
             tabFavorites: document.getElementById('tab-favorites'),
             tabRecent: document.getElementById('tab-recent'),
             zoneSelection: document.getElementById('zone-selection'),
@@ -1062,36 +1128,58 @@
         let userDocRef;
         let debouncedSaveState;
 
+        // --- !! SECURITY ENHANCEMENT !! ---
+        // This function now securely initializes Firebase without hardcoding API keys.
+        // It uses variables (__firebase_config, __initial_auth_token) provided by the
+        // secure hosting environment.
         async function initFirebase() {
-            const firebaseConfig = {
-                apiKey: "AIzaSyBr3hTkM_2PlRreFvgK9kk4s4bQvx5y8xw",
-                authDomain: "my-dashboard-app-e1d1f.firebaseapp.com",
-                projectId: "my-dashboard-app-e1d1f",
-                storageBucket: "my-dashboard-app-e1d1f.appspot.com",
-                messagingSenderId: "969081281658",
-                appId: "1:969081281658:web:d479a7b003805625f02fc3"
-            };
-            const app = initializeApp(firebaseConfig);
-            const auth = getAuth(app);
-            const db = getFirestore(app);
+            // Check if the required Firebase config variable exists.
+            if (typeof __firebase_config === 'undefined') {
+                console.error("Firebase configuration is missing.");
+                document.body.innerHTML = '<div class="text-center p-8 text-red-500">Error: Firebase configuration not found. The app cannot load.</div>';
+                return;
+            }
 
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    const userId = user.uid;
-                    userDocRef = doc(db, `users/${userId}`);
-                    initApp(db, userDocRef);
-                    const userIdDisplay = document.getElementById('user-id-display');
-                    if (userIdDisplay) userIdDisplay.textContent = `UserID: ${userId.substring(0, 8)}...`;
-                } else {
-                    try {
-                        await signInAnonymously(auth);
-                    } catch (error) {
-                        console.error("Error during anonymous sign-in:", error);
-                        document.body.innerHTML = '<div class="text-center p-8 text-red-500">Could not sign in. Please refresh.</div>';
+            try {
+                // Parse the configuration provided by the environment.
+                const firebaseConfig = JSON.parse(__firebase_config);
+                const app = initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+                const db = getFirestore(app);
+
+                // Set up a listener for authentication state changes.
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        // If a user is signed in, get their unique ID and Firestore document reference.
+                        const userId = user.uid;
+                        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                        userDocRef = doc(db, 'artifacts', appId, 'users', userId, 'userData', 'appData');
+
+                        // Initialize the main application logic.
+                        initApp(db, userDocRef);
+                        
+                        // Display the user ID for reference.
+                        const userIdDisplay = document.getElementById('user-id-display');
+                        if (userIdDisplay) userIdDisplay.textContent = `UserID: ${userId}`;
+
+                    } else {
+                        // If no user is signed in, attempt to sign in.
+                        // Prioritize the secure custom token if available.
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                            await signInWithCustomToken(auth, __initial_auth_token);
+                        } else {
+                            // Fallback to anonymous sign-in if no custom token is present.
+                            await signInAnonymously(auth);
+                        }
                     }
-                }
-            });
+                });
+
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                document.body.innerHTML = `<div class="text-center p-8 text-red-500">Critical Error: Could not initialize Firebase. Details: ${error.message}</div>`;
+            }
         }
+
 
         function initApp(db, docRef) {
             userDocRef = docRef;
@@ -1222,7 +1310,7 @@
             container.appendChild(createAddButton('Toolkit'));
 
             const allContent = getAllContent();
-            const toolkitCategories = Object.keys(interventionsData).filter(cat => !['Session Scripts', 'MI', 'Coping Skills', 'Psychoeducation'].includes(cat));
+            const toolkitCategories = Object.keys(interventionsData).filter(cat => !['Session Scripts', 'MI', 'Coping Skills', 'Psychoeducation', "When It's Not Landing"].includes(cat));
 
             toolkitCategories.forEach(category => {
                 const categoryEl = document.createElement('div');
@@ -1241,9 +1329,41 @@
         }
 
         function renderScripts() { renderGenericView(dom.scriptsView, 'Session Scripts'); }
+        function renderNotLanding() { renderGenericView(dom.notLandingView, "When It's Not Landing"); }
         function renderMi() { renderGenericView(dom.miView, 'MI'); }
         function renderCoping() { renderGenericView(dom.copingView, 'Coping Skills'); }
         function renderPsychoed() { renderGenericView(dom.psychoedView, 'Psychoeducation'); }
+        
+        function renderResources() {
+            dom.resourcesView.innerHTML = '';
+            const resources = [
+                { name: '988 Suicide & Crisis Lifeline', type: 'phone', value: '988', desc: '24/7 free, confidential support.' },
+                { name: 'Crisis Text Line', type: 'text', value: '741741', desc: 'Text MHA to 741741.' },
+                { name: 'The Trevor Project', type: 'phone', value: '1-866-488-7386', desc: 'Support for LGBTQ youth.' },
+                { name: 'National Domestic Violence Hotline', type: 'phone', value: '1-800-799-7233', desc: 'Support for victims and survivors.' },
+                { name: 'National Sexual Assault Hotline', type: 'phone', value: '1-800-656-4673', desc: 'Connect with a local provider.' },
+                { name: '211 Services', type: 'web', value: 'https://www.211.org/', desc: 'Find local essential services.' },
+            ];
+
+            const grid = document.createElement('div');
+            grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
+
+            resources.forEach(res => {
+                const card = document.createElement('a');
+                card.className = 'resource-card p-6 rounded-2xl block hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors';
+                card.href = res.type === 'phone' ? `tel:${res.value}` : (res.type === 'text' ? `sms:${res.value}` : res.value);
+                if (res.type === 'web') card.target = '_blank';
+                
+                card.innerHTML = `
+                    <h3 class="text-xl font-bold text-indigo-500 dark:text-indigo-400">${res.name}</h3>
+                    <p class="text-gray-600 dark:text-gray-300 mt-2">${res.desc}</p>
+                    <p class="text-lg font-semibold text-gray-800 dark:text-gray-100 mt-3">${res.value}</p>
+                `;
+                grid.appendChild(card);
+            });
+            dom.resourcesView.appendChild(grid);
+        }
+
         function renderFavorites() { renderCardList(dom.favoritesView, state.favorites.map(findScenarioById).filter(Boolean), "You haven't favorited any scenarios yet."); }
         function renderRecent() { renderCardList(dom.recentView, state.recentlyViewed.map(findScenarioById).filter(Boolean), "You haven't viewed any scenarios recently."); }
         
@@ -1281,7 +1401,6 @@
         function createScenarioCard(scenario) {
             const isFavorited = state.favorites.includes(scenario.id);
             const card = document.createElement('div');
-            // FIX: Removed fixed height and added justify-between for proper vertical alignment
             card.className = `scenario-card p-4 rounded-lg cursor-pointer flex flex-col justify-between relative`;
             
             let cardContent = `
@@ -1515,9 +1634,11 @@
                 case 'zones': renderZones(); dom.scenariosDisplay.classList.add('hidden'); dom.zoneSelection.classList.remove('hidden'); break;
                 case 'toolkit': renderToolkit(); break;
                 case 'scripts': renderScripts(); break;
+                case 'not-landing': renderNotLanding(); break;
                 case 'mi': renderMi(); break;
                 case 'coping': renderCoping(); break;
                 case 'psychoed': renderPsychoed(); break;
+                case 'resources': renderResources(); break;
                 case 'favorites': renderFavorites(); break;
                 case 'recent': renderRecent(); break;
             }
@@ -1526,11 +1647,11 @@
 
         function applyTheme() {
             if (state.theme === 'dark') {
-                dom.body.classList.add('dark');
+                dom.html.classList.add('dark');
                 dom.themeIconLight.classList.add('hidden');
                 dom.themeIconDark.classList.remove('hidden');
             } else {
-                dom.body.classList.remove('dark');
+                dom.html.classList.remove('dark');
                 dom.themeIconLight.classList.remove('hidden');
                 dom.themeIconDark.classList.add('hidden');
             }
@@ -1654,9 +1775,11 @@
             dom.tabZones.addEventListener('click', () => switchView('zones'));
             dom.tabToolkit.addEventListener('click', () => switchView('toolkit'));
             dom.tabScripts.addEventListener('click', () => switchView('scripts'));
+            dom.tabNotLanding.addEventListener('click', () => switchView('not-landing'));
             dom.tabMi.addEventListener('click', () => switchView('mi'));
             dom.tabCoping.addEventListener('click', () => switchView('coping'));
             dom.tabPsychoed.addEventListener('click', () => switchView('psychoed'));
+            dom.tabResources.addEventListener('click', () => switchView('resources'));
             dom.tabFavorites.addEventListener('click', () => switchView('favorites'));
             dom.tabRecent.addEventListener('click', () => switchView('recent'));
             dom.backButton.addEventListener('click', () => { dom.scenariosDisplay.classList.add('hidden'); dom.zoneSelection.classList.remove('hidden'); });
