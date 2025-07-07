@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClinicalX: Interactive Dashboard v3.2 (Final)</title>
+    <title>ClinicalX: Interactive Dashboard v3.3 (Notes Export)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,7 +19,7 @@
         .scenario-card:hover { transform: translateY(-5px); }
         .modal-body::-webkit-scrollbar { width: 8px; }
         body { background-color: #f3f4f6; color: #1f2937; }
-        .scenario-card, .modal-content, #timer-section { background-color: white; border: 1px solid #e5e7eb; }
+        .scenario-card, .modal-content, #timer-section, #notes-view { background-color: white; border: 1px solid #e5e7eb; }
         .scenario-card:hover { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); }
         .tab-button-container { background-color: #e5e7eb; }
         .tab-button.active { background-color: white; color: #4f46e5; }
@@ -27,11 +27,11 @@
         .sticky-header { background-color: rgba(243, 244, 246, 0.8); }
         input, textarea { background-color: #f9fafb; border-color: #d1d5db; color: #111827; }
         input::placeholder { color: #6b7280; }
-        .modal-body::-webkit-scrollbar-track { background: #e5e7eb; }
-        .modal-body::-webkit-scrollbar-thumb { background-color: #9ca3af; border-radius: 10px; border: 2px solid #e5e7eb; }
+        .modal-body::-webkit-scrollbar-track, #notes-view::-webkit-scrollbar-track { background: #e5e7eb; }
+        .modal-body::-webkit-scrollbar-thumb, #notes-view::-webkit-scrollbar-thumb { background-color: #9ca3af; border-radius: 10px; border: 2px solid #e5e7eb; }
         .modal-header, .modal-footer { border-color: #e5e7eb; }
         .dark body { background-color: #111827; color: #d1d5db; }
-        .dark .scenario-card, .dark .modal-content, .dark #timer-section { background-color: #1f2937; border: 1px solid #374151; }
+        .dark .scenario-card, .dark .modal-content, .dark #timer-section, .dark #notes-view { background-color: #1f2937; border: 1px solid #374151; }
         .dark .scenario-card:hover { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2), 0 2px 4px -1px rgba(0,0,0,0.15); }
         .dark .tab-button-container { background-color: #374151; }
         .dark .tab-button.active { background-color: #4f46e5; color: white; }
@@ -39,14 +39,14 @@
         .dark .sticky-header { background-color: rgba(17, 24, 39, 0.8); }
         .dark input, .dark textarea { background-color: #374151; border-color: #4b5563; color: #f9fafb; }
         .dark input::placeholder { color: #9ca3af; }
-        .dark .modal-body::-webkit-scrollbar-track { background: #2d3748; }
-        .dark .modal-body::-webkit-scrollbar-thumb { background-color: #4a5568; border-radius: 10px; border: 2px solid #2d3748; }
+        .dark .modal-body::-webkit-scrollbar-track, .dark #notes-view::-webkit-scrollbar-track { background: #2d3748; }
+        .dark .modal-body::-webkit-scrollbar-thumb, .dark #notes-view::-webkit-scrollbar-thumb { background-color: #4a5568; border-radius: 10px; border: 2px solid #2d3748; }
         .dark .modal-header, .dark .modal-footer { border-color: #374151; }
-        #modalBody h3 { font-size: 1.25rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.5rem; }
-        .dark #modalBody h3 { color: #9ca3af; }
+        #modalBody h3, #notes-view h3 { font-size: 1.25rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+        .dark #modalBody h3, .dark #notes-view h3 { color: #9ca3af; }
         #modalBody h4 { font-size: 1.1rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.5rem; }
         .dark #modalBody h4 { color: #8b94a3; }
-        #modalBody p, #modalBody li { margin-bottom: 0.75rem; line-height: 1.6; }
+        #modalBody p, #modalBody li, #notes-view p { margin-bottom: 0.75rem; line-height: 1.6; }
         #modalBody ol, #modalBody ul { padding-left: 1.5rem; }
         .favorite-star.favorited svg { fill: #facc15; color: #facc15; }
         .intervention-link { color: #60a5fa; text-decoration: underline; cursor: pointer; }
@@ -61,7 +61,6 @@
         <header class="text-center mb-6 relative">
             <h1 class="text-4xl md:text-5xl font-bold">ClinicalX Dashboard</h1>
             <p class="text-lg md:text-xl text-gray-500 dark:text-gray-400 mt-2">Your Real-Time Guide for Care Coaching</p>
-            <!-- User ID Display -->
             <div id="user-id-display" class="text-xs text-gray-400 dark:text-gray-600 mt-1 font-mono">Connecting...</div>
             <button id="theme-toggle" class="absolute top-0 right-0 p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700">
                 <svg id="theme-icon-light" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
@@ -69,7 +68,7 @@
             </button>
         </header>
 
-        <!-- The rest of the HTML body is unchanged... -->
+        <!-- Timer Section -->
         <div id="timer-section" class="max-w-md mx-auto p-4 rounded-2xl mb-8">
             <div id="timer-display" class="text-5xl font-mono text-center mb-3">20:00</div>
             <div class="flex justify-center items-center space-x-2">
@@ -80,6 +79,8 @@
                 <button class="timer-preset-btn bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-sm py-1 px-3 rounded-full" data-time="1200">20 min</button>
             </div>
         </div>
+
+        <!-- Search & Tabs -->
         <div class="sticky-header sticky top-0 backdrop-blur-sm py-4 z-10">
             <div class="max-w-4xl mx-auto">
                 <div class="relative mb-4">
@@ -93,9 +94,12 @@
                     <button id="tab-toolkit" class="tab-button flex-1 py-2 px-4 rounded-full text-sm font-semibold transition-colors">Toolkit</button>
                     <button id="tab-favorites" class="tab-button flex-1 py-2 px-4 rounded-full text-sm font-semibold transition-colors">Favorites</button>
                     <button id="tab-recent" class="tab-button flex-1 py-2 px-4 rounded-full text-sm font-semibold transition-colors">Recent</button>
+                    <button id="tab-notes" class="tab-button flex-1 py-2 px-4 rounded-full text-sm font-semibold transition-colors">My Notes</button>
                 </div>
             </div>
         </div>
+
+        <!-- Main Content Area -->
         <div id="content-area" class="mt-8">
             <div id="zones-view" class="view-content">
                  <div id="zone-selection" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"></div>
@@ -108,8 +112,11 @@
             <div id="toolkit-view" class="view-content hidden"></div>
             <div id="favorites-view" class="view-content hidden"></div>
             <div id="recent-view" class="view-content hidden"></div>
+            <div id="notes-view" class="view-content hidden max-w-4xl mx-auto p-6 rounded-2xl overflow-y-auto" style="max-height: 70vh;"></div>
         </div>
     </div>
+
+    <!-- Modal -->
     <div id="scenarioModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
         <div class="modal-content rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
             <div class="modal-header flex justify-between items-center p-5 border-b">
@@ -168,10 +175,12 @@
             toolkitView: document.getElementById('toolkit-view'),
             favoritesView: document.getElementById('favorites-view'),
             recentView: document.getElementById('recent-view'),
+            notesView: document.getElementById('notes-view'), // New
             tabZones: document.getElementById('tab-zones'),
             tabToolkit: document.getElementById('tab-toolkit'),
             tabFavorites: document.getElementById('tab-favorites'),
             tabRecent: document.getElementById('tab-recent'),
+            tabNotes: document.getElementById('tab-notes'), // New
             zoneSelection: document.getElementById('zone-selection'),
             scenariosDisplay: document.getElementById('scenarios-display'),
             backButton: document.getElementById('backButton'),
@@ -283,12 +292,10 @@
             }
         }
 
-        // --- RENDERING FUNCTIONS (Mostly unchanged) ---
+        // --- RENDERING FUNCTIONS ---
         function renderAll() {
-            renderZones();
-            renderToolkit();
-            renderFavorites();
-            renderRecent();
+            // This function now just re-renders the content of the currently active view
+            renderAllInView(state.currentView);
         }
 
         function renderZones() {
@@ -327,6 +334,87 @@
         
         function renderRecent() {
             renderCardList(dom.recentView, state.recentlyViewed, "You haven't viewed any scenarios recently.");
+        }
+
+        function renderNotesView() {
+            dom.notesView.innerHTML = '';
+            const notes = state.notes;
+            const noteKeys = Object.keys(notes);
+
+            if (noteKeys.length === 0) {
+                dom.notesView.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400 mt-8">You haven't written any notes yet. You can add notes to any scenario from its pop-up window.</p>`;
+                return;
+            }
+
+            const header = document.createElement('div');
+            header.className = 'flex justify-between items-center mb-6';
+            header.innerHTML = `<h2 class="text-3xl font-bold">All My Notes</h2>`;
+            
+            const copyBtn = document.createElement('button');
+            copyBtn.id = 'copy-all-notes-btn';
+            copyBtn.className = 'bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded-full transition-colors flex items-center space-x-2';
+            copyBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" /><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" /></svg><span>Copy All Notes</span>`;
+            copyBtn.addEventListener('click', copyAllNotesToClipboard);
+            
+            header.appendChild(copyBtn);
+            dom.notesView.appendChild(header);
+
+            noteKeys.forEach(title => {
+                const noteData = notes[title];
+                if (noteData.phrasing || noteData.reminders || noteData.followup) {
+                    const noteEl = document.createElement('div');
+                    noteEl.className = 'mb-6 pb-4 border-b border-gray-200 dark:border-gray-700';
+                    let content = `<h3 class="text-xl font-semibold text-gray-800 dark:text-gray-200">${title}</h3>`;
+                    if (noteData.phrasing) {
+                        content += `<h4 class="font-semibold mt-3 mb-1 text-gray-600 dark:text-gray-400">My Phrasing:</h4><p class="whitespace-pre-wrap">${noteData.phrasing}</p>`;
+                    }
+                    if (noteData.reminders) {
+                        content += `<h4 class="font-semibold mt-3 mb-1 text-gray-600 dark:text-gray-400">Key Reminders:</h4><p class="whitespace-pre-wrap">${noteData.reminders}</p>`;
+                    }
+                     if (noteData.followup) {
+                        content += `<h4 class="font-semibold mt-3 mb-1 text-gray-600 dark:text-gray-400">Follow-up Actions:</h4><p class="whitespace-pre-wrap">${noteData.followup}</p>`;
+                    }
+                    noteEl.innerHTML = content;
+                    dom.notesView.appendChild(noteEl);
+                }
+            });
+        }
+
+        function copyAllNotesToClipboard() {
+            let textToCopy = `ClinicalX Notes Export - ${new Date().toLocaleString()}\n\n`;
+            const notes = state.notes;
+            Object.keys(notes).forEach(title => {
+                const noteData = notes[title];
+                 if (noteData.phrasing || noteData.reminders || noteData.followup) {
+                    textToCopy += `----------------------------------------\n`;
+                    textToCopy += `SCENARIO: ${title}\n`;
+                    textToCopy += `----------------------------------------\n`;
+                    if (noteData.phrasing) {
+                        textToCopy += `My Phrasing:\n${noteData.phrasing}\n\n`;
+                    }
+                    if (noteData.reminders) {
+                        textToCopy += `Key Reminders:\n${noteData.reminders}\n\n`;
+                    }
+                    if (noteData.followup) {
+                        textToCopy += `Follow-up Actions:\n${noteData.followup}\n\n`;
+                    }
+                }
+            });
+
+            const textArea = document.createElement("textarea");
+            textArea.value = textToCopy;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast("All notes copied to clipboard!");
+            } catch (err) {
+                showToast("Failed to copy notes.");
+                console.error('Failed to copy text: ', err);
+            }
+            document.body.removeChild(textArea);
         }
 
         function renderCardList(container, titleList, emptyMessage) {
@@ -427,7 +515,7 @@
             } else {
                 state.favorites.push(title);
             }
-            saveStateToFirestore(); // Save the entire state after modification
+            saveStateToFirestore(); 
         }
 
         function updateModalFavoriteButton() {
@@ -507,7 +595,7 @@
             resetTimer();
         }
 
-        // --- SEARCH & UI (Unchanged) ---
+        // --- SEARCH & UI ---
         function filterContent(query) {
             const normalizedQuery = query.toLowerCase().trim();
             const allContent = { ...Object.keys(clinicalData).reduce((acc, zoneKey) => { acc[clinicalData[zoneKey].title] = clinicalData[zoneKey].scenarios; return acc; }, {}), ...interventionsData };
@@ -553,10 +641,11 @@
         
         function renderAllInView(viewName) {
              switch(viewName) {
-                case 'zones': renderZones(); break;
+                case 'zones': renderZones(); dom.scenariosDisplay.classList.add('hidden'); dom.zoneSelection.classList.remove('hidden'); break;
                 case 'toolkit': renderToolkit(); break;
                 case 'favorites': renderFavorites(); break;
                 case 'recent': renderRecent(); break;
+                case 'notes': renderNotesView(); break;
             }
         }
 
@@ -583,6 +672,7 @@
             dom.tabToolkit.addEventListener('click', () => switchView('toolkit'));
             dom.tabFavorites.addEventListener('click', () => switchView('favorites'));
             dom.tabRecent.addEventListener('click', () => switchView('recent'));
+            dom.tabNotes.addEventListener('click', () => switchView('notes')); // New
             dom.backButton.addEventListener('click', () => {
                 dom.scenariosDisplay.classList.add('hidden');
                 dom.zoneSelection.classList.remove('hidden');
