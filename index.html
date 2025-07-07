@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClinicalX: Interactive Dashboard v5.2</title>
+    <title>ClinicalX: Interactive Dashboard v5.4</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1128,52 +1128,39 @@
         let userDocRef;
         let debouncedSaveState;
 
-        // --- !! SECURITY ENHANCEMENT !! ---
-        // This function now securely initializes Firebase without hardcoding API keys.
-        // It uses variables (__firebase_config, __initial_auth_token) provided by the
-        // secure hosting environment.
+        // --- !! DEBUGGING VERSION !! ---
+        // This function temporarily hardcodes the Firebase configuration to diagnose
+        // deployment issues. This is NOT secure for a final production app.
         async function initFirebase() {
-            // Check if the required Firebase config variable exists.
-            if (typeof __firebase_config === 'undefined') {
-                console.error("Firebase configuration is missing.");
-                document.body.innerHTML = '<div class="text-center p-8 text-red-500">Error: Firebase configuration not found. The app cannot load.</div>';
-                return;
-            }
-
             try {
-                // Parse the configuration provided by the environment.
-                const firebaseConfig = JSON.parse(__firebase_config);
+                // Hardcoded configuration for debugging purposes.
+                const firebaseConfig = {
+                    apiKey: "AIzaSyBr3hTkM_2PlRreFvgK9kk4s4bQvx5y8xw",
+                    authDomain: "my-dashboard-app-e1d1f.firebaseapp.com",
+                    projectId: "my-dashboard-app-e1d1f",
+                    storageBucket: "my-dashboard-app-e1d1f.appspot.com",
+                    messagingSenderId: "969081281658",
+                    appId: "1:969081281658:web:d479a7b003805625f02fc3"
+                };
+
                 const app = initializeApp(firebaseConfig);
                 const auth = getAuth(app);
                 const db = getFirestore(app);
 
-                // Set up a listener for authentication state changes.
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
-                        // If a user is signed in, get their unique ID and Firestore document reference.
                         const userId = user.uid;
-                        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                        userDocRef = doc(db, 'artifacts', appId, 'users', userId, 'userData', 'appData');
-
-                        // Initialize the main application logic.
+                        const appId = 'clinical-dashboard-app'; // A static ID for the app
+                        userDocRef = doc(db, 'artifacts', appId, 'users', userId, 'userData');
+                        
                         initApp(db, userDocRef);
                         
-                        // Display the user ID for reference.
                         const userIdDisplay = document.getElementById('user-id-display');
                         if (userIdDisplay) userIdDisplay.textContent = `UserID: ${userId}`;
-
                     } else {
-                        // If no user is signed in, attempt to sign in.
-                        // Prioritize the secure custom token if available.
-                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                            await signInWithCustomToken(auth, __initial_auth_token);
-                        } else {
-                            // Fallback to anonymous sign-in if no custom token is present.
-                            await signInAnonymously(auth);
-                        }
+                        await signInAnonymously(auth);
                     }
                 });
-
             } catch (error) {
                 console.error("Firebase initialization failed:", error);
                 document.body.innerHTML = `<div class="text-center p-8 text-red-500">Critical Error: Could not initialize Firebase. Details: ${error.message}</div>`;
