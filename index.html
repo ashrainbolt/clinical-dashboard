@@ -1,998 +1,699 @@
-<!DOCTYPE html>
-<html lang="en" class="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClinicalX: Interactive Dashboard v4.4 (Full Functionality)</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    
-    <style>
-        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
-        .modal-content, .toast-notification { animation: slide-up 0.3s ease-out; }
-        @keyframes slide-up { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .scenario-card { transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s; }
-        .scenario-card:hover { transform: translateY(-5px); }
-        .modal-body::-webkit-scrollbar, #notes-view::-webkit-scrollbar { width: 8px; }
-        
-        body { background-color: #f3f4f6; color: #1f2937; }
-        .scenario-card, .modal-content, #timer-section, #notes-view, .content-section { background-color: white; border: 1px solid #e5e7eb; }
-        .scenario-card:hover { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); }
-        .tab-button-container { background-color: #e5e7eb; }
-        .tab-button.active { background-color: white; color: #4f46e5; }
-        .tab-button { color: #4b5563; }
-        .sticky-header { background-color: rgba(243, 244, 246, 0.8); backdrop-filter: blur(8px); }
-        input, textarea { background-color: #f9fafb; border-color: #d1d5db; color: #111827; }
-        input::placeholder, textarea::placeholder { color: #6b7280; }
-        .modal-body::-webkit-scrollbar-track, #notes-view::-webkit-scrollbar-track { background: #e5e7eb; }
-        .modal-body::-webkit-scrollbar-thumb, #notes-view::-webkit-scrollbar-thumb { background-color: #9ca3af; border-radius: 10px; border: 2px solid #e5e7eb; }
-        .modal-header, .modal-footer { border-color: #e5e7eb; }
+// Firebase Libraries
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        .dark body { background-color: #111827; color: #d1d5db; }
-        .dark .scenario-card, .dark .modal-content, .dark #timer-section, .dark #notes-view, .dark .content-section { background-color: #1f2937; border: 1px solid #374151; }
-        .dark .scenario-card:hover { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2), 0 2px 4px -1px rgba(0,0,0,0.15); }
-        .dark .tab-button-container { background-color: #374151; }
-        .dark .tab-button.active { background-color: #4f46e5; color: white; }
-        .dark .tab-button { color: #d1d5db; }
-        .dark .sticky-header { background-color: rgba(17, 24, 39, 0.8); }
-        .dark input, .dark textarea { background-color: #374151; border-color: #4b5563; color: #f9fafb; }
-        .dark input::placeholder, .dark textarea::placeholder { color: #9ca3af; }
-        .dark .modal-body::-webkit-scrollbar-track, .dark #notes-view::-webkit-scrollbar-track { background: #2d3748; }
-        .dark .modal-body::-webkit-scrollbar-thumb, .dark #notes-view::-webkit-scrollbar-thumb { background-color: #4a5568; border-radius: 10px; border: 2px solid #2d3748; }
-        .dark .modal-header, .dark .modal-footer { border-color: #374151; }
-        
-        #modalBody h3, #notes-view h3, .content-section h3 { font-size: 1.25rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.5rem; }
-        .dark #modalBody h3, .dark #notes-view h3, .dark .content-section h3 { color: #9ca3af; }
-        #modalBody h4, #notes-view h4, .content-section h4 { font-size: 1.1rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.5rem; }
-        .dark #modalBody h4, .dark #notes-view h4, .dark .content-section h4 { color: #8b94a3; }
-        #modalBody p, #modalBody li, #notes-view p, .content-section p { margin-bottom: 0.75rem; line-height: 1.6; }
-        #modalBody ol, #modalBody ul, .content-section ul { padding-left: 1.5rem; }
-        .favorite-star.favorited i { fill: #facc15; color: #facc15; }
-        .intervention-link { color: #60a5fa; text-decoration: underline; cursor: pointer; }
-
-        .author-control { display: none !important; }
-        .author-mode-active .author-control { display: flex !important; }
-        #author-mode-toggle.active svg { color: #4f46e5; }
-        
-        .gemini-suggestions { border-top: 1px solid #e5e7eb; margin-top: 1.5rem; padding-top: 1.5rem; }
-        .dark .gemini-suggestions { border-top-color: #374151; }
-        .gemini-suggestions h4 { color: #4f46e5; }
-        .dark .gemini-suggestions h4 { color: #a5b4fc; }
-        .suggestion-item { border-left: 3px solid #d1d5db; padding-left: 1rem; margin-bottom: 1rem; }
-        .dark .suggestion-item { border-left-color: #4b5563; }
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #4f46e5;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-            margin: 1rem auto;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
-</head>
-<body>
-    <V<div class="container mx-auto p-4 md:p-8">
-        <header class="text-center mb-6 relative">
-            <h1 class="text-4xl md:text-5xl font-bold">ClinicalX Dashboard</h1>
-            <p class="text-lg md:text-xl text-gray-500 dark:text-gray-400 mt-2">Your Real-Time Guide for Care Coaching</p>
-            <div id="user-id-display" class="text-xs text-gray-400 dark:text-gray-600 mt-1 font-mono">Connecting...</div>
-            <div class="absolute top-0 right-0 flex items-center space-x-2">
-                <button id="author-mode-toggle" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700" title="Toggle Author Mode">
-                    <i data-lucide="pencil" class="h-6 w-6"></i>
-                </button>
-                <button id="theme-toggle" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700" title="Toggle Theme">
-                    <i data-lucide="sun" id="theme-icon-light" class="h-6 w-6 hidden"></i>
-                    <i data-lucide="moon" id="theme-icon-dark" class="h-6 w-6"></i>
-                </button>
-            </div>
-        </header>
-
-        <div id="timer-section" class="max-w-md mx-auto p-4 rounded-2xl mb-8">
-            <div id="timer-display" class="text-5xl font-mono text-center mb-3">20:00</div>
-            <div class="flex justify-center items-center space-x-2">
-                <button id="start-pause-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded-full transition-colors">Start</button>
-                <button id="reset-btn" class="bg-gray-500 hover:bg-gray-400 text-white font-bold py-2 px-4 rounded-full transition-colors">Reset</button>
-                <div class="border-l border-gray-300 dark:border-gray-500 h-8 mx-2"></div>
-                <button class="timer-preset-btn bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-sm py-1 px-3 rounded-full" data-time="900">15 min</button>
-                <button class="timer-preset-btn bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-sm py-1 px-3 rounded-full" data-time="1200">20 min</button>
-            </div>
-        </div>
-
-        <div class="sticky-header sticky top-0 backdrop-blur-sm py-4 z-10">
-            <div class="max-w-5xl mx-auto">
-                <div class="relative mb-4">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i data-lucide="search" class="h-5 w-5 text-gray-500 dark:text-gray-400"></i>
-                    </div>
-                    <input type="text" id="searchInput" class="focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 pr-3 py-3 rounded-full" placeholder="Search all content...">
-                </div>
-                <div class="tab-button-container flex justify-center space-x-1 p-1 rounded-full overflow-x-auto">
-                    <button id="tab-zones" class="tab-button flex-shrink-0 py-2 px-4 rounded-full text-sm font-semibold transition-colors active">Zones</button>
-                    <button id="tab-toolkit" class="tab-button flex-shrink-0 py-2 px-4 rounded-full text-sm font-semibold transition-colors">Toolkit</button>
-                    <button id="tab-scripts" class="tab-button flex-shrink-0 py-2 px-4 rounded-full text-sm font-semibold transition-colors">Session Scripts</button>
-                    <button id="tab-mi" class="tab-button flex-shrink-0 py-2 px-4 rounded-full text-sm font-semibold transition-colors">MI</button>
-                    <button id="tab-coping" class="tab-button flex-shrink-0 py-2 px-4 rounded-full text-sm font-semibold transition-colors">Coping Skills</button>
-                    <button id="tab-favorites" class="tab-button flex-shrink-0 py-2 px-4 rounded-full text-sm font-semibold transition-colors">Favorites</button>
-                    <button id="tab-recent" class="tab-button flex-shrink-0 py-2 px-4 rounded-full text-sm font-semibold transition-colors">Recent</button>
-                    <button id="tab-notes" class="tab-button flex-shrink-0 py-2 px-4 rounded-full text-sm font-semibold transition-colors">My Notes</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="content-area" class="mt-8">
-            <div id="zones-view" class="view-content">
-                <div id="zone-selection" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"></div>
-                <div id="scenarios-display" class="hidden mt-8">
-                    <button id="backButton" class="mb-6 bg-gray-500 hover:bg-gray-400 text-white font-bold py-2 px-4 rounded-full transition-colors flex items-center space-x-2"><i data-lucide="arrow-left" class="h-5 w-5"></i><span>Back to Zones</span></button>
-                    <div class="flex justify-between items-center">
-                        <h2 id="zoneTitle" class="text-4xl font-bold mb-6"></h2>
-                        <button id="add-scenario-to-zone-btn" class="author-control bg-indigo-600 hover:bg-indigo-500 text-white font-bold p-2 rounded-full transition-colors -mt-6" title="Add New Scenario to this Zone">
-                            <i data-lucide="plus" class="h-6 w-6"></i>
-                        </button>
-                    </div>
-                    <div id="scenarios-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
-                </div>
-            </div>
-            <div id="toolkit-view" class="view-content hidden"></div>
-            <div id="scripts-view" class="view-content hidden"></div>
-            <div id="mi-view" class="view-content hidden"></div>
-            <div id="coping-view" class="view-content hidden"></div>
-            <div id="favorites-view" class="view-content hidden"></div>
-            <div id="recent-view" class="view-content hidden"></div>
-            <div id="notes-view" class="view-content hidden max-w-4xl mx-auto p-6 rounded-2xl overflow-y-auto" style="max-height: 70vh;"></div>
-        </div>
-    </div>
-
-    <div id="scenarioModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-        <div class="modal-content rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
-            <div class="modal-header flex justify-between items-center p-5 border-b">
-                <h3 id="modalTitle" class="text-2xl font-bold flex-1 pr-4"></h3>
-                <div class="flex items-center">
-                    <button id="modal-edit-btn" class="author-control text-gray-500 hover:text-indigo-500 transition-colors p-2" title="Edit Scenario">
-                        <i data-lucide="file-pen-line" class="h-6 w-6"></i>
-                    </button>
-                    <button id="modal-favorite-btn" class="favorite-star text-gray-500 hover:text-yellow-400 transition-colors p-2" title="Favorite">
-                        <i data-lucide="star" class="h-7 w-7"></i>
-                    </button>
-                    <button id="closeModal" class="text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors p-2 ml-2" title="Close">
-                        <i data-lucide="x" class="h-6 w-6"></i>
-                    </button>
-                </div>
-            </div>
-            <div id="modalBody" class="modal-body p-6 overflow-y-auto"></div>
-            <div class="modal-footer p-4 border-t space-y-4">
-                <div class="flex justify-center">
-                    <button id="suggest-phrasing-btn" class="bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 px-4 rounded-full transition-colors flex items-center space-x-2">
-                        <i data-lucide="sparkles" class="h-5 w-5"></i>
-                        <span>Suggest Phrasing</span>
-                    </button>
-                </div>
-                <div>
-                    <label for="notes-phrasing" class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">My Phrasing:</label>
-                    <textarea id="notes-phrasing" rows="2" class="notes-field w-full rounded-lg p-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Alternative ways I like to say this..."></textarea>
-                </div>
-                <div>
-                    <label for="notes-reminders" class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Key Reminders:</label>
-                    <textarea id="notes-reminders" rows="2" class="notes-field w-full Rounded-lg p-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., 'Works well for client X', 'Don't forget to validate first'"></textarea>
-                </div>
-                <div>
-                    <label for="notes-followup" class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Follow-up Actions:</label>
-                    <div class="flex items-center space-x-2">
-                        <textarea id="notes-followup" rows="2" class="notes-field w-full rounded-lg p-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., 'Flag for therapist', 'Check in next session'"></textarea>
-                        <button id="generate-followup-btn" class="p-2 bg-purple-600 hover:bg-purple-500 text-white rounded-full" title="✨ Generate Follow-up Plan">
-                            <i data-lucide="sparkles" class="h-5 w-5"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-        <div class="modal-content rounded-2xl shadow-xl w-full max-w-2xl flex flex-col">
-            <div class="modal-header flex justify-between items-center p-5 border-b">
-                <h3 id="editModalTitle" class="text-2xl font-bold">Create Scenario</h3>
-                <button id="closeEditModal" class="text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors p-2 ml-2" title="Close">
-                    <i data-lucide="x" class="h-6 w-6"></i>
-                </button>
-            </div>
-            <div class="p-6 space-y-4">
-                <div>
-                    <label for="editScenarioTitle" class="block text-sm font-medium mb-1">Title</label>
-                    <input type="text" id="editScenarioTitle" class="w-full rounded-lg p-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter scenario title...">
-                </div>
-                <div>
-                    <label for="editScenarioContent" class="block text-sm font-medium mb-1">Content (Markdown supported)</label>
-                    <textarea id="editScenarioContent" rows="10" class="w-full rounded-lg p-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter content. Use ### for headers, * for bullet points..."></textarea>
-                </div>
-            </div>
-            <div class="modal-footer p-4 border-t flex justify-end space-x-2">
-                <button id="cancelEdit" class="bg-gray-500 hover:bg-gray-400 text-white font-bold py-2 px-4 rounded-full transition-colors">Cancel</button>
-                <button id="saveEdit" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded-full transition-colors">Save</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="confirmModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-        <div class="modal-content rounded-2xl shadow-xl w-full max-w-sm flex flex-col">
-            <div class="p-6 text-center">
-                <i data-lucide="alert-triangle" class="h-12 w-12 text-red-500 mx-auto mb-4"></i>
-                <h3 id="confirmModalTitle" class="text-lg font-bold mb-2">Are you sure?</h3>
-                <p id="confirmModalText" class="text-sm text-gray-500 dark:text-gray-400">This action cannot be undone.</p>
-            </div>
-            <div class="modal-footer p-4 flex justify-center space-x-4">
-                <button id="confirmCancel" class="bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 font-bold py-2 px-6 rounded-full transition-colors">Cancel</button>
-                <button id="confirmAction" class="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-6 rounded-full transition-colors">Confirm</button>
-            </div>
-        </div>
-    </div>
-    
-    <div id="toast" class="hidden fixed bottom-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg"></div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        const clinicalData = {
-            "Red": {title: "🔴 Red Zone – Immediate Risk & Crisis", color: "red", scenarios: [
-                {title: "Suicidal Ideation – Safety Assessment", content: "<h3>ASSESS</h3><p>...</p>", id: "suicidal-ideation"},
-                // Additional Red Zone scenarios...
-            ]},
-            "Orange": {title: "🟠 Orange Zone – High Distress", color: "orange", scenarios: [
-                {title: "Highly Agitated or Escalating", content: "<h3>Center and Slow...</h3><p>...</p>", id: "highly-agitated"},
-                // Additional Orange Zone scenarios...
-            ]},
-            "Yellow": {title: "🟨 Yellow Zone – Moderate Challenges", color: "yellow", scenarios: [
-                {title: "Resistant / Ambivalent About Therapy", content: "<h3>Acknowledge Autonomy...</h3><p>...</p>", id: "resistant-therapy"},
-                // Additional Yellow Zone scenarios...
-            ]},
-            "Green": {title: "💚 Green Zone – Growth & Skill-Building", color: "green", scenarios: [
-                {title: "Political/Global Events Anxiety", content: "<h3>Validate...</h3><p>...</p>", id: "political-anxiety"},
-                // Additional Green Zone scenarios...
-            ]},
-        };
-
-        const interventionsData = {
-            "Distress Tolerance": [
-                {title: "TIPP Skill", content: "<h4>Temperature...</h4><p>...</p>", id: "tipp-skill"},
-                // Additional Distress Tolerance interventions...
-            ],
-            "Grounding & Somatic": [
-                {title: "5-4-3-2-1 Technique", content: "<h4>Anchoring...</h4><p>...</p>", id: "5-4-3-2-1"},
-                // Additional Grounding interventions...
-            ],
-            "Cognitive & ACT": [
-                {title: "Defusion (from ACT)", content: "<h4>Creating distance...</h4><p>...</p>", id: "defusion-act"},
-                // Additional Cognitive interventions...
-            ],
-            "Interpersonal Skills": [
-                {title: "DEAR MAN", content: "<h4>A structured way...</h4><p>...</p>", id: "dear-man"},
-                // Additional Interpersonal interventions...
-            ],
-            "Session Scripts": [
-                {title: "Opening Session Script", content: "<h3>Introduction</h3><p>Welcome to our session. Let's start by checking in on how you're feeling today.</p>", id: "opening-session-script"},
-                {title: "Closing Session Script", content: "<h3>Wrap-Up</h3><p>Thank you for sharing today. Let's review our key takeaways and plan for next time.</p>", id: "closing-session-script"}
-            ],
-            "MI": [
-                {title: "Motivational Interviewing Basics", content: "<h3>OARS</h3><p>Use Open Questions, Affirmations, Reflective Listening, and Summaries to engage clients.</p>", id: "mi-basics"},
-                {title: "Change Talk", content: "<h3>Eliciting Change Talk</h3><p>Ask: 'What would be different if you made this change?' to encourage motivation.</p>", id: "change-talk"}
-            ],
-            "Coping Skills": [
-                {title: "Deep Breathing", content: "<h3>Technique</h3><p>Inhale for 4 counts, hold for 4, exhale for 6 to calm your nervous system.</p>", id: "deep-breathing"},
-                {title: "Progressive Muscle Relaxation", content: "<h3>Technique</h3><p>Tense and release each muscle group to reduce physical tension.</p>", id: "progressive-muscle-relaxation"}
-            ]
-        };
-
-        const dom = {
-            body: document.body,
-            html: document.documentElement,
-            zonesView: document.getElementById('zones-view'),
-            toolkitView: document.getElementById('toolkit-view'),
-            scriptsView: document.getElementById('scripts-view'),
-            miView: document.getElementById('mi-view'),
-            copingView: document.getElementById('coping-view'),
-            favoritesView: document.getElementById('favorites-view'),
-            recentView: document.getElementById('recent-view'),
-            notesView: document.getElementById('notes-view'),
-            tabZones: document.getElementById('tab-zones'),
-            tabToolkit: document.getElementById('tab-toolkit'),
-            tabScripts: document.getElementById('tab-scripts'),
-            tabMi: document.getElementById('tab-mi'),
-            tabCoping: document.getElementById('tab-coping'),
-            tabFavorites: document.getElementById('tab-favorites'),
-            tabRecent: document.getElementById('tab-recent'),
-            tabNotes: document.getElementById('tab-notes'),
-            zoneSelection: document.getElementById('zone-selection'),
-            scenariosDisplay: document.getElementById('scenarios-display'),
-            backButton: document.getElementById('backButton'),
-            zoneTitle: document.getElementById('zoneTitle'),
-            scenariosGrid: document.getElementById('scenarios-grid'),
-            addScenarioToZoneBtn: document.getElementById('add-scenario-to-zone-btn'),
-            searchInput: document.getElementById('searchInput'),
-            modal: document.getElementById('scenarioModal'),
-            modalTitle: document.getElementById('modalTitle'),
-            modalBody: document.getElementById('modalBody'),
-            closeModal: document.getElementById('closeModal'),
-            modalFavoriteBtn: document.getElementById('modal-favorite-btn'),
-            modalEditBtn: document.getElementById('modal-edit-btn'),
-            notesFields: document.querySelectorAll('.notes-field'),
-            timerDisplay: document.getElementById('timer-display'),
-            startPauseBtn: document.getElementById('start-pause-btn'),
-            resetBtn: document.getElementById('reset-btn'),
-            timerPresetBtns: document.querySelectorAll('.timer-preset-btn'),
-            themeToggle: document.getElementById('theme-toggle'),
-            themeIconLight: document.getElementById('theme-icon-light'),
-            themeIconDark: document.getElementById('theme-icon-dark'),
-            toast: document.getElementById('toast'),
-            authorModeToggle: document.getElementById('author-mode-toggle'),
-            editModal: document.getElementById('editModal'),
-            editModalTitle: document.getElementById('editModalTitle'),
-            closeEditModal: document.getElementById('closeEditModal'),
-            editScenarioTitle: document.getElementById('editScenarioTitle'),
-            editScenarioContent: document.getElementById('editScenarioContent'),
-            cancelEdit: document.getElementById('cancelEdit'),
-            saveEdit: document.getElementById('saveEdit'),
-            confirmModal: document.getElementById('confirmModal'),
-            confirmModalTitle: document.getElementById('confirmModalTitle'),
-            confirmModalText: document.getElementById('confirmModalText'),
-            confirmCancel: document.getElementById('confirmCancel'),
-            confirmAction: document.getElementById('confirmAction'),
-        };
-
-        const state = {
-            currentView: 'zones',
-            currentZone: null,
-            favorites: [],
-            notes: {},
-            recentlyViewed: [],
-            customContent: {},
-            isAuthorMode: false,
-            timer: { id: null, timeRemaining: 1200, isPaused: true, initialTime: 1200 },
-            currentOpenScenario: null,
-            confirmCallback: null,
-        };
-
-        let userDocRef;
-
-        async function initFirebase() {
-            const firebaseConfig = {
-                apiKey: "AIzaSyBr3hTkM_2PlRreFvgK9kk4s4bQvx5y8xw",
-                authDomain: "my-dashboard-app-e1d1f.firebaseapp.com",
-                projectId: "my-dashboard-app-e1d1f",
-                storageBucket: "my-dashboard-app-e1d1f.appspot.com",
-                messagingSenderId: "969081281658",
-                appId: "1:969081281658:web:d479a7b003805625f02fc3"
-            };
-            const app = initializeApp(firebaseConfig);
-            const auth = getAuth(app);
-            const db = getFirestore(app);
-
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    const userId = user.uid;
-                    userDocRef = doc(db, `users/${userId}`);
-                    initApp(db, userDocRef);
-                    const userIdDisplay = document.getElementById('user-id-display');
-                    if (userIdDisplay) userIdDisplay.textContent = `UserID: ${userId.substring(0, 8)}...`;
-                } else {
-                    try {
-                        await signInAnonymously(auth);
-                    } catch (error) {
-                        console.error("Error during anonymous sign-in:", error);
-                        document.body.innerHTML = '<div class="text-center p-8 text-red-500">Could not sign in. Please refresh.</div>';
-                    }
-                }
-            });
-        }
-
-        function initApp(db, docRef) {
-            userDocRef = docRef;
-            onSnapshot(docRef, (doc) => {
-                const data = doc.data() || {};
-                state.favorites = data.favorites || [];
-                state.notes = data.notes || {};
-                state.recentlyViewed = data.recentlyViewed || [];
-                state.theme = data.theme || 'dark';
-                state.customContent = data.customContent || {};
-
-                applyTheme();
-                renderAll();
-            }, (error) => {
-                console.error("Error listening to user data:", error);
-            });
-
-            updateTimerDisplay();
-            setupEventListeners();
-            lucide.createIcons();
-        }
-
-        function getAllContent() {
-            const allContent = {};
-            for (const zoneKey in clinicalData) {
-                allContent[zoneKey] = [...clinicalData[zoneKey].scenarios.map(s => ({...s, category: zoneKey, color: clinicalData[zoneKey].color, id: s.id}))];
+// --- DATA STRUCTURES (Static content) ---
+const clinicalData = {
+    "Red": {
+        title: "🔴 Red Zone – Immediate Risk & Crisis",
+        color: "red",
+        scenarios: [
+            {
+                title: "Suicidal Ideation – Safety Assessment",
+                content: `
+                    <h3>ASSESS</h3>
+                    <p>"Before we go any deeper, <strong>our priority is always your safety</strong>. I’d like to ask a few questions that help us <strong>understand how you’re doing and what kind of support might help keep you safe right now.</strong></p>
+                    <ol class='list-decimal list-inside space-y-2 mt-2'>
+                        <li>Have you wished you were dead or that you could go to sleep and not wake up?</li>
+                        <li>Have you <strong>actually had any thoughts of killing yourself?</strong></li>
+                        <li>In the past 48 hours, <strong>have you been thinking about how you might do this?</strong></li>
+                        <li>In the past 48 hours, <strong>have you had these thoughts and had some intention of acting on them?</strong></li>
+                        <li><strong>In the past 48 hours, have you started to work out any details for how to kill yourself?</strong> Do you intend to carry out this plan?</li>
+                        <li>In the past 48 hours <strong>have you done anything to prepare to end your life?</strong></li>
+                    </ol>
+                    <p class='mt-2'>* If <strong>Yes to 4, 5, or 6?</strong> Ask scaling questions:</p>
+                    <p>"On a scale of 1-5, <strong>one meaning you feel you can stay safe today, and five meaning that you're going to make an attempt today, where would you place yourself right now?</strong>"</p>
+                    <h4>Reflect back answer:</h4>
+                    <ul>
+                        <li>"So a four means to me you have a plan and some intentions on acting on the plan, you just don’t know when. Is that accurate?"</li>
+                        <li>"A three means to me you have strong thoughts of wanting to die and have thought about ways you might act on it, but you don’t have a specific plan. Did I get that right?"</li>
+                        <li>"A two means to me that you have fleeting thoughts of wanting to end your life, but no plan or intention of acting on it."</li>
+                    </ul>
+                    <p>“I’m really glad you told me this. It takes a lot of strength to be this honest, and I’m here to help you figure it out.”</p>
+                    <h3 class='mt-4'>SAFETY PLAN</h3>
+                    <p><strong>Need to escalate:</strong> “Thank you for telling me that. If it sounds like things are starting to feel more intense or harder to manage on your own, I’d like to connect you with a Crisis Manager — who can better support you and help figure out the next steps to keep you safe.”</p>
+                    <ul>
+                        <li><strong>Warning Signs:</strong> “What are some early、再再再再再What are some early signs you notice when things start to spiral?” — Maybe isolating/ feeling numb or detached.</li>
+                        <li><strong>Internal Coping:</strong> “What can you try on your own that sometimes helps, even a little — engaging in something creative, putting on funny animal videos or stand-up clips, taking a hot shower, organizing a small space, or wrap up in something cozy and allow yourself to rest?”</li>
+                        <li><strong>Social Distractions:</strong> “Who or what helps you shift your focus — even briefly? A friend, a safe space, a show, a pet?”</li>
+                        <li><strong>People to Reach Out To:</strong> “If things feel too big to hold alone, who could you reach out to — even just to sit with you or check in?”</li>
+                        <li><strong>Professional Resources:</strong> “Do you have Charlie Health’s 24/7 crisis line saved in your phone? If you’d like, I can text it to you right now so it’s already saved in your phone.”</li>
+                        <li><strong>Safety at Home:</strong> “Is there anything nearby that might feel unsafe to have around right now — something we could move, lock up, or ask someone to hold onto for a while?”</li>
+                        <li><strong>Reasons to Stay:</strong> “When things get dark, what’s something — or someone — that reminds you there’s still a reason to hang on?”</li>
+                    </ul>
+                    <h3>CLOSURE & FOLLOW-UP</h3>
+                    <p>“Thank you for staying with this. I know it’s not easy, and I really appreciate how honest you’ve been.”</p>
+                    <p><strong>If no immediate risk:</strong> “Let’s make sure your safety plan is saved somewhere easy to find — and I’ll send a quick update to your therapist so they’re looped in and can follow up with you.”</p>
+                    <p><strong>If escalated to Crisis Manager:</strong> “They’ll take it from here, but I’ll stay until they’re with you so you’re not left alone in this.”</p>
+                    <p>“You’ve done something really important by talking about this instead of holding it in. That shows strength — and you don’t have to go through this alone.”</p>
+                `,
+                id: "suicidal-ideation"
+            },
+            {
+                title: "Self-Harm Urges (Non-Suicidal Self-Injury)",
+                content: `
+                    <h3>Direct Check-In</h3>
+                    <p>“Thank you for telling me. I need to ask: Are you having urges to hurt yourself right now?”</p>
+                    <p>If yes: “On a scale from 1 to 10, how strong is the urge right now, 10 being the strongest?”</p>
+                    <p>“Have you acted on that urge today or recently?”</p>
+                    <p>If yes: “What did you do, and how severe was it? Do you need any medical attention for that (any injury or bleeding that needs care)?”</p>
+                    <h3>Clarify Intent</h3>
+                    <p>“When you self-harmed, was it because you wanted to die, or was it more about coping with pain or numbness?”</p>
+                    <h3>Validate & Normalize</h3>
+                    <p>“It sounds like everything is feeling really intense right now. I’m really glad you’re talking about it instead of keeping it inside or acting on it alone.”</p>
+                    <p>“That urge makes sense given what you’re carrying. A part of you is trying to survive and find relief, even if it’s doing it in a way that ends up hurting you. Let’s see if we can work with that part in a safer way.”</p>
+                    <h3>Offer Alternatives & Coping Strategies</h3>
+                    <p>Ask Their Coping: “What usually helps even a little when you feel this urge? Maybe we can try one of those things together now.”</p>
+                    <p>Intense Physical Sensations (<a class="intervention-link" data-intervention="TIPP Skill">TIPP Skill</a>): “Sometimes our body needs a very strong sensation to release that tension. We could try holding something frozen (like ice), doing a wall-sit or some push-ups, or splashing really cold water on your face. If the feelings are overwhelming, an intense sensory jolt can ground you for a moment.”</p>
+                    <p>If they feel numb or disconnected: “If you’re feeling really numb, we might try something stimulating: hold a strong scent under your nose (like an essential oil or even vinegar), chew a piece of something very sour or spicy, or name as many objects around you as you can as fast as possible. It might feel odd, but it can activate your senses.”</p>
+                    <p>“Urge Surfing” Technique: “Remember, urges are like waves — they build, peak, and eventually fall. Let’s try to ride this wave out together. You don’t have to act on it; just notice it rise and watch it start to come down. I’m here with you through it.”</p>
+                    <p>Quick Grounding Distraction: “Let’s give your brain a short break. Can you name for me five things you see in the room around you that are [pick a color]? (e.g., anything that’s blue).”</p>
+                    <p>Safe Physical Release: “Sometimes doing something physical can help release the feeling safely. Would it help to rip up some paper, squeeze a stress ball, stomp your feet, or even scream into a pillow? Let’s channel that energy out without hurting yourself.”</p>
+                    <h3>Reduce Access to Harm Means</h3>
+                    <p>“Do you have anything nearby that you’ve thought about using to hurt yourself? Would it help if we moved those out of reach, just for now, so it’s a little harder to act on the urge?”</p>
+                    <h3>Strengthen Support</h3>
+                    <p>“Who or what helps you feel a bit more stable when you get like this? Is there a friend or family member you might reach out to after this, or a safe place you can go where you’re not alone?”</p>
+                    <h3>Commitment to Safety</h3>
+                    <p>“I know the urge is strong, but do you feel like you can stay safe tonight (or until you see your therapist next)? Even if the urge comes back, can you promise me you’ll try these coping steps or reach out for help before doing anything to hurt yourself?”</p>
+                    <h3>Encourage and Affirm</h3>
+                    <p>“I’m really proud of you for being open about this — it takes a lot of courage to face these urges and choose not to give in. Every time you ride the wave or use a tool instead of hurting yourself, it’s a victory. You’re showing so much strength by just staying with me and trying. You deserve to stay safe, and you’re not alone. We will get through this, one moment at a time.”</p>
+                `,
+                id: "self-harm-urges"
+            },
+            {
+                title: "Hallucinations or Disturbing Perceptual Experiences",
+                content: `
+                    <h3>Acknowledge Experience (Don’t Dismiss)</h3>
+                    <p>“Thank you for telling me. I can imagine this feels really intense and scary. I want you to know I’m here with you, and I believe that you’re experiencing this.”</p>
+                    <h3>Safety Check (Calm & Direct)</h3>
+                    <p>“Are the things you’re hearing or seeing telling you to hurt yourself or anyone else?”</p>
+                    <p>“Do you feel safe in your body and environment right now?”</p>
+                    <p>“Are you able to recognize that what you’re experiencing might be a hallucination, or does it feel completely real to you?”</p>
+                    <h3>Orient to Present (Ground in Shared Reality)</h3>
+                    <p>“Let’s try something together to bring you into the here and now with me, okay? For example, can you look around the room and name one thing you see that’s familiar to you?”</p>
+                    <p>“Put your feet flat on the floor for me. Press them down a little and notice that sensation. Feel that? You’re right here, in this moment, with me. We’re safe right now.”</p>
+                    <p>If they’re hearing voices: “I know you hear those voices, but try to also hear my voice. Focus on my voice and the sound of my words right now. We’re in this room (or on this call) together.”</p>
+                    <h3>Calm Reassurance</h3>
+                    <p>“You’re doing really well. I’m going to stay right here with you. The things you’re perceiving can feel real, but I want you to keep noticing the ground under your feet, the sound of my voice. We’re in the present moment.”</p>
+                    <h3>Close the Loop</h3>
+                    <p>“You did a great job staying with me through that. That took a lot of strength. I know it was intense, but you came back to right now, and I’m really proud of you for that. You’re safe here. If it happens again, remember you’re not alone and it will pass. We will let your therapist know about this so they can help you find ways to cope if these experiences continue.”</p>
+                `,
+                id: "hallucinations"
+            },
+            {
+                title: "Acute Medical Crisis",
+                content: `
+                    <h3>Immediate Action – Take Charge</h3>
+                    <p>“Okay, I see/hear that something serious might be happening physically. The most important thing right now is getting you medical help immediately.”</p>
+                    <h3>Instruct to Call Emergency</h3>
+                    <p>“Are you able to call 911 (or your local emergency number) right now? Is there someone with you who can call for you?”</p>
+                    <p>If they cannot call: “It sounds like you can’t call on your own. I’m going to get you help. Do I have your permission to call 911 for you right now to get an ambulance? I’ll need to tell them where you are.”</p>
+                    <p>Obtain location: “Tell me your exact address (and any apartment or room number) so the paramedics can find you quickly.”</p>
+                    <h3>Keep Them Engaged While Help Comes</h3>
+                    <p>“Help is on the way. I’m right here with you. Try to stay as calm as you can – focus on taking slow breaths with me if possible. In… and out… nice and easy.”</p>
+                    <p>“If you start to feel worse or anything changes, tell me immediately. I’m staying on the line until help arrives.”</p>
+                    <p>“If you can, unlock your door so the medics can get in. And if there’s a neighbor or someone nearby, let them know what’s happening if possible.”</p>
+                    <h3>After Emergency Arrives (Closing)</h3>
+                    <p>“It sounds like the paramedics are there with you now. You’re in good hands. I’m going to let you go so they can take over. I’ll make sure our team knows what happened. You’re going to get the care you need – you did the right thing. I’ll be thinking of you, and we’ll follow up as soon as we can to see how you’re doing.”</p>
+                `,
+                id: "acute-medical-crisis"
+            },
+            {
+                title: "Substance Overdose or Severe Intoxication",
+                content: `
+                    <h3>Recognize Seriousness (Calm & Clear)</h3>
+                    <p>“I can tell this is serious. I’m very concerned that you might be experiencing a medical emergency from substances.”</p>
+                    <p>“You mentioned you took [X amount of Y]. That can be dangerous.”</p>
+                    <h3>Instruct to Call Emergency</h3>
+                    <p>“This is urgent. Are you able to call 911 right now for medical attention? Or is there someone with you who can call?”</p>
+                    <p>If they cannot call: “If you can’t call, I will. I need to get you an ambulance right now. Is it okay if I call 911 for you? I’ll need your exact location and any info on what you took.”</p>
+                    <p>Get essential info: “What’s the address where you are right now? And do you know exactly what substance(s) you took, about how much, and roughly when? I’ll pass that to the paramedics – it’s really important for your treatment.”</p>
+                    <p>Naloxone (If Opioid Overdose suspected): “If this might be an opioid overdose and if you or anyone there has Naloxone (Narcan) and knows how to use it, please use it now while we wait for the ambulance.”</p>
+                    <h3>Keep Them Awake & Oriented</h3>
+                    <p>“Stay with me, okay? Help is coming. Try to stay awake and keep talking to me. I know you’re very drowsy, but focus on my voice. You’re doing great, just hang in there a little longer.”</p>
+                    <p>“If you can, try to take some slow breaths. In through your nose, out through your mouth… good. Keep breathing.”</p>
+                    <p>“Is your door unlocked for the paramedics? If you’re able to, unlock it or have someone ready to open it for them.”</p>
+                    <h3>After Emergency Takes Over</h3>
+                    <p>“The paramedics are with you now? Okay. They’re going to take care of you. I’m going to step back and let them do that. You’re in good hands. I know this is scary, but you’re getting the help you need. I’ll make sure your care team knows what happened so we can support you after this. Take care – you’re not alone and you’re going to get through this.”</p>
+                `,
+                id: "substance-overdose"
+            },
+            {
+                title: "Unsafe Home Environment / Domestic Violence",
+                content: `
+                    <h3>Express Empathy and Belief</h3>
+                    <p>“Thank you for sharing this with me. I can’t imagine how hard it was to say that out loud. I want you to know I believe you, and you didn’t deserve any of this.”</p>
+                    <p>“It’s incredibly brave of you to talk about what’s happening at home. You’re not at fault for their behavior.”</p>
+                    <h3>Assess Immediate Safety</h3>
+                    <p>“Are you safe right now? Is the person who hurt you nearby or likely to return soon?”</p>
+                    <p>“Are there children or anyone else in the home who might also be in danger right now?”</p>
+                    <p>If immediate danger: “Your safety is the number one priority. If you think you’re in immediate danger, we should consider calling 911. Do you feel like you need emergency help right now to stay safe?”</p>
+                    <h3>Provide Control & Options</h3>
+                    <p>“You know your situation best, and I’m here to support whatever you choose to do. There are people who specialize in helping in situations like yours. For example, have you heard of the National Domestic Violence Hotline? They have advocates 24/7 at 1-800-799-7233 who can help you make a safety plan or find resources. We can call them together if you want, or I can give you that information to reach out when you’re ready.”</p>
+                    <p>“Is there a friend or family member you trust whom you could stay with, or at least talk to, about what’s happening?”</p>
+                    <p>“If you ever feel unsafe and need to leave quickly, do you have a bag with essentials and important documents prepared? We can brainstorm that if you want.”</p>
+                    <h3>Empower & Validate</h3>
+                    <p>“You are not alone and there are people who want to help. You deserve to be safe. None of this is your fault — the responsibility lies with the person hurting you.”</p>
+                    <p>“Whatever you decide, I’ll support you. You’re doing the right thing by reaching out. We’ll also let your primary therapist know what you’ve shared (unless you have concerns about that) so that we can all be on the same page to help keep you safe.”</p>
+                    <h3>Commitment</h3>
+                    <p>“Until we figure out longer-term steps, can you promise me you’ll prioritize your safety? If things get dangerous, please get out and get somewhere safe if you can, and call emergency services. You’re important, and we want you alive and okay.”</p>
+                    <h3>Closing Assurance</h3>
+                    <p>“I’m really glad you told me. You didn’t deserve any of this, and you deserve support. We will do everything we can to help you be safe. You’re not alone in this.”</p>
+                `,
+                id: "unsafe-home"
+            },
+            {
+                title: "Child Abuse or Neglect Disclosure",
+                content: `
+                    <h3>Respond with Care</h3>
+                    <p>“Thank you for telling me that. I know it’s not easy to talk about. I am so sorry this happened to you (or to that child). No one, especially no child, should have to go through that. It’s absolutely not your fault, and you didn’t deserve that.”</p>
+                    <h3>Explain Mandated Reporting (Transparent and Reassuring)</h3>
+                    <p>“I need you to know: because you shared this, I’m required by law to take steps to report it to the proper authorities so that the child can get help and be safe. This isn’t to get anyone in trouble; it’s to protect you/them and make sure it doesn’t continue. As a mandated reporter, I have to let child protection professionals know when a minor is being hurt or is in danger.”</p>
+                    <p>“What this means is that I will write down what you told me and contact Child Protective Services (or the appropriate agency) after our conversation. They may need to ask more questions to make sure everyone is safe.”</p>
+                    <p>“I know that might sound scary, but my goal and their goal is to keep you (or that child) safe. You are not in any trouble for telling me – in fact, you did exactly the right thing by telling someone. This is how we can get help.”</p>
+                    <h3>Support the Client’s Emotions</h3>
+                    <p>“How are you feeling now that you’ve shared that? It’s a lot, I know. Whatever you’re feeling – scared, relieved, angry – it’s completely understandable.”</p>
+                    <p>“I’m here with you. You’re not alone in dealing with this anymore.”</p>
+                    <h3>Empower & Involve (If appropriate)</h3>
+                    <p>“If you want, we can talk about what happens next or any worries you have. I can’t control what CPS or others do, but I can be here with you through the process. We can also involve your therapist; they will definitely want to support you through this as well.”</p>
+                    <p>“Is there someone you feel safe with that you’d like to have with you for support after this call? I want to make sure you’re not alone if you don’t want to be.”</p>
+                    <h3>Closing Reassurance</h3>
+                    <p>“I know this was a big step to tell me. You were very brave to speak up. Remember: you didn’t do anything wrong by telling the truth. What’s wrong is that it happened to you (or is happening to that child), and now we have a chance to get help. You’re not alone, and we’re going to do everything we can to make sure you’re safe.”</p>
+                `,
+                id: "child-abuse"
+            },
+            {
+                title: "Threat of Harm to Others (Homicidal Ideation)",
+                content: `
+                    <h3>Immediate Clarification (Calm & Firm)</h3>
+                    <p>“I hear you saying you want to hurt someone. I take that very seriously, and I need to ask you a few questions to understand better, because my job is to keep everyone safe.”</p>
+                    <p>“Are you talking about a specific person? Who are you thinking of harming?”</p>
+                    <p>“Have you thought about how you would do it? Do you have a plan in mind?”</p>
+                    <p>“Do you have access to any weapons or tools (like guns or knives) that you’ve thought about using?”</p>
+                    <p>“On a scale of 1 to 10, how strong is the urge or intent to act on this right now?”</p>
+                    <h3>Duty to Protect Explanation</h3>
+                    <p>“Okay, I need you to know: because you’re talking about harming someone else, I have a responsibility to make sure that person (and everyone) stays safe. That may mean involving other professionals or authorities right away. I want us to work together on this if possible.”</p>
+                    <h3>Offer Emergency Help</h3>
+                    <p>“Do you feel like you might actually act on these thoughts soon? If you do, we should get you emergency help right now. I can call 911 to help keep you and everyone safe. Would you be willing to accept that help?”</p>
+                    <p>If resistant to emergency intervention: “I understand you’re furious. I can’t let anyone get hurt, including you. I might have to notify the police or a crisis team about what you’ve told me to ensure everyone’s safety. I wanted to tell you that directly because I respect you and I want you to know what’s happening.”</p>
+                    <h3>De-escalate Anger</h3>
+                    <p>“I get that you’re extremely angry. That anger is telling us something important — you feel deeply hurt or wronged. I’m here to listen to that. Let’s slow this down and sit with what’s coming up, instead of letting it boil over or go numb. Tell me what’s fueling this anger so strongly.”</p>
+                    <p>“No one is saying your feelings aren’t valid. You have every right to feel angry. Let’s talk about it, because acting on it violently could ruin your life as well. I don’t want that for you.”</p>
+                    <p>“You’re picturing getting revenge because you’re in a lot of pain. I hear that. Hurting someone might feel like it would release that pain or justice, but it could also create more problems for you. Let’s find a way to deal with this that doesn’t destroy your life or anyone else’s.”</p>
+                    <h3>Negotiate a Safety Plan</h3>
+                    <p>“Can you promise me you will not act on these thoughts, at least for now, and let’s focus on what you need? I want to help you find a better way to handle this anger. Maybe we involve your therapist or someone you trust right after this, so you’re not alone with these feelings.”</p>
+                    <p>“If you feel like you’re going to hurt them, please call 911 or go somewhere safe away from the person. We can let someone know to protect that person, but I’d much rather help you get through this without anyone getting hurt.”</p>
+                    <h3>Follow-Up and Reporting</h3>
+                    <p>“I know you might not want me to, but I will have to inform my team (and possibly the authorities) about what you told me, because I care about everyone’s safety. My hope is that this helps get you more support too, not just protect the other person.”</p>
+                    <h3>Close (Supportive, not Judging)</h3>
+                    <p>“I want you to know I’m not against you. In fact, I’m on your side – the part of you that doesn’t want to throw your life away on this. Thank you for being honest with me. You’re dealing with incredibly powerful feelings. We’re going to do everything we can to keep you and everyone safe. You’re not alone in this, even if you feel enraged and hurt. We’ll get you help to deal with these feelings safely.”</p>
+                `,
+                id: "threat-of-harm"
+            },
+            {
+                title: "Under the Influence (Non-Crisis)",
+                content: `
+                    <h3>Immediate Safety Check</h3>
+                    <p>"Hi. I’m just checking in with you briefly. It was noticed in group that [specific observation, e.g., ‘you seemed a bit sleepy,’ or ‘it looked like you were having a hard time following the discussion’]. How are you doing right now?"</p>
+                    <p>"Part of my role is to support everyone in group. It’s really important for group that everyone can be fully present and engaged. Can you tell me a bit about how you’re feeling at this moment?"</p>
+                    <p><strong>Potential overdose / danger:</strong> “Based on what you’re telling me, I’m concerned for your safety. We might need to get medical help.” (Pivot to Substance Overdose scenario if needed.)</p>
+                    <h3>If Client Admits Use or Impairment is Clear</h3>
+                    <p>"As you know, our group policy requires members to be sober and not under the influence during sessions. This is mainly to make sure you and everyone else can participate safely and get the full benefit of the therapy."</p>
+                    <p>"My main priorities right now are your immediate safety and ensuring the group remains a focused therapeutic space."</p>
+                    <h3>Stating the Need to Log Off (Clear, Kind, Firm - Non-negotiable)</h3>
+                    <p>"Because it appears you’re under the influence right now, and in line with the group policy for everyone’s safety and benefit, I am going to need you to log off from the group session for the rest of today."</p>
+                    <p>"This isn’t a punishment, but it’s a necessary step to ensure your well-being and to maintain the group’s therapeutic environment. We need all members to be fully present and sober to participate."</p>
+                    <h3>Brief Safety Assessment (Essential before log-off)</h3>
+                    <p>"Before you log off for the day, my top priority is to make sure you’re going to be safe. Are you in a safe place physically right now? Is there anyone with you, or someone responsible you can contact if you start to feel unwell or need help?"</p>
+                    <h3>Explain Next Steps</h3>
+                    <p>“Because you were under the influence and had to step out of group, I will let your primary therapist know what happened, just so they’re in the loop and can support you. They might want to check in with you about it later and help you plan for moving forward.”</p>
+                    <p>“After we hang up, is there someone who can be with you or check on you? If not, is there something safe and calming you can do for the rest of the day/night? I’d feel better knowing you’re just resting or in a safe space while this wears off.”</p>
+                    <h3>Encourage Self-Compassion & Support</h3>
+                    <p>“It’s easy to feel down on yourself in moments like this, but you’re not alone and you’re not the first person to use [substance]. The important thing is you’re safe. We care about you and want to help you get back on track.”</p>
+                    <p>“If you’re up for it later, maybe think about what led you to use today and we can talk about better ways to handle that urge next time. But for now, just focus on taking care of yourself.”</p>
+                    <h3>Close on a Positive Note</h3>
+                    <p>“I’m glad we could talk even for a little bit. Make sure you get some rest, drink water, maybe eat something light when you can. You’re going to be okay. We’ll talk again soon, and your therapist will also reach out to support you. You’re not alone, okay? Take care of yourself.”</p>
+                `,
+                id: "under-influence"
             }
-            for (const categoryKey in interventionsData) {
-                if (!allContent[categoryKey]) allContent[categoryKey] = [];
-                allContent[categoryKey].push(...interventionsData[categoryKey].map(i => ({...i, category: categoryKey, color: 'indigo', id: i.id})));
+        ]
+    },
+    "Orange": {
+        title: "🟠 Orange Zone – High Distress",
+        color: "orange",
+        scenarios: [
+            {
+                title: "Highly Agitated or Escalating",
+                content: `
+                    <h3>Center and Slow the Moment</h3>
+                    <p>“I can see (or hear) how agitated you are. Let’s take a pause for a second. I’m right here with you. You don’t have to go through this moment alone.”</p>
+                    <p>“It’s okay to feel everything you’re feeling. I just want to help you not feel so overwhelmed by it all at once. Can we try to take one slow breath together?”</p>
+                    <h3>Acknowledge the Anger/Frustration</h3>
+                    <p>“That energy and anger you’re feeling right now — it makes sense. Something important is going on inside you and it’s demanding to be heard.”</p>
+                    <p>“This anger is telling us something important. I hear that you’ve been pushed to your limit. I’m listening.”</p>
+                    <h3>Keep Voice Calm & Assuring</h3>
+                    <p>“I’m not going anywhere. I know you’re really upset, and it’s okay. Let’s stay right here. You’re safe with me to let it out, as long as we keep each other safe.”</p>
+                    <p>If they are pacing or shaking: “It’s okay if you need to move. I’ll move a bit with you. Let’s walk together and breathe, no rush.”</p>
+                    <h3>Encourage Expression vs. Explosion</h3>
+                    <p>“Let’s slow this down and sit with what’s coming up, instead of letting it boil over or shutting it down. What’s the strongest thing on your mind right now? I’m here to listen.”</p>
+                    <p>“You don’t have to hold back — I can handle whatever it is. Go ahead and tell me what’s going on, I’m listening.”</p>
+                    <h3>Validation</h3>
+                    <p>“Anyone in your situation would feel upset. It’s okay to feel this. We just want to keep it from hurting you or anyone else while it’s so strong.”</p>
+                    <p>“You have every right to feel the way you do. Let’s channel it in a way that helps you, not hurts you.”</p>
+                    <h3>Grounding in Present</h3>
+                    <p>If they seem disoriented by emotion: “Look at me for a second and take a breath. We’re right here, in this room (or on this call). You’re doing okay. Just keep breathing. That’s it.”</p>
+                    <h3>After Calming Slightly – Reflection</h3>
+                    <p>“That was a lot. You did really well slowing down just now. This is hard stuff, and you’re handling it. When you’re ready, maybe we can figure out what you need next or how I can help further.”</p>
+                    <p>“I know you’re still upset, but you’re also in control right now — you’re talking to me and breathing, and that’s a big win. We’ll let your therapist know how hard this was for you today so they can support you more with it.”</p>
+                `,
+                id: "highly-agitated"
+            },
+            {
+                title: "Acute Anxiety or Panic Attack",
+                content: `
+                    <h3>Immediate Physiological Regulation (<a class="intervention-link" data-intervention="TIPP Skill">TIPP Skills</a>)</h3>
+                    <p>"Right now, your body is in fight-or-flight mode. Let’s try something called TIPP to help calm your nervous system quickly."</p>
+                    <p>"First, let’s try Temperature. Can you splash some cold water on your face, or hold a cold water bottle or ice cube if you have one? This triggers something called the ‘dive response’ that naturally slows your heart rate."</p>
+                    <p>[If they can’t access cold, continue with breathing]</p>
+                    <p>"Now let’s try Paced Breathing. We’re going to breathe together in a way that tells your nervous system it’s safe to calm down. Breathe in through your nose for 4 counts… hold for a second… and out through your mouth for 6 counts. Let’s do that a few times."</p>
+                    <h3>Normalize & Reassure</h3>
+                    <p>“What you’re experiencing is a panic attack. It feels really scary, but I promise it’s not life-threatening. You are going to be okay. I’m right here.”</p>
+                    <h3>Orient to Safety (<a class="intervention-link" data-intervention="5-4-3-2-1 Technique">5-4-3-2-1 Technique</a>)</h3>
+                    <p>“Let’s name five things you see in the room. Good. Now four things you can feel… three things you can hear… two things you can smell… and one thing you can taste.”</p>
+                    <h3>Permission to Pause</h3>
+                    <p>“We don’t need to unpack everything right now. In fact, we shouldn’t dive deeper into anything heavy at this moment, because I want to make sure you don’t leave here feeling even worse.”</p>
+                `,
+                id: "acute-anxiety"
             }
-            for (const customId in state.customContent) {
-                const item = state.customContent[customId];
-                if (!allContent[item.category]) allContent[item.category] = [];
-                allContent[item.category].push({...item, color: 'purple'});
+            // Add other Orange Zone scenarios as needed from document
+        ]
+    },
+    "Yellow": {
+        title: "🟨 Yellow Zone – Moderate Challenges",
+        color: "yellow",
+        scenarios: [
+            {
+                title: "Resistant / Ambivalent About Therapy",
+                content: `
+                    <h3>Acknowledge Autonomy</h3>
+                    <p>“It’s okay if you’re not sure about this or even if you don’t want help right now. You’re in control here – I’m not going to force anything on you.”</p>
+                    <h3>Gently Explore Resistance</h3>
+                    <p>“Can I ask, what’s your biggest concern about accepting help? If you’d rather not say, that’s fine, but if we talk about it, maybe we can address it together.”</p>
+                    <h3>Subtle Encouragement</h3>
+                    <p>“You’ve been fighting your battles alone for a while. That’s impressive. Needing or accepting help doesn’t make you weak – if anything, it can lighten the load so you can keep going strong.”</p>
+                    <h3>End on Respect</h3>
+                    <p>“I respect you for being honest that you’re not into this right now. That’s actually really helpful for me to know. How about we check in about it later? If you decide you want something from me, just say the word.”</p>
+                `,
+                id: "resistant-therapy"
             }
-            return allContent;
-        }
-
-        function findScenarioById(id) {
-            const allContent = getAllContent();
-            for (const category in allContent) {
-                const found = allContent[category].find(item => item.id === id);
-                if (found) return found;
+            // Add other Yellow Zone scenarios as needed from document
+        ]
+    },
+    "Green": {
+        title: "💚 Green Zone – Growth & Skill-Building",
+        color: "green",
+        scenarios: [
+            {
+                title: "Political/Global Events Anxiety",
+                content: `
+                    <h3>Validate</h3>
+                    <p>“It makes complete sense that you’re feeling [anxious/angry/overwhelmed] given what’s happening in the world. These are heavy and uncertain times, and your feelings are a very understandable response.”</p>
+                    <h3>Focus on Control vs. Concern</h3>
+                    <p>“One thing that can help is to separate what you can control from what you can’t. We can’t single-handedly solve [the big issue], but we can control small actions in our own lives.”</p>
+                    <h3>Encourage Active Coping</h3>
+                    <p>“Sometimes taking action, even tiny ones, can restore a sense of control. It might be donating $5 to a cause, signing a petition, or simply helping a neighbor.”</p>
+                    <h3>Set Healthy Boundaries with Media</h3>
+                    <p>“How much news are you consuming daily? It might be worth setting some boundaries. Maybe choose one reliable news summary a day, and give yourself permission to unplug after that.”</p>
+                `,
+                id: "political-anxiety"
             }
-            return null;
-        }
+            // Add other Green Zone scenarios as needed from document
+        ]
+    }
+};
 
-        async function saveStateToFirestore() {
-            if (!userDocRef) return;
-            try {
-                await setDoc(userDocRef, {
-                    favorites: state.favorites,
-                    notes: state.notes,
-                    recentlyViewed: state.recentlyViewed,
-                    theme: state.theme,
-                    customContent: state.customContent
-                }, { merge: true });
-            } catch (error) {
-                console.error("Error saving state to Firestore: ", error);
-                showToast("Error: Could not save changes.");
+const interventionsData = {
+    "Distress Tolerance": [
+        {
+            title: "TIPP Skill",
+            content: `
+                <h4>Temperature, Intense Exercise, Paced Breathing, Paired Muscle Relaxation</h4>
+                <p>Use for rapid physiological de-escalation when emotions are intensely overwhelming.</p>
+                <p><strong>T - Temperature:</strong> "Sometimes the body just needs a jolt to interrupt the overwhelm. Let’s try a quick temperature shock: we could splash a bit of cold water on your face or hold this cold bottle against your skin. That sudden sensation might help your system reset just enough."</p>
+                <p><strong>I - Intense Exercise:</strong> "Let’s use your body to help calm things down. Try clenching all your muscles tight for a few seconds — squeeze your fists, arms, even your legs — and then release. We’ll do it together. That kind of full-body tension and release can let out some of the intensity you’re feeling."</p>
+                <p><strong>P - Paced Breathing:</strong> "Let’s slow your breath. Breathe in for 4 counts, and breathe out slowly for 6 counts. The longer exhale calms your nervous system."</p>
+                <p><strong>P - Paired Muscle Relaxation:</strong> "As you breathe in, tense a muscle group, like your fists. As you breathe out, release the tension completely. Notice the difference."</p>
+            `,
+            id: "tipp-skill"
+        },
+        {
+            title: "ACCEPTS (Distraction)",
+            content: `
+                <h4>Activities, Contributing, Comparisons, Emotions, Pushing Away, Thoughts, Sensations</h4>
+                <p>Use to temporarily distract from distress until you’re in a better state to cope.</p>
+                <p><strong>A - Activities:</strong> "Let’s find something to do that takes your focus — maybe a puzzle, a game, or cleaning something small."</p>
+                <p><strong>C - Contributing:</strong> "Doing something small for someone else can shift your mood. Could you send a kind text or help someone out?"</p>
+                <p><strong>C - Comparisons:</strong> "Think about a time you felt worse than this. How did you get through it then?"</p>
+                <p><strong>E - Emotions:</strong> "Let’s stir up a different emotion. Want to watch a funny video or listen to an upbeat song?"</p>
+                <p><strong>P - Pushing Away:</strong> "Imagine putting this problem in a box and setting it aside for just 10 minutes."</p>
+                <p><strong>T - Thoughts:</strong> "Fill your mind with something else — count backwards from 100 by 7s, or name all the states you can think of."</p>
+                <p><strong>S - Sensations:</strong> "Grab something with a strong sensation — a sour candy, a cold drink, a textured object — and focus on how it feels."</p>
+            `,
+            id: "accepts"
+        },
+        {
+            title: "Radical Acceptance",
+            content: `
+                <h4>Accepting Reality As It Is</h4>
+                <p>Use when fighting reality increases suffering.</p>
+                <p>"Sometimes things are what they are, even if we hate it. Radical acceptance isn’t approval — it’s just saying, ‘This is happening.’ What would it feel like to stop wrestling with that fact, just for now?”</p>
+                <p>"Let’s try saying it out loud: ‘This is how it is right now.’ Notice what happens when you stop pushing against it."</p>
+            `,
+            id: "radical-acceptance"
+        },
+        {
+            title: "Opposite Action",
+            content: `
+                <h4>Acting Opposite to Emotional Urges</h4>
+                <p>Use when emotions push you toward unhelpful actions.</p>
+                <p>"If fear says ‘hide,’ what’s the opposite? Maybe we take one small step out. If anger says ‘yell,’ maybe we whisper instead. What’s one opposite action you could try right now?”</p>
+            `,
+            id: "opposite-action"
+        }
+    ],
+    "Grounding & Somatic": [
+        {
+            title: "5-4-3-2-1 Technique",
+            content: `
+                <h4>Anchoring in the Present Using All Five Senses</h4>
+                <p>Use for high anxiety, flashbacks, or feeling disconnected.</p>
+                <p>"Let’s ground ourselves in the present moment. Take a slow breath, and let’s find:<ul><li><strong>5</strong> things you can see right now.</li><li><strong>4</strong> things you can feel or touch.</li><li><strong>3</strong> things you can hear.</li><li><strong>2</strong> things you can smell.</li><li><strong>1</strong> thing you can taste.</li></ul>"</p>
+            `,
+            id: "5-4-3-2-1"
+        },
+        {
+            title: "Somatic Anchors",
+            content: `
+                <h4>Simple Somatic Anchors</h4>
+                <p>Immediate ways to connect with the present moment using bodily sensations.</p>
+                <p><strong>Noticing Feet on Floor:</strong> "Right now, wherever you are, just bring your attention down to your feet. Can you feel them on the floor...? Notice the sensation of contact... Just let your feet connect you to the ground..."</p>
+                <p><strong>Butterfly Tapping (Butterfly Hug):</strong> "Here’s a simple way to offer yourself some comfort, it’s called the Butterfly Hug... cross your arms over your chest... Now, start gently tapping your hands, one after the other, in a slow, rhythmic way... As you do this, just notice the sensation..."</p>
+                <p><strong>Hand on Heart:</strong> "If it feels comfortable... you might try placing a hand gently on your heart, or perhaps on your belly... Just notice the warmth... Notice your breath moving under your hand."</p>
+                <p><strong>Pressing Fingertips Together:</strong> "Try gently pressing the tips of your fingers on one hand against the tips of your fingers on the other. Just notice the sensation of that contact. You can do this very discreetly."</p>
+            `,
+            id: "somatic-anchors"
+        },
+        {
+            title: "Mindful Body Scan",
+            content: `
+                <h4>Mindful Body Scan</h4>
+                <p>A technique involving bringing non-judgmental awareness to sensations throughout the body, part by part.</p>
+                <p><strong>When to use:</strong> To increase body awareness, promote relaxation, ground in the present, manage chronic pain (adapted).</p>
+                <p>"We can try a Mindful Body Scan. This involves bringing gentle, curious attention to different parts of your body, just noticing any sensations without trying to change them. Would you be open to that?"</p>
+                <p>"Find a comfortable position... Let’s start by bringing your attention to your feet... Just notice any sensations there – warmth, coolness, pressure, tingling... Now slowly move your attention up to your ankles... your lower legs..." (Continue guiding through body parts).</p>
+                <p>"If your mind wanders, gently bring it back to the part of the body we’re focusing on."</p>
+                <p>(For Chronic Pain adaptation): "If you’re open to it, we could try a gentle Body Scan, but with a focus on ‘breathing into’ areas of discomfort with kindness, or noticing areas that don’t hurt, rather than trying to change anything."</p>
+            `,
+            id: "mindful-body-scan"
+        },
+        {
+            title: "Orienting",
+            content: `
+                <h4>Orienting</h4>
+                <p>Actively noticing and engaging with the immediate environment through the senses to establish safety and presence.</p>
+                <p><strong>When to use:</strong> Dissociation, flashbacks, depersonalization/derealization, high anxiety.</p>
+                <p>"Let’s remind yourself of a few key things to help you connect to the present. Can you say this out loud, or to yourself: ‘I am [Your Name]. Today is [Date], [Year]. The time is approximately [Time]. I am in [Your current location, e.g., ‘my bedroom at home’]. I am safe right now’."</p>
+                <p>"Focus on my voice. My name is [Your Name], and I’m here with you on this call."</p>
+                <p>"Let’s try to connect with your senses. What’s one thing you can see clearly right now? Describe it to me."</p>
+                <p>"What’s one thing you can physically feel? Maybe the texture of your clothes or the chair you’re sitting on?"</p>
+            `,
+            id: "orienting"
+        },
+        {
+            title: "The 'Voo' Sound for Physiological Calming",
+            content: `
+                <h4>The "Voo" Sound</h4>
+                <p>Making a low, vibrating "Voo" sound on the exhale to stimulate the vagus nerve and promote parasympathetic (calming) activation.</p>
+                <p><strong>When to use:</strong> Anxiety, feeling "revved up," needing to settle the nervous system.</p>
+                <p>"Let’s try a simple sound that can help to calm your nervous system. It’s sometimes called the ‘Voo’ sound, and the vibration it creates can be very soothing. Would you be willing to try it with me for a few breaths?"</p>
+                <p>"First, just take a comfortable, easy breath in through your nose, letting your belly expand a little."</p>
+                <p>"Now, as you breathe out slowly and fully, I want you to make a low, gentle, vibrating ‘Voooooooooo’ sound. Imagine the sound of a distant foghorn, or a low hum. Let the sound be long and smooth, and try to feel the vibration in your chest and throat."</p>
+            `,
+            id: "voo-sound"
+        }
+    ],
+    "Cognitive & ACT": [
+        {
+            title: "Defusion (from ACT)",
+            content: `
+                <h4>Creating Distance from Unhelpful Thoughts</h4>
+                <p>Use when fused with thoughts, treating them as literal truths.</p>
+                <p><strong>"I’m having the thought that...":</strong> "Let’s try something with that painful thought that keeps popping up. Say to yourself, ‘I’m noticing that I’m having the thought that ______,’ and fill in the blank with the thought. It might sound awkward, but putting ‘I’m having the thought that…’ in front of the idea can give you a bit of distance from it."</p>
+                <p><strong>Thanking Your Mind:</strong> "I know it sounds funny, but you might try thanking your mind for that thought. Like, ‘Thanks mind, for trying to protect me,’ even if the thought is really negative. Sometimes a little mental nod or even a humorous ‘thanks’ can make the thought feel less powerful."</p>
+                <p><strong>Silly Voice:</strong> "Sometimes taking a really powerful negative thought and saying it repeatedly in a silly voice... or singing it to the tune of ‘Happy Birthday,’ can help strip away its seriousness."</p>
+            `,
+            id: "defusion-act"
+        },
+        {
+            title: "Cognitive Reframing",
+            content: `
+                <h4>Looking at Situations from Different Angles</h4>
+                <p>Use when thoughts feel heavy or limiting.</p>
+                <p>"Sometimes our thoughts can get us stuck in one way of seeing things... Let’s try switching lenses for a moment: If this situation wasn’t a total failure, what else could it be? A learning opportunity? A misunderstanding?"</p>
+                <p>"I hear that your current view is that [client’s negative interpretation]... What are some other possible ways to see this situation?"</p>
+            `,
+            id: "cognitive-reframing"
+        },
+        {
+            title: "Values Clarification",
+            content: `
+                <h4>Identifying Core Values</h4>
+                <p>Use when feeling stuck or directionless.</p>
+                <p>"When things feel confusing or stuck, sometimes connecting with what truly matters can be like finding a compass. If you think about the kind of person you want to be... what qualities or principles are most important? (e.g., Kindness, Courage, Connection, Growth...)"</p>
+                <p>"Of those values, which 1-3 feel most important or relevant to you right now?"</p>
+            `,
+            id: "values-clarification"
+        }
+    ],
+    "Interpersonal Skills": [
+        {
+            title: "DEAR MAN",
+            content: `
+                <h4>A Structured Way to Ask for Something or Say "No" Assertively</h4>
+                <p>Use for setting boundaries or addressing conflict.</p>
+                <ul>
+                    <li><strong>D</strong>escribe the facts.</li>
+                    <li><strong>E</strong>xpress your feelings (‘I feel…’).</li>
+                    <li><strong>A</strong>ssert what you need clearly.</li>
+                    <li><strong>R</strong>einforce the positive outcome.</li>
+                    <li>(Stay) <strong>M</strong>indful of your goal.</li>
+                    <li><strong>A</strong>ppear confident.</li>
+                    <li><strong>N</strong>egotiate if needed.</li>
+                </ul>
+            `,
+            id: "dear-man"
+        },
+        {
+            title: "NVC Framework",
+            content: `
+                <h4>Nonviolent Communication Framework</h4>
+                <p>Use for expressing needs and empathizing with others.</p>
+                <p><strong>Observation:</strong> "Let’s start with just the facts... what did you see or hear, without adding interpretation?"</p>
+                <p><strong>Feeling:</strong> "When that happened, what did you feel? Try an emotion word."</p>
+                <p><strong>Need:</strong> "What need wasn’t met? Respect? Understanding? Connection?"</p>
+                <p><strong>Request:</strong> "What’s one specific thing you could ask for?"</p>
+            `,
+            id: "nvc-framework"
+        },
+        {
+            title: "Self-Compassion Break",
+            content: `
+                <h4>A Brief Practice for Self-Kindness</h4>
+                <p>Use when feeling shame or self-criticism.</p>
+                <p><strong>Acknowledge Pain:</strong> "Right now, it sounds like you’re really struggling. Can we say, ‘This is a moment of suffering’?"</p>
+                <p><strong>Common Humanity:</strong> "You’re not alone in this — lots of people feel this way sometimes."</p>
+                <p><strong>Self-Kindness:</strong> "What would you say to a friend? Try saying it to yourself: ‘It’s okay, I’m here for me.’”</p>
+            `,
+            id: "self-compassion-break"
+        }
+    ],
+    "Coach Tools": [
+        {
+            title: "Boundary Setting",
+            content: `
+                <h4>Boundary Setting</h4>
+                <p>Scripts for setting boundaries with clients.</p>
+                <ul>
+                    <li>"I see you requested a CC, I’m wondering what you are looking for with our connection."</li>
+                    <li>"I want to pause you for just a sec – I hear how heavy this is, and I also want to make sure we use our 20 minutes in a way that helps you feel steadier, not more overwhelmed."</li>
+                    <li>"My role here is a bit different from a therapist’s. I’m not here to do a deep dive or give you formal therapy right now — I’m here to check on your safety and help you feel a little steadier before you head back to group."</li>
+                    <li>"I can’t go deep with you here, but I can help you feel safer and more grounded right now."</li>
+                    <li>"Let’s slow it down together. I’m here to help steady things — not unpack everything."</li>
+                </ul>
+            `,
+            id: "boundary-setting"
+        },
+        {
+            title: "Stabilize",
+            content: `
+                <h4>Stabilize</h4>
+                <p>Techniques to help stabilize the client.</p>
+                <ul>
+                    <li>"You’ve been dealing with a lot, and your mind and body are hitting a limit. That’s okay. There’s no rush to fix anything right now. We’re not trying to erase that heaviness — but to hold it in a way that feels manageable enough for this moment."</li>
+                    <li>"We won’t dive deeper into this right now because I want to make sure you don’t leave this space feeling worse. Let’s focus on what you need most in this moment to feel a little more steady."</li>
+                    <li>"It sounds like your mind’s spinning fast rn and there’s a lot of fear showing up. Let’s slow this down and find one thing we can do to help you feel more grounded during the time we have together."</li>
+                    <li>"Let’s take a moment to slow things down together. There’s no rush here and no pressure to fix anything. Let’s try one slow breath together. Inhale and notice your lungs filling... hold it for a second... now exhale nice and slow."</li>
+                </ul>
+            `,
+            id: "stabilize"
+        }
+    ]
+};
+
+// --- DOM ELEMENTS & STATE ---
+const dom = {
+    modal: document.getElementById("modal"),
+    modalTitle: document.getElementById("modal-title"),
+    modalContent: document.getElementById("modal-content"),
+    closeModalBtn: document.getElementById("close-modal-btn"),
+    redBtn: document.getElementById("red-btn"),
+    orangeBtn: document.getElementById("orange-btn"),
+    yellowBtn: document.getElementById("yellow-btn"),
+    greenBtn: document.getElementById("green-btn"),
+    toolkitBtn: document.getElementById("toolkit-btn"),
+    scenarioList: document.getElementById("scenario-list"),
+    interventionList: document.getElementById("intervention-list"),
+    saveBtn: document.getElementById("save-btn"),
+    noteInput: document.getElementById("note-input"),
+    notesList: document.getElementById("notes-list")
+};
+
+let state = {
+    currentZone: null,
+    currentScenario: null,
+    notes: []
+};
+
+// --- FUNCTIONS ---
+function openModal(title, content) {
+    dom.modal.classList.remove("hidden");
+    dom.modalTitle.textContent = title;
+    dom.modalContent.innerHTML = content;
+    linkInterventions(dom.modalContent);
+}
+
+function closeModal() {
+    dom.modal.classList.add("hidden");
+}
+
+function renderScenarios(zone) {
+    dom.scenarioList.innerHTML = "";
+    clinicalData[zone].scenarios.forEach(scenario => {
+        const li = document.createElement("li");
+        li.textContent = scenario.title;
+        li.classList.add("cursor-pointer", "hover:text-gray-300");
+        li.addEventListener("click", () => openModal(scenario.title, scenario.content));
+        dom.scenarioList.appendChild(li);
+    });
+}
+
+function renderInterventions() {
+    dom.interventionList.innerHTML = "";
+    Object.keys(interventionsData).forEach(category => {
+        const categoryDiv = document.createElement("div");
+        categoryDiv.innerHTML = `<h3 class="text-lg font-semibold mt-4">${category}</h3>`;
+        const ul = document.createElement("ul");
+        ul.classList.add("ml-4");
+        interventionsData[category].forEach(intervention => {
+            const li = document.createElement("li");
+            li.textContent = intervention.title;
+            li.classList.add("cursor-pointer", "hover:text-gray-300");
+            li.addEventListener("click", () => openModal(intervention.title, intervention.content));
+            ul.appendChild(li);
+        });
+        categoryDiv.appendChild(ul);
+        dom.interventionList.appendChild(categoryDiv);
+    });
+}
+
+function linkInterventions(container) {
+    const interventionTitles = Object.values(interventionsData).flat().map(i => i.title);
+    container.querySelectorAll("p, li").forEach(element => {
+        let text = element.innerHTML;
+        interventionTitles.forEach(title => {
+            const regex = new RegExp(`\\b${title}\\b`, "gi");
+            text = text.replace(regex, `<a class="intervention-link text-blue-500 underline cursor-pointer" data-intervention="${title}">${title}</a>`);
+        });
+        element.innerHTML = text;
+    });
+    container.querySelectorAll(".intervention-link").forEach(link => {
+        link.addEventListener("click", () => {
+            const intervention = Object.values(interventionsData).flat().find(i => i.title === link.dataset.intervention);
+            if (intervention) openModal(intervention.title, intervention.content);
+        });
+    });
+}
+
+function saveNote() {
+    const note = dom.noteInput.value.trim();
+    if (note) {
+        state.notes.push({ text: note, timestamp: new Date().toISOString() });
+        dom.noteInput.value = "";
+        renderNotes();
+    }
+}
+
+function renderNotes() {
+    dom.notesList.innerHTML = "";
+    state.notes.forEach((note, index) => {
+        const li = document.createElement("li");
+        li.textContent = `${new Date(note.timestamp).toLocaleString()} - ${note.text}`;
+        li.classList.add("border-b", "py-2");
+        dom.notesList.appendChild(li);
+    });
+}
+
+// --- FIREBASE SETUP ---
+const firebaseConfig = {
+    // Your Firebase configuration object here
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+signInAnonymously(auth).catch(error => console.error("Error signing in anonymously:", error));
+
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        const notesRef = doc(db, "notes", user.uid);
+        onSnapshot(notesRef, (doc) => {
+            if (doc.exists()) {
+                state.notes = doc.data().notes || [];
+                renderNotes();
             }
-        }
+        });
+    }
+});
 
-        function renderAll() {
-            renderAllInView(state.currentView);
-            lucide.createIcons();
-        }
-
-        function createAddButton(category) {
-            const btn = document.createElement('button');
-            btn.className = 'author-control bg-indigo-600 hover:bg-indigo-500 text-white font-bold p-2 rounded-full transition-colors absolute top-0 right-0 -mt-4 mr-4';
-            btn.innerHTML = `<i data-lucide="plus" class="h-6 w-6"></i>`;
-            btn.title = "Add New Scenario";
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                openEditModal(null, category);
-            });
-            return btn;
-        }
-
-        function renderZones() {
-            dom.zoneSelection.innerHTML = '';
-            Object.keys(clinicalData).forEach(zoneKey => {
-                const zone = clinicalData[zoneKey];
-                const card = document.createElement('div');
-                card.className = `zone-card bg-${zone.color}-500/10 dark:bg-${zone.color}-800/20 border border-${zone.color}-200 dark:border-${zone.color}-600 p-6 rounded-2xl cursor-pointer hover:bg-${zone.color}-500/20 dark:hover:bg-${zone.color}-700/30`;
-                card.innerHTML = `<h2 class="text-3xl font-bold text-${zone.color}-600 dark:text-${zone.color}-400">${zone.title}</h2><p class="text-gray-500 dark:text-${zone.color}-300 mt-2">${zoneKey} Zone</p>`;
-                card.dataset.zone = zoneKey;
-                card.addEventListener('click', () => showScenarios(zoneKey));
-                dom.zoneSelection.appendChild(card);
-            });
-        }
-
-        function renderToolkit() {
-            dom.toolkitView.innerHTML = '';
-            const container = document.createElement('div');
-            container.className = 'relative';
-            container.appendChild(createAddButton('Toolkit'));
-
-            const allContent = getAllContent();
-            const toolkitCategories = Object.keys(interventionsData).filter(cat => !['Session Scripts', 'MI', 'Coping Skills'].includes(cat));
-
-            toolkitCategories.forEach(category => {
-                const categoryEl = document.createElement('div');
-                categoryEl.className = 'mb-8';
-                categoryEl.innerHTML = `<h2 class="text-3xl font-bold text-indigo-600 dark:text-indigo-400 border-b border-gray-300 dark:border-gray-700 pb-2 mb-4">${category}</h2>`;
-                const gridEl = document.createElement('div');
-                gridEl.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4';
-                const items = allContent[category] || [];
-                items.forEach(item => {
-                    gridEl.appendChild(createScenarioCard(item));
-                });
-                categoryEl.appendChild(gridEl);
-                container.appendChild(categoryEl);
-            });
-            dom.toolkitView.appendChild(container);
-        }
-
-        function renderScripts() {
-            dom.scriptsView.innerHTML = '';
-            const container = document.createElement('div');
-            container.className = 'relative';
-            container.appendChild(createAddButton('Session Scripts'));
-
-            const allContent = getAllContent();
-            const items = allContent['Session Scripts'] || [];
-            const gridEl = document.createElement('div');
-            gridEl.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4';
-            items.forEach(item => {
-                gridEl.appendChild(createScenarioCard(item));
-            });
-            container.appendChild(gridEl);
-            dom.scriptsView.appendChild(container);
-        }
-
-        function renderMi() {
-            dom.miView.innerHTML = '';
-            const container = document.createElement('div');
-            container.className = 'relative';
-            container.appendChild(createAddButton('MI'));
-
-            const allContent = getAllContent();
-            const items = allContent['MI'] || [];
-            const gridEl = document.createElement('div');
-            gridEl.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4';
-            items.forEach(item => {
-                gridEl.appendChild(createScenarioCard(item));
-            });
-            container.appendChild(gridEl);
-            dom.miView.appendChild(container);
-        }
-
-        function renderCoping() {
-            dom.copingView.innerHTML = '';
-            const container = document.createElement('div');
-            container.className = 'relative';
-            container.appendChild(createAddButton('Coping Skills'));
-
-            const allContent = getAllContent();
-            const items = allContent['Coping Skills'] || [];
-            const gridEl = document.createElement('div');
-            gridEl.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4';
-            items.forEach(item => {
-                gridEl.appendChild(createScenarioCard(item));
-            });
-            container.appendChild(gridEl);
-            dom.copingView.appendChild(container);
-        }
-
-        function renderFavorites() { renderCardList(dom.favoritesView, state.favorites.map(findScenarioById).filter(Boolean), "You haven't favorited any scenarios yet."); }
-        function renderRecent() { renderCardList(dom.recentView, state.recentlyViewed.map(findScenarioById).filter(Boolean), "You haven't viewed any scenarios recently."); }
-
-        function renderNotesView() {
-            dom.notesView.innerHTML = '';
-            const notes = state.notes;
-            const noteKeys = Object.keys(notes).filter(key => notes[key].phrasing || notes[key].reminders || notes[key].followup);
-
-            const header = document.createElement('div');
-            header.className = 'flex justify-between items-center mb-6';
-            header.innerHTML = `<h2 class="text-3xl font-bold">All My Notes</h2>`;
-            if (noteKeys.length > 0) {
-                const clearBtn = document.createElement('button');
-                clearBtn.className = 'bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded-full transition-colors flex items-center space-x-2';
-                clearBtn.innerHTML = `<i data-lucide="trash-2" class="h-5 w-5"></i><span>Clear All Notes</span>`;
-                clearBtn.addEventListener('click', () => {
-                    showConfirmModal("Clear All Notes?", "This will permanently delete all of your notes.", () => {
-                        state.notes = {};
-                        saveStateToFirestore();
-                        showToast("All notes cleared.");
-                    });
-                });
-                header.appendChild(clearBtn);
-            }
-            dom.notesView.appendChild(header);
-
-            if (noteKeys.length === 0) {
-                dom.notesView.innerHTML += `<p class="text-center text-gray-500 dark:text-gray-400 mt-8">You haven't written any notes yet.</p>`;
-                return;
-            }
-
-            const copyBtn = document.createElement('button');
-            copyBtn.className = 'bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded-full transition-colors flex items-center space-x-2 mb-6';
-            copyBtn.innerHTML = `<i data-lucide="clipboard" class="h-5 w-5"></i><span>Copy All Notes</span>`;
-            copyBtn.addEventListener('click', copyAllNotesToClipboard);
-            dom.notesView.appendChild(copyBtn);
-
-            noteKeys.forEach(title => {
-                const noteData = notes[title];
-                const noteEl = document.createElement('div');
-                noteEl.className = 'mb-6 pb-4 border-b border-gray-200 dark:border-gray-700';
-                let content = `<h3 class="text-xl font-semibold text-gray-800 dark:text-gray-200">${title}</h3>`;
-                if (noteData.phrasing) content += `<h4 class="font-semibold mt-3 mb-1 text-gray-600 dark:text-gray-400">My Phrasing:</h4><p class="whitespace-pre-wrap">${noteData.phrasing}</p>`;
-                if (noteData.reminders) content += `<h4 class="font-semibold mt-3 mb-1 text-gray-600 dark:text-gray-400">Key Reminders:</h4><p class="whitespace-pre-wrap">${noteData.reminders}</p>`;
-                if (noteData.followup) content += `<h4 class="font-semibold mt-3 mb-1 text-gray-600 dark:text-gray-400">Follow-up Actions:</h4><p class="whitespace-pre-wrap">${noteData.followup}</p>`;
-                noteEl.innerHTML = content;
-                dom.notesView.appendChild(noteEl);
-            });
-        }
-
-        function copyAllNotesToClipboard() {
-            let textToCopy = `ClinicalX Notes Export - ${new Date().toLocaleString()}\n\n`;
-            const notes = state.notes;
-            Object.keys(notes).forEach(title => {
-                const noteData = notes[title];
-                if (noteData.phrasing || noteData.reminders || noteData.followup) {
-                    textToCopy += `----------------------------------------\n`;
-                    textToCopy += `SCENARIO: ${title}\n`;
-                    textToCopy += `----------------------------------------\n`;
-                    if (noteData.phrasing) textToCopy += `My Phrasing:\n${noteData.phrasing}\n\n`;
-                    if (noteData.reminders) textToCopy += `Key Reminders:\n${noteData.reminders}\n\n`;
-                    if (noteData.followup) textToCopy += `Follow-up Actions:\n${noteData.followup}\n\n`;
-                }
-            });
-
-            const textArea = document.createElement("textarea");
-            textArea.value = textToCopy;
-            textArea.style.position = "fixed"; textArea.style.left = "-9999px";
-            document.body.appendChild(textArea);
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                showToast("All notes copied to clipboard!");
-            } catch (err) {
-                showToast("Failed to copy notes.");
-            }
-            document.body.removeChild(textArea);
-        }
-
-        function renderCardList(container, items, emptyMessage) {
-            container.innerHTML = '';
-            container.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4';
-            if (items.length === 0) {
-                container.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400 col-span-full">${emptyMessage}</p>`;
-                return;
-            }
-            items.forEach(item => {
-                if (item) container.appendChild(createScenarioCard(item));
-            });
-        }
-
-        function showScenarios(zoneKey) {
-            state.currentZone = zoneKey;
-            const allContent = getAllContent();
-            const zoneData = clinicalData[zoneKey];
-            const items = allContent[zoneKey] || [];
-
-            dom.zoneSelection.classList.add('hidden');
-            dom.scenariosDisplay.classList.remove('hidden');
-            dom.zoneTitle.textContent = zoneData.title;
-            dom.zoneTitle.className = `text-4xl font-bold mb-6 text-${zoneData.color}-600 dark:text-${zoneData.color}-400`;
-            dom.scenariosGrid.innerHTML = '';
-            items.forEach(item => {
-                dom.scenariosGrid.appendChild(createScenarioCard(item));
-            });
-        }
-
-        function createScenarioCard(scenario) {
-            const isFavorited = state.favorites.includes(scenario.id);
-            const card = document.createElement('div');
-            card.className = `scenario-card p-4 rounded-lg cursor-pointer flex flex-col justify-between relative`;
-            let cardColorClass = `border-${scenario.color}-500/30`;
-            if (scenario.isCustom) cardColorClass = `border-purple-500/50`;
-
-            card.innerHTML = `
-                <div class="absolute top-1 right-1 flex space-x-1">
-                    <button class="author-control edit-custom-btn text-gray-400 hover:text-indigo-500 p-1" title="Edit"><i data-lucide="file-pen-line" class="h-4 w-4"></i></button>
-                    <button class="author-control delete-custom-btn text-gray-400 hover:text-red-500 p-1" title="Delete"><i data-lucide="trash-2" class="h-4 w-4"></i></button>
-                </div>
-                <h3 class="font-semibold pr-12">${scenario.title}</h3>
-                <div class="favorite-star self-end mt-2 text-gray-400 dark:text-gray-600 ${isFavorited ? 'favorited' : ''}">
-                    <i data-lucide="star" class="h-5 w-5"></i>
-                </div>`;
-
-            card.querySelector('.favorite-star').addEventListener('click', (e) => {
-                e.stopPropagation();
-                toggleFavorite(scenario.id);
-            });
-            card.addEventListener('click', () => openModal(scenario));
-
-            if (scenario.isCustom) {
-                card.querySelector('.edit-custom-btn').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    openEditModal(scenario);
-                });
-                card.querySelector('.delete-custom-btn').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    showConfirmModal("Delete Scenario?", `Are you sure you want to delete "${scenario.title}"?`, () => {
-                        delete state.customContent[scenario.id];
-                        saveStateToFirestore();
-                        showToast("Scenario deleted.");
-                    });
-                });
-            } else {
-                card.querySelector('.edit-custom-btn').remove();
-                card.querySelector('.delete-custom-btn').remove();
-            }
-            return card;
-        }
-
-        function openModal(scenario) {
-            state.currentOpenScenario = scenario;
-            dom.modalTitle.textContent = scenario.title;
-            dom.modalBody.innerHTML = scenario.isCustom ? marked.parse(scenario.content) : linkInterventions(scenario.content);
-            dom.modal.classList.remove('hidden');
-            dom.modalEditBtn.style.display = scenario.isCustom ? 'flex' : 'none';
-            updateModalFavoriteButton();
-            loadNotes();
-            addToRecentlyViewed(scenario.id);
-            lucide.createIcons();
-        }
-
-        function hideModal() { dom.modal.classList.add('hidden'); state.currentOpenScenario = null; }
-
-        function linkInterventions(content) {
-            let newContent = content;
-            const allInterventions = Object.values(interventionsData).flat();
-            allInterventions.forEach(intervention => {
-                const regex = new RegExp(`\\b(${intervention.title})\\b`, 'gi');
-                if (content.match(regex)) {
-                    newContent = newContent.replace(regex, `<a class="intervention-link" data-id="${intervention.id}">$1</a>`);
-                }
-            });
-            return newContent;
-        }
-
-        function toggleFavorite(id) {
-            const favIndex = state.favorites.indexOf(id);
-            if (favIndex > -1) state.favorites.splice(favIndex, 1);
-            else state.favorites.push(id);
-            saveStateToFirestore();
-        }
-
-        function updateModalFavoriteButton() {
-            if (!state.currentOpenScenario) return;
-            dom.modalFavoriteBtn.classList.toggle('favorited', state.favorites.includes(state.currentOpenScenario.id));
-        }
-
-        function loadNotes() {
-            if (!state.currentOpenScenario) return;
-            const notes = state.notes[state.currentOpenScenario.title] || {};
-            dom.notesFields.forEach(f => f.value = '');
-            document.getElementById('notes-phrasing').value = notes.phrasing || '';
-            document.getElementById('notes-reminders').value = notes.reminders || '';
-            document.getElementById('notes-followup').value = notes.followup || '';
-        }
-
-        function saveNote() {
-            if (!state.currentOpenScenario) return;
-            const title = state.currentOpenScenario.title;
-            const phrasing = document.getElementById('notes-phrasing').value.trim();
-            const reminders = document.getElementById('notes-reminders').value.trim();
-            const followup = document.getElementById('notes-followup').value.trim();
-            if (phrasing || reminders || followup) {
-                state.notes[title] = { phrasing, reminders, followup };
-            } else {
-                delete state.notes[title];
-            }
-            saveStateToFirestore();
-            showToast('Note saved!');
-        }
-
-        function addToRecentlyViewed(id) {
-            state.recentlyViewed = [id, ...state.recentlyViewed.filter(t => t !== id)].slice(0, 8);
-            saveStateToFirestore();
-        }
-
-        function updateTimerDisplay() {
-            const minutes = Math.floor(state.timer.timeRemaining / 60);
-            const seconds = state.timer.timeRemaining % 60;
-            dom.timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            dom.startPauseBtn.textContent = state.timer.isPaused ? 'Start' : 'Pause';
-        }
-
-        function timerTick() {
-            if (!state.timer.isPaused && state.timer.timeRemaining > 0) {
-                state.timer.timeRemaining--;
-                updateTimerDisplay();
-            } else if (state.timer.timeRemaining <= 0) {
-                clearInterval(state.timer.id);
-                state.timer.id = null;
-                new Tone.Synth().toDestination().triggerAttackRelease("C4", "8n");
-                showToast("Timer finished!");
-            }
-        }
-
-        function startPauseTimer() {
-            if (state.timer.isPaused) {
-                if (!state.timer.id) state.timer.id = setInterval(timerTick, 1000);
-                state.timer.isPaused = false;
-            } else {
-                clearInterval(state.timer.id);
-                state.timer.id = null;
-                state.timer.isPaused = true;
-            }
-            updateTimerDisplay();
-        }
-
-        function resetTimer() {
-            clearInterval(state.timer.id);
-            state.timer.id = null;
-            state.timer.timeRemaining = state.timer.initialTime;
-            state.timer.isPaused = true;
-            updateTimerDisplay();
-        }
-
-        function setTimer(seconds) {
-            clearInterval(state.timer.id);
-            state.timer.id = null;
-            state.timer.timeRemaining = seconds;
-            state.timer.initialTime = seconds;
-            state.timer.isPaused = true;
-            updateTimerDisplay();
-        }
-
-        function filterContent(query) {
-            const normalizedQuery = query.toLowerCase().trim();
-            const allContent = getAllContent();
-            let searchResults = [];
-
-            for (const category in allContent) {
-                searchResults.push(...allContent[category].filter(item => 
-                    item.title.toLowerCase().includes(normalizedQuery) || 
-                    item.content.toLowerCase().includes(normalizedQuery)
-                ));
-            }
-            const currentViewEl = document.querySelector('.view-content:not(.hidden)');
-            renderCardList(currentViewEl, searchResults, `No results found for "${query}".`);
-            lucide.createIcons();
-        }
-
-        function showToast(message) {
-            dom.toast.textContent = message;
-            dom.toast.classList.remove('hidden');
-            setTimeout(() => dom.toast.classList.add('hidden'), 3000);
-        }
-
-        function switchView(viewName) {
-            state.currentView = viewName;
-            document.querySelectorAll('.view-content').forEach(v => v.classList.add('hidden'));
-            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-            document.getElementById(`${viewName}-view`).classList.remove('hidden');
-            document.getElementById(`tab-${viewName}`).classList.add('active');
-            dom.searchInput.value = '';
-            renderAllInView(viewName);
-        }
-
-        function renderAllInView(viewName) {
-            switch(viewName) {
-                case 'zones': renderZones(); dom.scenariosDisplay.classList.add('hidden'); dom.zoneSelection.classList.remove('hidden'); break;
-                case 'toolkit': renderToolkit(); break;
-                case 'scripts': renderScripts(); break;
-                case 'mi': renderMi(); break;
-                case 'coping': renderCoping(); break;
-                case 'favorites': renderFavorites(); break;
-                case 'recent': renderRecent(); break;
-                case 'notes': renderNotesView(); break;
-            }
-            lucide.createIcons();
-        }
-
-        function applyTheme() {
-            if (state.theme === 'dark') {
-                dom.body.classList.add('dark');
-                dom.themeIconLight.classList.add('hidden');
-                dom.themeIconDark.classList.remove('hidden');
-            } else {
-                dom.body.classList.remove('dark');
-                dom.themeIconLight.classList.remove('hidden');
-                dom.themeIconDark.classList.add('hidden');
-            }
-        }
-
-        function toggleTheme() {
-            state.theme = state.theme === 'dark' ? 'light' : 'dark';
-            applyTheme();
-            saveStateToFirestore();
-        }
-
-        function toggleAuthorMode() {
-            state.isAuthorMode = !state.isAuthorMode;
-            dom.body.classList.toggle('author-mode-active', state.isAuthorMode);
-            dom.authorModeToggle.classList.toggle('active', state.isAuthorMode);
-            showToast(`Author Mode ${state.isAuthorMode ? 'Enabled' : 'Disabled'}`);
-            renderAll();
-        }
-
-        function openEditModal(scenario = null, category = null) {
-            dom.editModalTitle.textContent = scenario ? 'Edit Scenario' : 'Create Scenario';
-            dom.editScenarioTitle.value = scenario ? scenario.title : '';
-            dom.editScenarioContent.value = scenario ? scenario.content : '';
-            dom.editModal.dataset.editingId = scenario ? scenario.id : '';
-            dom.editModal.dataset.category = category || (scenario ? scenario.category : 'Toolkit');
-            dom.editModal.classList.remove('hidden');
-        }
-
-        function closeEditModal() { dom.editModal.classList.add('hidden'); }
-
-        function saveCustomScenario() {
-            const title = dom.editScenarioTitle.value.trim();
-            const content = dom.editScenarioContent.value.trim();
-            const category = dom.editModal.dataset.category;
-            const editingId = dom.editModal.dataset.editingId;
-
-            if (!title || !content) {
-                showToast("Title and content cannot be empty.");
-                return;
-            }
-
-            const id = editingId || `custom_${Date.now()}`;
-            state.customContent[id] = { id, title, content, category, isCustom: true };
-            saveStateToFirestore();
-            closeEditModal();
-            showToast(`Scenario ${editingId ? 'updated' : 'created'}!`);
-        }
-
-        function showConfirmModal(title, text, onConfirm) {
-            dom.confirmModalTitle.textContent = title;
-            dom.confirmModalText.textContent = text;
-            state.confirmCallback = onConfirm;
-            dom.confirmModal.classList.remove('hidden');
-            lucide.createIcons();
-        }
-
-        function hideConfirmModal() {
-            dom.confirmModal.classList.add('hidden');
-            state.confirmCallback = null;
-        }
-
-        function setupEventListeners() {
-            dom.tabZones.addEventListener('click', () => switchView('zones'));
-            dom.tabToolkit.addEventListener('click', () => switchView('toolkit'));
-            dom.tabScripts.addEventListener('click', () => switchView('scripts'));
-            dom.tabMi.addEventListener('click', () => switchView('mi'));
-            dom.tabCoping.addEventListener('click', () => switchView('coping'));
-            dom.tabFavorites.addEventListener('click', () => switchView('favorites'));
-            dom.tabRecent.addEventListener('click', () => switchView('recent'));
-            dom.tabNotes.addEventListener('click', () => switchView('notes'));
-            dom.backButton.addEventListener('click', () => { dom.scenariosDisplay.classList.add('hidden'); dom.zoneSelection.classList.remove('hidden'); });
-            dom.closeModal.addEventListener('click', hideModal);
-            dom.modal.addEventListener('click', (e) => { if (e.target === dom.modal) hideModal(); });
-            dom.closeEditModal.addEventListener('click', closeEditModal);
-            dom.cancelEdit.addEventListener('click', closeEditModal);
-            dom.saveEdit.addEventListener('click', saveCustomScenario);
-            dom.confirmCancel.addEventListener('click', hideConfirmModal);
-            dom.confirmAction.addEventListener('click', () => {
-                if (state.confirmCallback) state.confirmCallback();
-                hideConfirmModal();
-            });
-            document.addEventListener('keydown', (e) => { 
-                if (e.key === 'Escape') {
-                    if (!dom.modal.classList.contains('hidden')) hideModal();
-                    if (!dom.editModal.classList.contains('hidden')) closeEditModal();
-                    if (!dom.confirmModal.classList.contains('hidden')) hideConfirmModal();
-                }
-            });
-            dom.modalFavoriteBtn.addEventListener('click', () => toggleFavorite(state.currentOpenScenario.id));
-            dom.modalEditBtn.addEventListener('click', () => openEditModal(state.currentOpenScenario));
-            dom.addScenarioToZoneBtn.addEventListener('click', () => openEditModal(null, state.currentZone));
-            dom.notesFields.forEach(field => field.addEventListener('blur', saveNote));
-            dom.startPauseBtn.addEventListener('click', startPauseTimer);
-            dom.resetBtn.addEventListener('click', resetTimer);
-            dom.timerPresetBtns.forEach(btn => btn.addEventListener('click', () => setTimer(parseInt(btn.dataset.time))));
-            dom.searchInput.addEventListener('input', (e) => {
-                const query = e.target.value;
-                if (!query) renderAllInView(state.currentView);
-                else filterContent(query);
-            });
-            dom.themeToggle.addEventListener('click', toggleTheme);
-            dom.authorModeToggle.addEventListener('click', toggleAuthorMode);
-            document.body.addEventListener('click', (e) => {
-                const link = e.target.closest('.intervention-link');
-                if (link) {
-                    e.preventDefault();
-                    const scenario = findScenarioById(link.dataset.id);
-                    if (scenario) openModal(scenario);
-                }
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', initFirebase);
-    </script>
-</body>
-</html>
+// --- EVENT LISTENERS ---
+dom.closeModalBtn.addEventListener("click", closeModal);
+dom.redBtn.addEventListener("click", () => {
+    state.currentZone = "Red";
+    renderScenarios("Red");
+});
+dom.orangeBtn.addEventListener("click", () => {
+    state.currentZone = "Orange";
+    renderScenarios("Orange");
+});
+dom.yellowBtn.addEventListener("click", () => {
+    state.currentZone = "Yellow";
+    renderScenarios("Yellow");
+});
+dom.greenBtn.addEventListener("click", () => {
+    state.currentZone = "Green";
+    renderScenarios("Green");
+});
+dom.toolkitBtn.addEventListener("click", renderInterventions);
+dom.saveBtn.addEventListener("click", saveNote);
