@@ -51,9 +51,9 @@
         #modalBody h4, #notes-view h4, .content-section h4 { font-size: 1.1rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.5rem; }
         .dark #modalBody h4, .dark #notes-view h4, .dark .content-section h4 { color: #8b94a3; }
         #modalBody p, #modalBody li, #notes-view p, .content-section p { margin-bottom: 0.75rem; line-height: 1.6; }
-        #modalBody ol, #modalBody ul, .content-section ul { padding-left: 1.5rem; }
+        #modalBody ol, #modalBody ul, .content-section ul { padding-left: 1.5rem; list-style-type: disc; }
         .favorite-star.favorited i { fill: #facc15; color: #facc15; }
-        .intervention-link { color: #60a5fa; text-decoration: underline; cursor: pointer; }
+        .intervention-link { color: #60a5fa; text-decoration: underline; cursor: pointer; font-weight: 600; }
 
         .author-control { display: none !important; }
         .author-mode-active .author-control { display: flex !important; }
@@ -78,7 +78,7 @@
     </style>
 </head>
 <body>
-    <V<div class="container mx-auto p-4 md:p-8">
+    <div class="container mx-auto p-4 md:p-8">
         <header class="text-center mb-6 relative">
             <h1 class="text-4xl md:text-5xl font-bold">ClinicalX Dashboard</h1>
             <p class="text-lg md:text-xl text-gray-500 dark:text-gray-400 mt-2">Your Real-Time Guide for Care Coaching</p>
@@ -241,55 +241,658 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // --- POPULATED DATA ---
         const clinicalData = {
-            "Red": {title: "🔴 Red Zone – Immediate Risk & Crisis", color: "red", scenarios: [
-                {title: "Suicidal Ideation – Safety Assessment", content: "<h3>ASSESS</h3><p>...</p>", id: "suicidal-ideation"},
-                // Additional Red Zone scenarios...
-            ]},
-            "Orange": {title: "🟠 Orange Zone – High Distress", color: "orange", scenarios: [
-                {title: "Highly Agitated or Escalating", content: "<h3>Center and Slow...</h3><p>...</p>", id: "highly-agitated"},
-                // Additional Orange Zone scenarios...
-            ]},
-            "Yellow": {title: "🟨 Yellow Zone – Moderate Challenges", color: "yellow", scenarios: [
-                {title: "Resistant / Ambivalent About Therapy", content: "<h3>Acknowledge Autonomy...</h3><p>...</p>", id: "resistant-therapy"},
-                // Additional Yellow Zone scenarios...
-            ]},
-            "Green": {title: "💚 Green Zone – Growth & Skill-Building", color: "green", scenarios: [
-                {title: "Political/Global Events Anxiety", content: "<h3>Validate...</h3><p>...</p>", id: "political-anxiety"},
-                // Additional Green Zone scenarios...
-            ]},
+            "Red": {
+                title: "🔴 Red Zone – Immediate Risk & Crisis",
+                color: "red",
+                scenarios: [
+                    {
+                        id: "suicidal-ideation-assessment",
+                        title: "Suicidal Ideation – Safety Assessment",
+                        content: `
+                            <h3>ASSESS</h3>
+                            <p><strong>"Before we go any deeper, our priority is always your safety. I’d like to ask a few questions that help us understand how you’re doing and what kind of support might help keep you safe right now."</strong></p>
+                            <ul>
+                                <li><strong>#1:</strong> Have you wished you were dead or that you could go to sleep and not wake up?</li>
+                                <li><strong>#2:</strong> Have you actually had any thoughts of killing yourself? (If yes, ask 3, 4, 5, 6. If no, go to 6).</li>
+                                <li><strong>#3:</strong> In the past 48 hours, have you been thinking about how you might do this?</li>
+                                <li><strong>#4:</strong> In the past 48 hours, have you had these thoughts and had some intention of acting on them?</li>
+                                <li><strong>#5:</strong> In the past 48 hours, have you started to work out any details for how to kill yourself? Do you intend to carry out this plan?</li>
+                                <li><strong>#6:</strong> In the past 48 hours have you done anything to prepare to end your life?</li>
+                            </ul>
+                            <p><em>* If Yes to 4, 5, or 6? Ask scaling questions:</em></p>
+                            <p>"On a scale of 1-5, one meaning you feel you can stay safe today, and five meaning that you're going to make an attempt today, where would you place yourself right now?"</p>
+                            <h3>SAFETY PLAN</h3>
+                            <p><strong>Warning Signs:</strong> “What are some early signs you notice when things start to spiral?”</p>
+                            <p><strong>Internal Coping:</strong> “What can you try on your own that sometimes helps, even a little?”</p>
+                            <p><strong>Social Distractions:</strong> “Who or what helps you shift your focus — even briefly?”</p>
+                            <p><strong>People to Reach Out To:</strong> “If things feel too big to hold alone, who could you reach out to?”</p>
+                            <p><strong>Professional Resources:</strong> “Do you have Charlie Health’s 24/7 crisis line saved in your phone?”</p>
+                            <p><strong>Safety at Home:</strong> “Is there anything nearby that might feel unsafe to have around right now?”</p>
+                            <p><strong>Reasons to Stay:</strong> “When things get dark, what’s something — or someone — that reminds you there’s still a reason to hang on?”</p>
+                            <h3>Closure & Follow-Up</h3>
+                            <p>“Thank you for staying with this. I know it’s not easy, and I really appreciate how honest you’ve been.”</p>
+                        `
+                    },
+                    {
+                        id: "self-harm-urges",
+                        title: "Self-Harm Urges (Non-Suicidal Self-Injury)",
+                        content: `
+                            <h3>Direct Check-In</h3>
+                            <p>“Thank you for telling me. I need to ask: Are you having urges to hurt yourself right now?”</p>
+                            <h3>Clarify Intent</h3>
+                            <p>“When you self-harmed, was it because you wanted to die, or was it more about coping with pain or numbness?”</p>
+                            <h3>Validate & Normalize</h3>
+                            <p>“That urge makes sense given what you’re carrying. A part of you is trying to survive and find relief, even if it’s doing it in a way that ends up hurting you. Let’s see if we can work with that part in a safer way.”</p>
+                            <h3>Offer Alternatives & Coping Strategies</h3>
+                            <ul>
+                                <li><strong>Intense Physical Sensations (<a class="intervention-link" data-id="tipp-skill">TIPP skills</a>):</strong> “Sometimes our body needs a very strong sensation to release that tension. We could try holding something frozen (like ice), doing a wall-sit or some push-ups, or splashing really cold water on your face.”</li>
+                                <li><strong>“Urge Surfing” Technique:</strong> “Remember, urges are like waves — they build, peak, and eventually fall. Let’s try to ride this wave out together.”</li>
+                                <li><strong>Safe Physical Release:</strong> “Would it help to rip up some paper, squeeze a stress ball, stomp your feet, or even scream into a pillow? Let’s channel that energy out without hurting yourself.”</li>
+                            </ul>
+                        `
+                    },
+                    {
+                        id: "hallucinations-perceptual-experiences",
+                        title: "Hallucinations or Disturbing Perceptual Experiences",
+                        content: `
+                            <h3>Acknowledge Experience</h3>
+                            <p>“Thank you for telling me. I can imagine this feels really intense and scary. I want you to know I’m here with you, and I believe that you’re experiencing this.”</p>
+                            <h3>Safety Check</h3>
+                            <p>“Are the things you’re hearing or seeing telling you to hurt yourself or anyone else?”</p>
+                            <h3>Orient to Present</h3>
+                            <p>“Let’s try something together to bring you into the here and now with me, okay? Put your feet flat on the floor for me. Press them down a little and notice that sensation. You’re right here, in this moment, with me. We’re safe right now.”</p>
+                        `
+                    },
+                    {
+                        id: "acute-medical-crisis",
+                        title: "Acute Medical Crisis",
+                        content: `
+                            <h3>Immediate Action – Take Charge</h3>
+                            <p>“Okay, I see/hear that something serious might be happening physically. The most important thing right now is getting you medical help immediately.”</p>
+                            <h3>Instruct to Call Emergency</h3>
+                            <p>“Are you able to call 911 (or your local emergency number) right now? Is there someone with you who can call for you?”</p>
+                            <h3>Offer to Call</h3>
+                            <p>“It sounds like you can’t call on your own. I’m going to get you help. Do I have your permission to call 911 for you right now to get an ambulance?”</p>
+                        `
+                    },
+                    {
+                        id: "substance-overdose-intoxication",
+                        title: "Substance Overdose or Severe Intoxication",
+                        content: `
+                            <h3>Recognize Seriousness</h3>
+                            <p>“I can tell this is serious. I’m very concerned that you might be experiencing a medical emergency from substances.”</p>
+                            <h3>Instruct to Call Emergency</h3>
+                            <p>“This is urgent. Are you able to call 911 right now for medical attention? Or is there someone with you who can call?”</p>
+                            <h3>Keep Them Awake & Oriented</h3>
+                            <p>“Stay with me, okay? Help is coming. Try to stay awake and keep talking to me. I know you’re very drowsy, but focus on my voice. You’re doing great, just hang in there a little longer.”</p>
+                        `
+                    },
+                    {
+                        id: "unsafe-home-environment-dv",
+                        title: "Unsafe Home Environment / Domestic Violence",
+                        content: `
+                            <h3>Express Empathy and Belief</h3>
+                            <p>“Thank you for sharing this with me. I can’t imagine how hard it was to say that out loud. I want you to know I believe you, and you didn’t deserve any of this.”</p>
+                            <h3>Assess Immediate Safety</h3>
+                            <p>“Are you safe right now? Is the person who hurt you nearby or likely to return soon?”</p>
+                            <h3>Provide Control & Options</h3>
+                            <p>“You know your situation best, and I’m here to support whatever you choose to do. For example, have you heard of the National Domestic Violence Hotline? They have advocates 24/7 at 1-800-799-7233 who can help you make a safety plan or find resources.”</p>
+                        `
+                    },
+                    {
+                        id: "child-abuse-neglect-disclosure",
+                        title: "Child Abuse or Neglect Disclosure",
+                        content: `
+                            <h3>Mandated Reporting</h3>
+                            <p>“What this means is that I will write down what you told me and contact Child Protective Services (or the appropriate agency) after our conversation. They may need to ask more questions to make sure everyone is safe.”</p>
+                            <h3>Support Emotions</h3>
+                            <p>“How are you feeling now that you’ve shared that? It’s a lot, I know. Whatever you’re feeling – scared, relieved, angry – it’s completely understandable.”</p>
+                        `
+                    },
+                    {
+                        id: "threat-of-harm-to-others",
+                        title: "Threat of Harm to Others (Homicidal Ideation)",
+                        content: `
+                            <h3>Immediate Clarification</h3>
+                            <p>“I hear you saying you want to hurt someone. I take that very seriously, and I need to ask you a few questions to understand better, because my job is to keep everyone safe.”</p>
+                            <h3>Duty to Protect Explanation</h3>
+                            <p>“Okay, I need you to know: because you’re talking about harming someone else, I have a responsibility to make sure that person (and everyone) stays safe. That may mean involving other professionals or authorities right away.”</p>
+                            <h3>De-escalate Anger</h3>
+                            <p>“I get that you’re extremely angry. That anger is telling us something important — you feel deeply hurt or wronged. I’m here to listen to that. Let’s slow this down and sit with what’s coming up, instead of letting it boil over or go numb.”</p>
+                        `
+                    },
+                    {
+                        id: "under-the-influence-non-crisis",
+                        title: "Under the Influence (Non-Crisis)",
+                        content: `
+                            <h3>Immediate Safety Check</h3>
+                            <p>“Hi. I’m just checking in with you briefly. It was noticed in group that [specific observation]. How are you doing right now?”</p>
+                            <h3>State Need to Log Off</h3>
+                            <p>“Because it appears you’re under the influence right now, and in line with the group policy for everyone’s safety and benefit, I am going to need you to log off from the group session for the rest of today.”</p>
+                            <h3>Brief Safety Assessment</h3>
+                            <p>“Before you log off for the day, my top priority is to make sure you’re going to be safe. Are you in a safe place physically right now? Is there anyone with you, or someone responsible you can contact if you start to feel unwell or need help?”</p>
+                        `
+                    }
+                ]
+            },
+            "Orange": {
+                title: "🟠 Orange Zone – High Distress",
+                color: "orange",
+                scenarios: [
+                    {
+                        id: "highly-agitated-escalating",
+                        title: "Highly Agitated or Escalating",
+                        content: `
+                            <h3>Center and Slow</h3>
+                            <p>“I can see (or hear) how agitated you are. Let’s take a pause for a second. I’m right here with you. You don’t have to go through this moment alone.”</p>
+                            <h3>After Calming</h3>
+                            <p>“I know you’re still upset, but you’re also in control right now — you’re talking to me and breathing, and that’s a big win. We’ll let your therapist know how hard this was for you today so they can support you more with it.”</p>
+                        `
+                    },
+                    {
+                        id: "acute-anxiety-panic-attack",
+                        title: "Acute Anxiety or Panic Attack",
+                        content: `
+                            <h3>Normalize & Reassure</h3>
+                            <p>“What you’re experiencing is a panic attack. It feels really scary, but I promise it’s not life-threatening. You are going to be okay. I’m right here.”</p>
+                            <h3>Orient to Safety (<a class="intervention-link" data-id="grounding-54321">5-4-3-2-1 technique</a>)</h3>
+                            <p>“Let’s name five things you see in the room. Good. Now four things you can feel... three things you can hear... two things you can smell... and one thing you can taste.”</p>
+                            <h3>Permission to Pause</h3>
+                            <p>“We don’t need to unpack everything right now. In fact, we shouldn’t dive deeper into anything heavy at this moment, because I want to make sure you don’t leave here feeling even worse.”</p>
+                            <p><strong>Intervention Insight:</strong> Use <a class="intervention-link" data-id="tipp-skill">TIPP skills</a> for rapid physiological calming, such as splashing cold water or doing paced breathing.</p>
+                        `
+                    },
+                    {
+                        id: "unusual-thoughts-mild-paranoia",
+                        title: "Unusual Thoughts (Mild Paranoia or Cognitive Distortions)",
+                        content: `
+                            <h3>Do Not Dismiss</h3>
+                            <p>“That sounds really troubling. It must feel scary (or confusing) thinking that might be true. Thank you for telling me what’s going through your mind.”</p>
+                            <h3>Gently Reality-Check</h3>
+                            <p>“Let’s look at that together. You feel like everyone in group hates you. I know it can really feel that way. May I share what I’ve observed? I’ve seen group members show you care... I’m not seeing evidence of hate.”</p>
+                            <h3>Affirm</h3>
+                            <p>“You’re not ‘crazy’ or bad for having these thoughts. Our minds do all kinds of weird things under stress. The fact that you can question it and talk about it means you have insight and courage.”</p>
+                        `
+                    },
+                    {
+                        id: "trauma-reaction-flashback",
+                        title: "Trauma Reaction / Flashback",
+                        content: `
+                            <h3>Ground in Present Safety</h3>
+                            <p>“Hey, you’re here with me. You’re safe right now. That thing isn’t happening to you right this second, even though it feels like it is.”</p>
+                            <h3>Breathe and Orient</h3>
+                            <p>“Take a deep breath if you can. You’re breathing in 2025. You’re [client’s name], and you’re here with me, not back in that situation. That was then, and this is now. Can you say out loud, ‘I’m here now’?”</p>
+                        `
+                    },
+                    {
+                        id: "sexual-assault-disclosure",
+                        title: "Sexual Assault Disclosure (Trauma Processing in the Moment)",
+                        content: `
+                            <h3>Listen and Honor Courage</h3>
+                            <p>“I’m so sorry that happened to you. Thank you for trusting me enough to tell me. I can’t imagine how terrible that was for you, and how heavy it must be to carry that.”</p>
+                            <h3>Validate the Response</h3>
+                            <p>“What happened is not your fault. You did not deserve that. The blame is 100% on the person who hurt you.”</p>
+                            <h3>Empower Choices</h3>
+                            <p>“I want you to have control over what happens next. If you want help reporting it or getting medical care, I can help facilitate that. If you just wanted to tell someone and not take further action right now, that’s okay too.”</p>
+                        `
+                    },
+                    {
+                        id: "relational-rupture-conflict",
+                        title: "Relational Rupture / Intense Interpersonal Conflict",
+                        content: `
+                            <h3>Validate the Hurt/Anger</h3>
+                            <p>“It sounds like you’re really hurt and angry about what happened. That’s completely understandable – when someone we care about [does X], it can feel awful and infuriating.”</p>
+                            <h3>Assurance</h3>
+                            <p>“I know conflict with someone you care about is really painful. We’ll let your therapist know what’s going on, so they can help you navigate it too. You’re not alone in this.”</p>
+                        `
+                    },
+                    {
+                        id: "triggered-by-group-content",
+                        title: "Triggered by Group Content",
+                        content: `
+                            <h3>Normalize Triggers</h3>
+                            <p>“It makes a lot of sense that you felt triggered by what came up in group. Sometimes other people’s stories can stir up feelings or memories we didn’t expect. That doesn’t mean anything is wrong with you – it means you’re human and you have experiences that were touched by that topic.”</p>
+                            <h3>Affirmation</h3>
+                            <p>“I’m glad you took a break and talked to me about it. That’s a healthy response to feeling overwhelmed. You honored your limits, and that’s good.”</p>
+                        `
+                    },
+                    {
+                        id: "conflict-in-group-or-with-staff",
+                        title: "Conflict in Group or with Staff",
+                        content: `
+                            <h3>Initial Response</h3>
+                            <p>"It makes sense that you’d feel activated after what happened in group. I want to hold space for that with you."</p>
+                            <h3>Plan a Constructive Follow-Up</h3>
+                            <p>“If you feel up to it, we can talk about how to address this. Would you want to speak with [the person] one-on-one with a mediator, maybe me or your therapist, present? Or would you prefer writing down what you feel and sharing it?”</p>
+                            <h3>Affirm Self-Advocacy</h3>
+                            <p>“I’m really glad you told me how you feel. You have every right to speak up when something isn’t okay for you.”</p>
+                        `
+                    },
+                    {
+                        id: "anger-and-irritability",
+                        title: "Anger and Irritability (beyond mild agitation)",
+                        content: `
+                            <h3>Acknowledge the Emotion</h3>
+                            <p>“You’ve been feeling a lot of anger lately – like a constant simmering. That’s exhausting, isn’t it? It’s okay to feel angry. Anger is a normal emotion. It often comes when we feel hurt, or trapped, or disrespected.”</p>
+                            <h3>Invite Insight</h3>
+                            <p>“Do you have a sense of what’s underneath the anger? Often there’s pain or fear hiding under anger’s umbrella.”</p>
+                            <p><strong>Intervention Insight:</strong> Use <a class="intervention-link" data-id="circles-of-control">Circles of Control, Influence, and Concern</a> to help focus energy effectively. Apply "I-Statements" for assertive expression.</p>
+                        `
+                    }
+                ]
+            },
+            "Yellow": {
+                title: "🟨 Yellow Zone – Moderate Challenges",
+                color: "yellow",
+                scenarios: [
+                    {
+                        id: "manipulative-testing-behaviors",
+                        title: "“Manipulative” or Testing Behaviors",
+                        content: `
+                            <h3>Look Under the Behavior</h3>
+                            <p>“It seems like you really need something right now – maybe reassurance, or to feel in control? I want to understand what you need, because I don’t think you’re doing these things for no reason.”</p>
+                            <h3>Call Out Needs, Not Character</h3>
+                            <p>“I don’t see you as ‘manipulative.’ I see someone who’s trying hard to get their needs met. How about we skip the part where you have to escalate things to get me to care – because I already care.”</p>
+                            <h3>Encourage Direct Communication</h3>
+                            <p>“You shouldn’t have to test me to see if I’ll support you. I want you to know: if you need something, you can ask me as plainly as possible.”</p>
+                            <p><strong>Intervention Insight:</strong> Use <a class="intervention-link" data-id="dear-man">DEAR MAN</a> framework for clear, assertive communication.</p>
+                        `
+                    },
+                    {
+                        id: "shut-down-withdrawn-minimizing",
+                        title: "Shut Down, Withdrawn, or Minimizing",
+                        content: `
+                            <h3>Gently Call It Out</h3>
+                            <p>“I notice you’re getting really quiet (or you keep saying you’re fine). Sometimes when people get really quiet, it’s because the feelings are too much or too hard to put into words. Does that feel true for you right now?”</p>
+                            <h3>Explore Connection</h3>
+                            <p>“Let’s think of one small way to feel a bit more connected. Is there anyone – even an acquaintance or a family member – you could send a text to later today, just to say hi?”</p>
+                            <h3>Affirmation</h3>
+                            <p>“It took courage to admit how lonely you feel. That’s a step toward change. You deserve to feel connected and valued – because you are.”</p>
+                        `
+                    },
+                    {
+                        id: "shame-self-hatred-guilt",
+                        title: "Shame, Self-Hatred, or Guilt",
+                        content: `
+                            <h3>Validate</h3>
+                            <p>“It sounds like you’re holding yourself to an impossible standard. Whatever you did (or think you did), it doesn’t make you worthless or evil. It makes you human.”</p>
+                            <h3>Get Specific</h3>
+                            <p>“Can we talk about what’s making you feel so ashamed? What do you believe you did that’s so unforgivable?”</p>
+                            <h3>Self-Compassion</h3>
+                            <p>“Think about what you would say to a close friend if they were feeling exactly what you’re feeling. You deserve that same kindness. What if you tried talking to yourself in that gentle way, maybe saying something like ‘It’s okay to feel this. I’m here for you.’?”</p>
+                            <p><strong>Intervention Insight:</strong> Use <a class="intervention-link" data-id="act-defusion">ACT Defusion</a> ("I'm having the thought that...") to create distance from thoughts. Apply Cognitive Reframing: Behavior vs. Identity to separate actions from self-worth.</p>
+                        `
+                    },
+                    {
+                        id: "hopelessness-despair",
+                        title: "Hopelessness or Despair (without active suicidal intent)",
+                        content: `
+                            <h3>Borrow Hope</h3>
+                            <p>“Sometimes we have to borrow hope from others. Is it okay if I believe that things can change, even if you don’t believe it today? I’ve seen people come out of pits like this, and I truly believe you can too.”</p>
+                            <h3>Focus on Immediate Next Step</h3>
+                            <p>“When the future looks blank or bleak, don’t even worry about the future right now. Let’s just focus on getting through today, or even just the next hour.”</p>
+                            <h3>Compassion</h3>
+                            <p>“Even if you can’t feel hope right now, I have enough for both of us. I know you’re tired. But you’ve made it to this day, even carrying all that despair – that’s not small thing.”</p>
+                        `
+                    },
+                    {
+                        id: "obsessive-compulsive-thoughts",
+                        title: "Obsessive-Compulsive Thoughts",
+                        content: `
+                            <h3>Normalize</h3>
+                            <p>“It sounds like your brain is stuck on a loop right now. Those kinds of intrusive thoughts can be really exhausting and frightening. You’re not crazy – OCD-type thoughts happen to a lot of people, and they don’t reflect your character or true intentions.”</p>
+                            <h3>Plan for Therapy Work</h3>
+                            <p>“It might help to tell your therapist or psychiatrist about this if you haven’t – OCD is something that can really improve with the right techniques (like Exposure and Response Prevention therapy or sometimes medication).”</p>
+                            <p><strong>Intervention Insight:</strong> Practice Thought Labeling ("That's an OCD thought") or Urge Surfing to create distance.</p>
+                        `
+                    },
+                    {
+                        id: "negative-thought-loops-rumination",
+                        title: "Negative Thought Loops / Rumination",
+                        content: `
+                            <h3>Gently Interrupt</h3>
+                            <p>“I notice your mind keeps circling around this. It’s like you’re stuck in a thought loop, huh? That can be really draining. Let’s hit the pause button on those thoughts for just a moment, if we can.”</p>
+                            <p><strong>Intervention Insight:</strong> Use <a class="intervention-link" data-id="act-defusion">ACT Defusion</a> techniques to help distance from thoughts.</p>
+                        `
+                    },
+                    {
+                        id: "eating-disorder-moderate",
+                        title: "Eating Disorder (Moderate)",
+                        content: `
+                            <h3>Address Gently</h3>
+                            <p>“You mentioned some concerns around eating and body image. I know that can be really sensitive to talk about. I just want to say: I’m here to support you, not judge you. A lot of people struggle with food and eating; you’re definitely not alone in that.”</p>
+                            <h3>Assurance</h3>
+                            <p>“I know this is scary. But you’re not alone in it. We care about you – I care about you – and we want you healthy and happy. You deserve to nourish yourself and to live without this burden.”</p>
+                        `
+                    },
+                    {
+                        id: "neurodivergent-challenges",
+                        title: "Neurodivergent Challenges (ADHD/Autism Spectrum)",
+                        content: `
+                            <h3>Immediate Coping for Sensory Overload</h3>
+                            <p>“Are the lights or sounds bothering you right now? We can dim the lights, or if you want, you can wear headphones or a hoodie to feel more comfortable. No judgment – do what you need to regulate.”</p>
+                            <h3>Encourage Self-Acceptance</h3>
+                            <p>“I know you sometimes feel like you’re ‘too weird’ or ‘broken’ because of how your brain works. You’re not. You’re different, yes, and different can be hard, but it can also be powerful.”</p>
+                        `
+                    },
+                    {
+                        id: "off-topic-distractible",
+                        title: "Off-Topic / Distractible (Difficulty Staying Focused)",
+                        content: `
+                            <h3>Kindly Refocus</h3>
+                            <p>“I notice we jumped to a different topic just now. That’s okay – sometimes our brains steer us away when we hit something uncomfortable or just because something else pops up. Let’s gently steer back to what we were talking about earlier, because I think that was important.”</p>
+                            <h3>Address Distractibility (if cognitive)</h3>
+                            <p>“I can see you have a lot on your mind, and it’s totally fine to cover many things. However, we have limited time, so let’s prioritize. What’s the most important thing you want to focus on today? Let’s write that down, and if we stray, we can glance at it to remember.”</p>
+                            <h3>Positive Reinforcement</h3>
+                            <p>“You’re doing great. We covered the tough bit about your mom’s comment after all, and I really appreciate you sticking with that. I know it’s tempting to veer away, but you stayed with it. That’s progress!”</p>
+                        `
+                    }
+                ]
+            },
+            "Green": {
+                title: "💚 Green Zone – Growth & Skill-Building",
+                color: "green",
+                scenarios: [
+                    {
+                        id: "political-global-events-anxiety",
+                        title: "Political/Global Events Anxiety",
+                        content: `
+                            <h3>Validate</h3>
+                            <p>“It makes complete sense that you’re feeling [anxious/angry/overwhelmed] given what’s happening in the world. These are heavy and uncertain times, and your feelings are a very understandable response.”</p>
+                            <h3>Address Fears of Death/Cosmic Insignificance</h3>
+                            <p>“A lot of existential dread comes from realizing our own mortality or how small we are in the vast universe. That can be scary, but it can also be seen another way: If nothing ultimately matters on a cosmic scale, then maybe we’re free to create our own meaning here and now.”</p>
+                            <p><strong>Intervention Insight:</strong> Use <a class="intervention-link" data-id="circles-of-control">Circles of Control, Influence, and Concern</a> to focus energy effectively.</p>
+                        `
+                    },
+                    {
+                        id: "chronic-pain-health-challenges",
+                        title: "Chronic Pain or Health Challenges",
+                        content: `
+                            <h3>Acknowledge Difficulty</h3>
+                            <p>“Dealing with chronic pain (or a chronic illness) is really tough. Not only are you physically hurting, but it wears on you emotionally too. It’s completely valid to feel frustrated, exhausted, or down about it.”</p>
+                            <h3>Discuss Coping Strategies</h3>
+                            <p>“What helps on the days when the pain or symptoms are a bit more manageable? Is there anything – maybe a heating pad, a short walk, a certain stretch, a distraction like a good TV show – that gives you even a small relief or comfort?”</p>
+                            <p><strong>Intervention Insight:</strong> Practice <a class="intervention-link" data-id="radical-acceptance">Radical Acceptance</a> of the current reality.</p>
+                        `
+                    },
+                    {
+                        id: "struggling-to-identify-express-needs",
+                        title: "Struggling to Identify or Express Needs",
+                        content: `
+                            <h3>Highlight the Pattern</h3>
+                            <p>“It sounds like you often find yourself feeling unsatisfied or hurt because your needs aren’t met – but at the same time, you have a hard time even knowing or saying what those needs are. That’s more common than you might think... your needs matter.”</p>
+                            <h3>Practice in the Moment</h3>
+                            <p>“Let’s practice right now in a small way: How are you feeling in this moment with me? Do you need anything? This is a low-stakes environment to practice identifying a need and voicing it. Whatever it is, I promise to take it seriously.”</p>
+                            <p><strong>Intervention Insight:</strong> Use the <a class="intervention-link" data-id="nvc-framework">Nonviolent Communication (NVC) Framework</a> (Observations, Feelings, Needs, Requests).</p>
+                        `
+                    },
+                    {
+                        id: "enmeshed-dependent-relationships",
+                        title: "Enmeshed or Dependent Relationships",
+                        content: `
+                            <h3>Validate Difficulty</h3>
+                            <p>“It sounds like you feel really tangled up in this relationship – like your feelings and decisions are almost merged with theirs. That can be comforting at times, but also suffocating or confusing.”</p>
+                            <p><strong>Intervention Insight:</strong> Explore <a class="intervention-link" data-id="boundary-setting">Boundary Setting</a>.</p>
+                        `
+                    },
+                    {
+                        id: "feeling-directionless-stuck",
+                        title: "Feeling Directionless or “Stuck” in Life",
+                        content: `
+                            <h3>Normalize</h3>
+                            <p>“A lot of people go through periods of life where they feel lost or directionless. It can be really unsettling, like you’re drifting without a map. First off, it’s okay to not have everything figured out.”</p>
+                            <h3>Explore Values</h3>
+                            <p>“Sometimes direction becomes clearer when we focus on what we truly value in life.”</p>
+                            <p><strong>Intervention Insight:</strong> Use Solution-Focused Brief Therapy (SFBT) techniques like the "Miracle Question" to identify desired future states.</p>
+                        `
+                    },
+                    {
+                        id: "time-management-organization",
+                        title: "Time Management and Organization",
+                        content: `
+                            <h3>Positive Frame</h3>
+                            <p>“You’re looking to get more organized and manage your time better – that’s a great goal. These skills can make life so much less stressful once they click, and I’m excited to help you with it.”</p>
+                            <h3>Task Chunking</h3>
+                            <p>“Another approach is breaking the task into teeny tiny chunks. Instead of ‘Write essay,’ chunk it to: ‘1) Open a Word doc, 2) write a rough title, 3) jot three bullet points of ideas.’ Then do one chunk at a time.”</p>
+                            <h3>Time Management Techniques (Pomodoro)</h3>
+                            <p>“Have you heard of the Pomodoro Technique? It’s where you work for 25 minutes, then take a 5-minute break, then repeat.”</p>
+                            <p><strong>Intervention Insight:</strong> Encourage Habit Stacking (attaching new habits to existing ones).</p>
+                        `
+                    },
+                    {
+                        id: "decision-making",
+                        title: "Decision-Making",
+                        content: `
+                            <h3>Frame the Issue</h3>
+                            <p>“Decision-making can be really stressful, especially if you’re afraid of making the wrong choice or if you’ve got a lot of options. It’s actually great that you want to work on this; being more confident in your decisions can reduce a lot of anxiety.”</p>
+                            <h3>Establish Criteria</h3>
+                            <p>“For bigger decisions, it helps to clarify what factors are most important to you. We can make a simple pros and cons list, but beyond that, maybe weight the pros and cons by importance.”</p>
+                            <h3>Listen to Gut and Head</h3>
+                            <p>“It’s good to analyze, but also consider your gut feeling. Our instincts are basically our subconscious pulling from past experiences and values.”</p>
+                            <p><strong>Intervention Insight:</strong> Use Cost-Benefit Analysis or the "10-10-10 Perspective" to examine consequences.</p>
+                        `
+                    },
+                    {
+                        id: "perfectionism",
+                        title: "Perfectionism",
+                        content: `
+                            <h3>Acknowledge Upside/Downside</h3>
+                            <p>“It sounds like you have some perfectionistic tendencies – like you set very high standards for yourself and maybe feel like nothing you do is ever quite good enough. On one hand, that drive can push you to achieve great things. On the other hand, it’s really exhausting and can make you avoid things.”</p>
+                            <h3>Address Procrastination</h3>
+                            <p>“Try the motto, ‘Done is better than perfect.’ Starting something, even if you know it’s rough, gives you material to refine.”</p>
+                            <h3>Self-Compassion Practice</h3>
+                            <p>“You likely speak to yourself very harshly when you’re not perfect. Try to cultivate a more compassionate inner voice. A good trick is to talk to yourself as if you were your best friend.”</p>
+                            <p><strong>Intervention Insight:</strong> Use Thought Challenging to examine "shoulds".</p>
+                        `
+                    },
+                    {
+                        id: "life-transitions",
+                        title: "Life Transitions",
+                        content: `
+                            <h3>Normalize Anxiety</h3>
+                            <p>“Big changes – even positive ones – can be really unsettling. It’s totally normal to feel anxious or unsure when you’re entering a new phase of life. You’re basically stepping into the unknown.”</p>
+                            <h3>Use Old Skills in New Ways</h3>
+                            <p>“Remember that even though the context is changing, you’re bringing all your accumulated skills and wisdom with you. Think about other transitions you’ve navigated in the past... What helped you then?”</p>
+                        `
+                    },
+                    {
+                        id: "building-healthy-habits-routines",
+                        title: "Building Healthy Habits & Routines",
+                        content: `
+                            <h3>Praise Initiative</h3>
+                            <p>“It’s fantastic that you want to build healthy habits. That’s a big step toward improving your day-to-day life. Habits and routines can really give you a sense of stability and make those positive actions almost automatic.”</p>
+                            <h3>Start Small</h3>
+                            <p>“Instead of aiming for 30 minutes of meditation, what if you started with just one deep breath after you sit down at your desk? The goal is to make it so easy you can’t say no.”</p>
+                            <h3>Accountability</h3>
+                            <p>“It can really help to track your habits – like a habit journal or an app where you tick off each day you did the behavior. Seeing a streak can be motivating (you won’t want to break the chain!).”</p>
+                        `
+                    }
+                ]
+            }
         };
 
         const interventionsData = {
             "Distress Tolerance": [
-                {title: "TIPP Skill", content: "<h4>Temperature...</h4><p>...</p>", id: "tipp-skill"},
-                // Additional Distress Tolerance interventions...
-            ],
-            "Grounding & Somatic": [
-                {title: "5-4-3-2-1 Technique", content: "<h4>Anchoring...</h4><p>...</p>", id: "5-4-3-2-1"},
-                // Additional Grounding interventions...
-            ],
-            "Cognitive & ACT": [
-                {title: "Defusion (from ACT)", content: "<h4>Creating distance...</h4><p>...</p>", id: "defusion-act"},
-                // Additional Cognitive interventions...
+                {
+                    id: "tipp-skill",
+                    title: "TIPP Skill",
+                    content: `
+                        <h3>Core Rationale</h3>
+                        <p>TIPP skills directly target the body's acute stress response, changing your body chemistry and creating a window to re-engage your thinking brain.</p>
+                        <h4>T - Temperature</h4>
+                        <p>Splash cold water on your face or hold an ice cube. This triggers the 'dive response,' which quickly lowers your heart rate.</p>
+                        <h4>I - Intense Exercise</h4>
+                        <p>Engage in a short burst of intense exercise, like jumping jacks or running in place for 60 seconds, to burn off the surge of physical energy.</p>
+                        <h4>P - Paced Breathing</h4>
+                        <p>Slow your breath down, making your exhale longer than your inhale. Breathe in for 4 counts, and out for 6.</p>
+                        <h4>P - Paired Muscle Relaxation</h4>
+                        <p>Tense a muscle group as you inhale, and then relax the muscles as you exhale. Notice the difference between tension and relaxation.</p>
+                    `
+                },
+                {
+                    id: "radical-acceptance",
+                    title: "Radical Acceptance",
+                    content: `
+                        <h3>Core Rationale</h3>
+                        <p>Fighting reality doesn't change it; it only creates more suffering. Acceptance frees up the energy you were using to fight, allowing you to focus on coping effectively and moving forward. It does not mean liking or approving of the reality.</p>
+                        <h4>How to Practice</h4>
+                        <p>Acknowledge the facts of a situation without judgment. Remind yourself, "This is what happened. I cannot change it." Focus on letting go of the fight against what is unchangeable.</p>
+                    `
+                }
             ],
             "Interpersonal Skills": [
-                {title: "DEAR MAN", content: "<h4>A structured way...</h4><p>...</p>", id: "dear-man"},
-                // Additional Interpersonal interventions...
+                {
+                    id: "dear-man",
+                    title: "DEAR MAN",
+                    content: `
+                        <h3>A structured way to ask for something or say "no" assertively.</h3>
+                        <ul>
+                            <li><strong>Describe:</strong> Stick to the objective facts of the situation.</li>
+                            <li><strong>Express:</strong> Clearly state your feelings using "I-statements."</li>
+                            <li><strong>Assert:</strong> Clearly state what you need or want. Be direct.</li>
+                            <li><strong>Reinforce:</strong> Explain the positive outcome if your request is met.</li>
+                            <li><strong>(Stay) Mindful:</strong> Keep your focus on your goal. Avoid getting sidetracked.</li>
+                            <li><strong>Appear Confident:</strong> Use a confident tone and body language.</li>
+                            <li><strong>Negotiate:</strong> Be willing to listen and find a workable compromise.</li>
+                        </ul>
+                    `
+                },
+                {
+                    id: "nvc-framework",
+                    title: "Nonviolent Communication (NVC) Framework",
+                    content: `
+                        <h3>A framework for expressing oneself honestly and receiving others empathetically.</h3>
+                        <ul>
+                            <li><strong>Observations:</strong> State what you are observing without evaluation or judgment.</li>
+                            <li><strong>Feelings:</strong> State how you feel, not what you think.</li>
+                            <li><strong>Needs:</strong> State what needs of yours are connected to the feelings you identified.</li>
+                            <li><strong>Requests:</strong> Make a specific, actionable request for what you want now.</li>
+                        </ul>
+                    `
+                },
+                {
+                    id: "boundary-setting",
+                    title: "Boundary Setting",
+                    content: `
+                        <h3>Core Rationale</h3>
+                        <p>Identifying and communicating personal limits respectfully to maintain healthy relationships and protect your well-being. Feelings of resentment or exhaustion can be signals that a boundary needs to be set.</p>
+                        <h4>How to Practice</h4>
+                        <ul>
+                            <li><strong>Identify the Need:</strong> Recognize where a limit is needed (e.g., time, emotional energy, physical space).</li>
+                            <li><strong>Communicate Clearly:</strong> Use "I-statements" to express your boundary without blaming. E.g., "I need some quiet time after work to recharge."</li>
+                            <li><strong>Be Firm but Kind:</strong> It's possible to say "no" or set a limit respectfully. E.g., "Thank you for the invitation, but I won't be able to make it."</li>
+                            <li><strong>Acknowledge Guilt/Fear:</strong> It's common to feel guilty at first. Remind yourself that setting boundaries is healthy and necessary.</li>
+                        </ul>
+                    `
+                }
+            ],
+            "Cognitive & ACT": [
+                {
+                    id: "act-defusion",
+                    title: "Defusion (from ACT)",
+                    content: `
+                        <h3>Core Rationale</h3>
+                        <p>Defusion techniques help you change the way you relate to your thoughts, reducing their power and believability. The goal is to see thoughts as just mental events, not commands or facts.</p>
+                        <h4>How to Practice</h4>
+                        <ul>
+                            <li><strong>"I'm having the thought that...":</strong> Add this phrase before a difficult thought. E.g., "I'm having the thought that I'm a failure." This creates distance.</li>
+                            <li><strong>Thanking Your Mind:</strong> Acknowledge the thought and gently thank your mind for it. E.g., "Thanks, mind, for that interesting thought!"</li>
+                            <li><strong>Silly Voice:</strong> Repeat a negative thought in a silly voice or sing it to a tune to strip away its seriousness.</li>
+                        </ul>
+                    `
+                },
+                {
+                    id: "thought-challenging",
+                    title: "Thought Challenging",
+                    content: `
+                        <h3>Core Rationale</h3>
+                        <p>This CBT technique involves examining the evidence for and against automatic negative thoughts to develop more balanced perspectives.</p>
+                        <h4>How to Practice</h4>
+                        <ul>
+                            <li><strong>Identify the Hot Thought:</strong> Pinpoint the specific thought that triggered a strong emotion.</li>
+                            <li><strong>Examine Evidence For:</strong> What facts or experiences make you believe this thought is true?</li>
+                            <li><strong>Examine Evidence Against:</strong> What facts or experiences suggest this thought isn't 100% true?</li>
+                            <li><strong>Consider Alternatives:</strong> What is a more balanced or alternative way to view the situation?</li>
+                        </ul>
+                    `
+                },
+                {
+                    id: "circles-of-control",
+                    title: "Circles of Control, Influence, and Concern",
+                    content: `
+                        <h3>A tool to help focus energy effectively by differentiating what you can control, what you can influence, and what you can only be concerned about.</h3>
+                        <ul>
+                            <li><strong>Circle of Control:</strong> Your own thoughts, attitudes, choices, and actions. Focus most of your energy here.</li>
+                            <li><strong>Circle of Influence:</strong> Things you can have an impact on but don't directly control, like the outcomes of conversations or others' responses.</li>
+                            <li><strong>Circle of Concern:</strong> Things you have little to no control over, like global events, the past, or other people's choices. Practice acceptance for these.</li>
+                        </ul>
+                    `
+                }
+            ],
+            "Grounding & Somatic": [
+                {
+                    id: "grounding-54321",
+                    title: "5-4-3-2-1 Technique",
+                    content: `
+                        <h3>Core Rationale</h3>
+                        <p>This technique anchors you in the present moment by engaging all five senses, which can interrupt overwhelming thoughts or panic.</p>
+                        <h4>How to Practice</h4>
+                        <p>Wherever you are, pause and notice:</p>
+                        <ul>
+                            <li><strong>5 things you can see:</strong> Look around and name five objects.</li>
+                            <li><strong>4 things you can feel:</strong> Notice the texture of your clothes, the surface you're sitting on, etc.</li>
+                            <li><strong>3 things you can hear:</strong> Listen for three distinct sounds.</li>
+                            <li><strong>2 things you can smell:</strong> Identify two scents in your environment.</li>
+                            <li><strong>1 thing you can taste:</strong> Notice the taste in your mouth or take a sip of a drink.</li>
+                        </ul>
+                    `
+                },
+                {
+                    id: "self-compassion",
+                    title: "Self-Compassion",
+                    content: `
+                        <h3>Core Rationale</h3>
+                        <p>Treating yourself with the same kindness and understanding you would offer a good friend, especially during times of suffering or failure.</p>
+                        <h4>How to Practice</h4>
+                        <ul>
+                            <li><strong>Acknowledge the Pain:</strong> "This is a moment of suffering."</li>
+                            <li><strong>Common Humanity:</strong> "Suffering is a part of life. Other people feel this way too."</li>
+                            <li><strong>Self-Kindness:</strong> "May I be kind to myself." Think about what you would say to a friend in the same situation and direct that kindness inward.</li>
+                        </ul>
+                    `
+                }
             ],
             "Session Scripts": [
-                {title: "Opening Session Script", content: "<h3>Introduction</h3><p>Welcome to our session. Let's start by checking in on how you're feeling today.</p>", id: "opening-session-script"},
-                {title: "Closing Session Script", content: "<h3>Wrap-Up</h3><p>Thank you for sharing today. Let's review our key takeaways and plan for next time.</p>", id: "closing-session-script"}
+                {
+                    id: "boundary-setting-script",
+                    title: "Boundary Setting Scripts",
+                    content: `
+                        <h3>Foundational Role Setting</h3>
+                        <p><strong>Standard:</strong> “Before we get started—my role isn’t for processing, but to make sure you’re safe and help get you grounded so you can rejoin group. We’ve got about 20 minutes, can you tell me what’s going on?”</p>
+                        <p><strong>For Distressed Clients:</strong> “I may not be the best person to unpack all of it, but I can offer support, check in on safety, and help you find your footing before heading back to group. What feels most important to say out loud right now?”</p>
+                        <h3>Trauma-Dumping Containment</h3>
+                        <p><strong>Mid-Session Redirect:</strong> “I really hear that this is painful... but because we only have a few minutes... I want to be careful we don’t go too deep here and leave you feeling more overwhelmed.”</p>
+                        <p><strong>Gentle Wall:</strong> “I know it can feel urgent to get it all out, but my role is to support you in feeling safe—not to unpack everything... let's just focus on helping you get grounded enough to move forward.”</p>
+                    `
+                },
+                {
+                    id: "end-of-session-script",
+                    title: "End-of-Session Scripts",
+                    content: `
+                        <h3>Survey Hand-off</h3>
+                        <p>“Before you go back to group, I do have a brief survey that I’m required to provide. It's very short, just a thumbs up or a thumbs down. Do you see the link in the chat?”</p>
+                        <h3>For a Client Still in Distress</h3>
+                        <p><strong>Heavy:</strong> “You’re still carrying a lot — I see that. We haven’t solved everything, and we’re not supposed to in these few minutes. I just want to make sure that what you’re feeling now is something you can handle for now. Does it feel safe enough for you to wrap up, even if it’s still heavy?”</p>
+                        <p><strong>Distress:</strong> “I don’t want to send you back in this state. Why don’t we take another minute here? We can try another grounding technique or even get additional support if you need it. My priority is that you leave feeling safe enough.”</p>
+                    `
+                }
             ],
-            "MI": [
-                {title: "Motivational Interviewing Basics", content: "<h3>OARS</h3><p>Use Open Questions, Affirmations, Reflective Listening, and Summaries to engage clients.</p>", id: "mi-basics"},
-                {title: "Change Talk", content: "<h3>Eliciting Change Talk</h3><p>Ask: 'What would be different if you made this change?' to encourage motivation.</p>", id: "change-talk"}
-            ],
-            "Coping Skills": [
-                {title: "Deep Breathing", content: "<h3>Technique</h3><p>Inhale for 4 counts, hold for 4, exhale for 6 to calm your nervous system.</p>", id: "deep-breathing"},
-                {title: "Progressive Muscle Relaxation", content: "<h3>Technique</h3><p>Tense and release each muscle group to reduce physical tension.</p>", id: "progressive-muscle-relaxation"}
-            ]
+            "MI": [],
+            "Coping Skills": []
         };
+        // --- END OF POPULATED DATA ---
 
         const dom = {
             body: document.body,
@@ -715,7 +1318,7 @@
         function openModal(scenario) {
             state.currentOpenScenario = scenario;
             dom.modalTitle.textContent = scenario.title;
-            dom.modalBody.innerHTML = scenario.isCustom ? marked.parse(scenario.content) : linkInterventions(scenario.content);
+            dom.modalBody.innerHTML = scenario.isCustom ? marked.parse(scenario.content) : scenario.content;
             dom.modal.classList.remove('hidden');
             dom.modalEditBtn.style.display = scenario.isCustom ? 'flex' : 'none';
             updateModalFavoriteButton();
@@ -725,18 +1328,6 @@
         }
 
         function hideModal() { dom.modal.classList.add('hidden'); state.currentOpenScenario = null; }
-
-        function linkInterventions(content) {
-            let newContent = content;
-            const allInterventions = Object.values(interventionsData).flat();
-            allInterventions.forEach(intervention => {
-                const regex = new RegExp(`\\b(${intervention.title})\\b`, 'gi');
-                if (content.match(regex)) {
-                    newContent = newContent.replace(regex, `<a class="intervention-link" data-id="${intervention.id}">$1</a>`);
-                }
-            });
-            return newContent;
-        }
 
         function toggleFavorite(id) {
             const favIndex = state.favorites.indexOf(id);
