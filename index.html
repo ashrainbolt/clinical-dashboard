@@ -42,7 +42,7 @@
         .dark .sticky-header { background-color: rgba(17, 24, 39, 0.8); }
         .dark input, .dark textarea { background-color: #374151; border-color: #4b5563; color: #f9fafb; }
         .dark input::placeholder, .dark textarea::placeholder { color: #9ca3af; }
-        .dark .modal-body::-webkit-scrollbar-track, .dark #notes-view::-webkit-scrollbar-track { background: #2d3748; }
+        .dark .modal-body::-webkit-scrollbar-track, #notes-view::-webkit-scrollbar-track { background: #2d3748; }
         .dark .modal-body::-webkit-scrollbar-thumb, .dark #notes-view::-webkit-scrollbar-thumb { background-color: #4a5568; border-radius: 10px; border: 2px solid #2d3748; }
         .dark .modal-header, .dark .modal-footer { border-color: #374151; }
         
@@ -63,8 +63,8 @@
         .dark .gemini-suggestions { border-top-color: #374151; }
         .gemini-suggestions h4 { color: #4f46e5; }
         .dark .gemini-suggestions h4 { color: #a5b4fc; }
-        .suggestion-item { border-left: 3px solid #d1d5db; padding-left: 1rem; margin-bottom: 1rem; }
-        .dark .suggestion-item { border-left-color: #4b5563; }
+        .suggestion-item { background-color: #f9fafb; border-left: 3px solid #d1d5db; padding: 0.75rem 1rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; border-radius: 0 8px 8px 0; }
+        .dark .suggestion-item { background-color: #374151; border-left-color: #4b5563; }
         .loader {
             border: 4px solid #f3f3f3;
             border-top: 4px solid #4f46e5;
@@ -166,8 +166,11 @@
                     </button>
                 </div>
             </div>
-            <div id="modalBody" class="modal-body p-6 overflow-y-auto"></div>
+            <div id="modalBody" class="modal-body p-6 overflow-y-auto">
+                 <!-- Suggestions will be injected here -->
+            </div>
             <div class="modal-footer p-4 border-t space-y-4">
+                <div id="phrasing-suggestions-container" class="hidden"></div>
                 <div class="flex justify-center">
                     <button id="suggest-phrasing-btn" class="bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 px-4 rounded-full transition-colors flex items-center space-x-2">
                         <i data-lucide="sparkles" class="h-5 w-5"></i>
@@ -948,6 +951,9 @@
             confirmModalText: document.getElementById('confirmModalText'),
             confirmCancel: document.getElementById('confirmCancel'),
             confirmAction: document.getElementById('confirmAction'),
+            suggestPhrasingBtn: document.getElementById('suggest-phrasing-btn'),
+            generateFollowupBtn: document.getElementById('generate-followup-btn'),
+            phrasingSuggestionsContainer: document.getElementById('phrasing-suggestions-container'),
         };
 
         const state = {
@@ -1318,7 +1324,17 @@
         function openModal(scenario) {
             state.currentOpenScenario = scenario;
             dom.modalTitle.textContent = scenario.title;
-            dom.modalBody.innerHTML = scenario.isCustom ? marked.parse(scenario.content) : scenario.content;
+            // Clear previous content and suggestions
+            dom.modalBody.innerHTML = '';
+            const contentDiv = document.createElement('div');
+            contentDiv.innerHTML = scenario.isCustom ? marked.parse(scenario.content) : scenario.content;
+            dom.modalBody.appendChild(contentDiv);
+            
+            const suggestionsDiv = document.createElement('div');
+            suggestionsDiv.id = 'phrasing-suggestions';
+            suggestionsDiv.className = 'gemini-suggestions hidden';
+            dom.modalBody.appendChild(suggestionsDiv);
+            
             dom.modal.classList.remove('hidden');
             dom.modalEditBtn.style.display = scenario.isCustom ? 'flex' : 'none';
             updateModalFavoriteButton();
@@ -1532,6 +1548,88 @@
             state.confirmCallback = null;
         }
 
+        // --- NEW ENHANCEMENT FUNCTIONS ---
+
+        function suggestPhrasing() {
+            if (!state.currentOpenScenario) return;
+
+            const suggestionsContainer = document.getElementById('phrasing-suggestions');
+            suggestionsContainer.innerHTML = '<div class="loader"></div>';
+            suggestionsContainer.classList.remove('hidden');
+
+            setTimeout(() => {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = state.currentOpenScenario.content;
+                const textContent = tempDiv.textContent || tempDiv.innerText || "";
+                
+                const phrases = textContent.match(/“([^”]+)”/g) || [];
+
+                suggestionsContainer.innerHTML = ''; // Clear loader
+
+                if (phrases.length > 0) {
+                    let suggestionsHTML = '<h4 class="text-lg font-semibold mb-3">✨ Suggested Phrasing</h4>';
+                    phrases.forEach(phrase => {
+                        const cleanPhrase = phrase.slice(1, -1); // Remove quotes
+                        suggestionsHTML += `
+                            <div class="suggestion-item">
+                                <span class="flex-1 pr-4">${cleanPhrase}</span>
+                                <button class="copy-suggestion-btn p-2 rounded-full text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-600" title="Copy">
+                                    <i data-lucide="copy" class="h-4 w-4"></i>
+                                </button>
+                            </div>
+                        `;
+                    });
+                    suggestionsContainer.innerHTML = suggestionsHTML;
+                    lucide.createIcons();
+
+                    // Add event listeners to new copy buttons
+                    suggestionsContainer.querySelectorAll('.copy-suggestion-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            const textToCopy = e.currentTarget.previousElementSibling.textContent;
+                            const textArea = document.createElement("textarea");
+                            textArea.value = textToCopy;
+                            textArea.style.position = "fixed"; textArea.style.left = "-9999px";
+                            document.body.appendChild(textArea);
+                            textArea.select();
+                            try {
+                                document.execCommand('copy');
+                                showToast("Phrase copied!");
+                            } catch (err) {
+                                showToast("Failed to copy.");
+                            }
+                            document.body.removeChild(textArea);
+                        });
+                    });
+
+                } else {
+                    suggestionsContainer.innerHTML = '<p class="text-center text-gray-500 dark:text-gray-400">No specific phrasing suggestions found for this scenario.</p>';
+                }
+            }, 500); // Simulate generation time
+        }
+
+        function generateFollowUpPlan() {
+            if (!state.currentOpenScenario) return;
+            
+            const followUpTemplates = {
+                'suicidal-ideation-assessment': 'Plan: Escalate to Crisis Manager for immediate follow-up. Document safety assessment (CSSRS) and safety plan details. Inform primary therapist of the intervention.',
+                'self-harm-urges': 'Plan: Follow up with primary therapist regarding self-harm urges. Review safety plan and coping strategies, especially TIPP and Urge Surfing, in the next session. Monitor for safety.',
+                'highly-agitated-escalating': 'Plan: Inform primary therapist about the escalation episode. Discuss potential triggers and review de-escalation and grounding techniques in the next session.',
+                'acute-anxiety-panic-attack': 'Plan: Flag for therapist to review panic attack triggers and coping skills (TIPP, 5-4-3-2-1). Encourage client to track panic symptoms.',
+                'manipulative-testing-behaviors': 'Plan: Discuss observed behavior patterns with the primary therapist. Focus on reinforcing direct communication skills (DEAR MAN) and exploring underlying needs in therapy.',
+                'hopelessness-despair': 'Plan: Inform therapist about the client\'s state of hopelessness. Focus on behavioral activation and identifying small, value-based actions in upcoming sessions. Re-assess for suicidality regularly.',
+            };
+
+            const defaultTemplate = 'Plan: Follow up with primary therapist regarding today\'s session. Review key takeaways and coping strategies next time.';
+
+            const template = followUpTemplates[state.currentOpenScenario.id] || defaultTemplate;
+            
+            const followupTextarea = document.getElementById('notes-followup');
+            followupTextarea.value = template;
+            followupTextarea.dispatchEvent(new Event('blur')); // Trigger saveNote
+            showToast("Follow-up plan generated!");
+        }
+
+
         function setupEventListeners() {
             dom.tabZones.addEventListener('click', () => switchView('zones'));
             dom.tabToolkit.addEventListener('click', () => switchView('toolkit'));
@@ -1581,6 +1679,10 @@
                     if (scenario) openModal(scenario);
                 }
             });
+
+            // --- NEW EVENT LISTENERS ---
+            dom.suggestPhrasingBtn.addEventListener('click', suggestPhrasing);
+            dom.generateFollowupBtn.addEventListener('click', generateFollowUpPlan);
         }
 
         document.addEventListener('DOMContentLoaded', initFirebase);
