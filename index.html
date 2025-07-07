@@ -43,7 +43,7 @@
         .dark input, .dark textarea { background-color: #374151; border-color: #4b5563; color: #f9fafb; }
         .dark input::placeholder, .dark textarea::placeholder { color: #9ca3af; }
         .dark .modal-body::-webkit-scrollbar-track, #notes-view::-webkit-scrollbar-track { background: #2d3748; }
-        .dark .modal-body::-webkit-scrollbar-thumb, .dark #notes-view::-webkit-scrollbar-thumb { background-color: #4a5568; border-radius: 10px; border: 2px solid #2d3748; }
+        .dark .modal-body::-webkit-scrollbar-thumb, #notes-view::-webkit-scrollbar-thumb { background-color: #4a5568; border-radius: 10px; border: 2px solid #2d3748; }
         .dark .modal-header, .dark .modal-footer { border-color: #374151; }
         
         #modalBody h3, #notes-view h3, .content-section h3 { font-size: 1.25rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.5rem; }
@@ -1167,15 +1167,26 @@
         function renderRecent() { renderCardList(dom.recentView, state.recentlyViewed.map(findScenarioById).filter(Boolean), "You haven't viewed any scenarios recently."); }
         
         function renderCardList(container, items, emptyMessage) {
-            container.innerHTML = '';
-            container.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4';
-            if (items.length === 0) {
-                container.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400 col-span-full">${emptyMessage}</p>`;
+            if (!container) {
+                console.error("renderCardList called with a null container.");
                 return;
             }
+            container.innerHTML = ''; // Clear previous content
+
+            if (items.length === 0 && emptyMessage) {
+                container.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400 p-8">${emptyMessage}</p>`;
+                return;
+            }
+
+            const gridEl = document.createElement('div');
+            gridEl.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4';
+            
             items.forEach(item => {
-                if (item) container.appendChild(createScenarioCard(item));
+                if (item) {
+                    gridEl.appendChild(createScenarioCard(item));
+                }
             });
+            container.appendChild(gridEl);
         }
 
         function showScenarios(zoneKey) {
@@ -1331,10 +1342,17 @@
             lucide.createIcons();
         }
 
-        function showToast(message) {
+        function showToast(message, isSubtle = false) {
             dom.toast.textContent = message;
+            if (isSubtle) {
+                 dom.toast.classList.add('bg-gray-600', 'dark:bg-gray-700');
+                 dom.toast.classList.remove('bg-green-500');
+            } else {
+                 dom.toast.classList.remove('bg-gray-600', 'dark:bg-gray-700');
+                 dom.toast.classList.add('bg-green-500');
+            }
             dom.toast.classList.remove('hidden');
-            setTimeout(() => dom.toast.classList.add('hidden'), 3000);
+            setTimeout(() => dom.toast.classList.add('hidden'), 2000);
         }
 
         function switchView(viewName) {
@@ -1442,11 +1460,8 @@
                 }
             } else {
                 if (isHidden) {
-                    dom.notesWidgetContent.classList.remove('hidden');
+                    dom.notesWidgetContent.classList.remove('hidden', 'opacity-0', 'scale-95');
                     dom.notesWidgetToggle.classList.add('hidden');
-                    setTimeout(() => {
-                        dom.notesWidgetContent.classList.remove('opacity-0', 'scale-95');
-                    }, 10);
                 } else {
                     dom.notesWidgetContent.classList.add('opacity-0', 'scale-95');
                     setTimeout(() => {
@@ -1462,8 +1477,9 @@
             // Debounce saving to Firestore
             clearTimeout(state.saveTimeout);
             state.saveTimeout = setTimeout(() => {
-                saveStateToFirestore();
-                showToast("Note saved!", true);
+                saveStateToFirestore().then(() => {
+                    showToast("Note saved", true);
+                });
             }, 1000);
         }
         
