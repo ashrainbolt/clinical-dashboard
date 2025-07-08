@@ -365,10 +365,37 @@
         function setupEventListeners() {
             dom.closeModal.addEventListener('click', hideModal);
             dom.scenarioModal.addEventListener('click', (e) => { if (e.target === dom.scenarioModal) hideModal(); });
-            
             dom.startPauseBtn.addEventListener('click', startPauseTimer);
             dom.resetBtn.addEventListener('click', resetTimer);
             dom.timerPresetBtns.forEach(btn => btn.addEventListener('click', () => setTimer(parseInt(btn.dataset.time))));
+
+            // Theme toggle
+            dom.themeToggle.addEventListener('click', () => {
+                const html = document.documentElement;
+                const isDark = html.classList.toggle('dark');
+                dom.themeIconLight.classList.toggle('hidden', isDark);
+                dom.themeIconDark.classList.toggle('hidden', !isDark);
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            });
+            // Set initial theme icon state
+            if (document.documentElement.classList.contains('dark')) {
+                dom.themeIconLight.classList.add('hidden');
+                dom.themeIconDark.classList.remove('hidden');
+            } else {
+                dom.themeIconLight.classList.remove('hidden');
+                dom.themeIconDark.classList.add('hidden');
+            }
+
+            // Author mode toggle
+            dom.authorModeToggle.addEventListener('click', () => {
+                state.isAuthorMode = !state.isAuthorMode;
+                showToast(`Author Mode: ${state.isAuthorMode ? 'ON' : 'OFF'}`, true);
+            });
+
+            // Notes widget toggle
+            dom.notesWidgetToggle.addEventListener('click', () => {
+                dom.notesWidgetContent.classList.toggle('hidden');
+            });
         }
 
         function startPauseTimer() {
