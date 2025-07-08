@@ -1,19 +1,24 @@
-// ---- CARD RENDERING ----
+<!-- ...Your HTML structure above... -->
+<script>
+/**
+ * ---- CARD RENDERING ----
+ * Creates a scenario card element.
+ */
 function createScenarioCard(scenario) {
     const isFavorited = state.favorites.includes(scenario.id);
     const isUsed = state.checkedScenarios.includes(scenario.id);
     const colors = colorMap[scenario.color] || colorMap.indigo;
-    // Only show first non-empty paragraph as the summary
     const firstParagraph = scenario.content.split('\n').find(p => p.trim());
-    // Tag badges
-    const tagBadges = scenario.tags && scenario.tags.length
-        ? scenario.tags.map(tag => `<span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-xs rounded mr-1">${tag}</span>`).join('')
+    const tagBadges = Array.isArray(scenario.tags) && scenario.tags.length
+        ? scenario.tags.map(tag => `<span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-xs rounded mr-1" aria-label="Tag: ${tag}">${tag}</span>`).join('')
         : '';
-    const usedBadge = isUsed ? `<span class="used-badge">Used</span>` : '';
-    const favBadge = isFavorited ? `<i data-lucide="star" class="inline h-4 w-4 text-yellow-400 mr-1"></i>` : '';
+    const usedBadge = isUsed ? `<span class="used-badge" aria-label="Used">Used</span>` : '';
+    const favBadge = isFavorited ? `<i data-lucide="star" class="inline h-4 w-4 text-yellow-400 mr-1" aria-label="Favorite"></i>` : '';
+
     const card = document.createElement('div');
     card.className = `scenario-card bg-white dark:bg-gray-800 p-4 rounded-lg cursor-pointer flex flex-col justify-between relative ${colors.border} mb-4`;
     card.dataset.id = scenario.id;
+    card.setAttribute('tabindex', '0');
     card.innerHTML = `
         <div>
             <div class="flex items-center">
@@ -21,55 +26,66 @@ function createScenarioCard(scenario) {
             </div>
             <div class="scenario-summary mt-2 text-gray-600 dark:text-gray-400">${marked.parseInline(firstParagraph)}</div>
             <div class="mt-2">${tagBadges}</div>
-            <button class="show-more text-xs text-indigo-600 mt-2 underline">Show more</button>
+            <button class="show-more text-xs text-indigo-600 mt-2 underline" aria-expanded="false">Show more</button>
             <div class="scenario-full-content hidden mt-3">${marked.parse(scenario.content)}</div>
         </div>
         <div class="flex mt-2 space-x-2">
-            <button class="favorite-star text-gray-400 dark:text-gray-600 ${isFavorited ? 'favorited' : ''}" title="Toggle Favorite">
+            <button class="favorite-star text-gray-400 dark:text-gray-600 ${isFavorited ? 'favorited' : ''}" title="Toggle Favorite" aria-pressed="${isFavorited}">
                 <i data-lucide="star" class="h-5 w-5"></i>
             </button>
             <button class="copy-btn text-gray-400 dark:text-gray-600" title="Copy Script"><i data-lucide="copy" class="h-5 w-5"></i></button>
             <button class="mark-used-btn text-gray-400 dark:text-gray-600" title="Mark as Used"><i data-lucide="check" class="h-5 w-5"></i></button>
         </div>
     `;
-    card.querySelector('.show-more').addEventListener('click', (e) => {
-        e.stopPropagation();
-        const full = card.querySelector('.scenario-full-content');
-        if (full.classList.contains('hidden')) {
-            document.querySelectorAll('.scenario-full-content').forEach(el => el.classList.add('hidden'));
-            card.querySelector('.show-more').textContent = "Show less";
-            full.classList.remove('hidden');
+
+    // Event delegation for better performance
+    card.addEventListener('click', (e) => {
+        if (e.target.closest('.show-more')) {
+            toggleShowMore(card);
+            e.stopPropagation();
+        } else if (e.target.closest('.favorite-star')) {
+            toggleFavorite(scenario.id);
+            e.stopPropagation();
+        } else if (e.target.closest('.copy-btn')) {
+            copyToClipboard(scenario.content);
+            e.stopPropagation();
+        } else if (e.target.closest('.mark-used-btn')) {
+            markScenarioUsed(scenario.id);
+            e.stopPropagation();
         } else {
-            full.classList.add('hidden');
-            card.querySelector('.show-more').textContent = "Show more";
+            openModal(scenario);
         }
     });
-    card.querySelector('.favorite-star').addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleFavorite(scenario.id);
-    });
-    card.querySelector('.copy-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        navigator.clipboard.writeText(scenario.content);
-        showToast("Script copied to clipboard!", false);
-    });
-    card.querySelector('.mark-used-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (!state.checkedScenarios.includes(scenario.id)) state.checkedScenarios.push(scenario.id);
-        renderUsedThisSession();
-        showToast("Marked as used.", true);
-        switchView(state.currentView);
-    });
-    card.addEventListener('click', () => openModal(scenario));
     return card;
+}
+
+function toggleShowMore(card) {
+    const full = card.querySelector('.scenario-full-content');
+    const showMoreBtn = card.querySelector('.show-more');
+    const expanded = full.classList.toggle('hidden');
+    showMoreBtn.textContent = expanded ? "Show more" : "Show less";
+    showMoreBtn.setAttribute('aria-expanded', !expanded);
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text)
+        .then(() => showToast("Script copied to clipboard!", false))
+        .catch(() => showToast("Failed to copy.", true));
+}
+
+function markScenarioUsed(id) {
+    if (!state.checkedScenarios.includes(id)) state.checkedScenarios.push(id);
+    renderUsedThisSession();
+    showToast("Marked as used.", true);
+    switchView(state.currentView);
 }
 
 // ---- MODAL LOGIC ----
 function openModal(scenario) {
     if (!scenario) return;
     state.currentOpenScenario = scenario;
-    const tagBadges = scenario.tags && scenario.tags.length
-        ? scenario.tags.map(tag => `<span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-xs rounded mr-1">${tag}</span>`).join('')
+    const tagBadges = Array.isArray(scenario.tags) && scenario.tags.length
+        ? scenario.tags.map(tag => `<span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-xs rounded mr-1" aria-label="Tag: ${tag}">${tag}</span>`).join('')
         : '';
     dom.modalTitle.innerHTML = `${scenario.title} ${tagBadges}`;
     dom.modalBody.innerHTML = `
@@ -82,16 +98,10 @@ function openModal(scenario) {
     dom.scenarioModal.classList.remove('hidden');
     addToRecentlyViewed(scenario.id);
     lucide.createIcons();
-    document.getElementById('copyScript')?.addEventListener('click', () => {
-        navigator.clipboard.writeText(scenario.content);
-        showToast("Script copied to clipboard!", false);
-    });
+    document.getElementById('copyScript')?.addEventListener('click', () => copyToClipboard(scenario.content));
     document.getElementById('markUsed')?.addEventListener('click', () => {
-        if (!state.checkedScenarios.includes(scenario.id)) state.checkedScenarios.push(scenario.id);
-        renderUsedThisSession();
-        showToast("Marked as used.", true);
+        markScenarioUsed(scenario.id);
         dom.scenarioModal.classList.add('hidden');
-        switchView(state.currentView);
     });
 }
 dom.closeModal?.addEventListener('click', () => {
@@ -119,7 +129,7 @@ function addToRecentlyViewed(scenarioId) {
 function renderCardList(container, items, emptyMessage) {
     if (!container) return;
     container.innerHTML = '';
-    if (items.length === 0) {
+    if (!items.length) {
         container.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400 p-8 col-span-full">${emptyMessage}</p>`;
         return;
     }
@@ -137,19 +147,19 @@ function switchView(viewId) {
     });
     dom.contentArea.innerHTML = '';
     renderUsedThisSession();
-
+    let items = [];
     if (viewId === 'dashboard') {
-        const dashboardItems = Array.from(state.contentMap.values()).filter(item => item.category && item.category.includes('Zone'));
-        renderCardList(dom.contentArea, dashboardItems, 'No scenarios found.');
+        items = Array.from(state.contentMap.values()).filter(item => item.category && item.category.includes('Zone'));
+        renderCardList(dom.contentArea, items, 'No scenarios found.');
     } else if (viewId === 'favorites') {
-        const items = state.favorites.map(id => state.contentMap.get(id)).filter(Boolean);
+        items = state.favorites.map(id => state.contentMap.get(id)).filter(Boolean);
         renderCardList(dom.contentArea, items, 'No favorites yet.');
     } else if (viewId === 'recents') {
-        const items = state.recentlyViewed.map(id => state.contentMap.get(id)).filter(Boolean);
+        items = state.recentlyViewed.map(id => state.contentMap.get(id)).filter(Boolean);
         renderCardList(dom.contentArea, items, 'No recently viewed scenarios.');
     } else if (viewId === 'interventions') {
-        const items = [];
-        Object.entries(interventionsData).forEach(([cat, arr]) => items.push(...arr));
+        items = [];
+        Object.values(interventionsData).forEach(arr => items.push(...arr));
         renderCardList(dom.contentArea, items, 'No interventions found.');
     }
 }
@@ -157,16 +167,15 @@ function switchView(viewId) {
 // ---- SEARCH ----
 dom.searchBox?.addEventListener('input', (e) => {
     const q = e.target.value.toLowerCase();
-    let filtered = [];
     if (!q) {
         switchView(state.currentView);
         return;
     }
-    filtered = Array.from(state.contentMap.values()).filter(
+    const filtered = Array.from(state.contentMap.values()).filter(
         item =>
             item.title.toLowerCase().includes(q) ||
             (item.content && item.content.toLowerCase().includes(q)) ||
-            (item.tags && item.tags.some(tag => tag.includes(q)))
+            (item.tags && item.tags.some(tag => tag.toLowerCase().includes(q)))
     );
     dom.contentArea.innerHTML = '';
     renderUsedThisSession();
@@ -196,5 +205,4 @@ function main() {
 }
 document.addEventListener('DOMContentLoaded', main);
 </script>
-</body>
-</html>
+<!-- ...Your HTML structure below... -->
