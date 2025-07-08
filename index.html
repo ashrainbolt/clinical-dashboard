@@ -26,7 +26,6 @@
       <button class="sidebar-link w-full text-left px-4 py-2 rounded hover:bg-indigo-100 dark:hover:bg-indigo-900" data-tab="favorites">Favorites</button>
       <button class="sidebar-link w-full text-left px-4 py-2 rounded hover:bg-indigo-100 dark:hover:bg-indigo-900" data-tab="recents">Recently Viewed</button>
       <button class="sidebar-link w-full text-left px-4 py-2 rounded hover:bg-indigo-100 dark:hover:bg-indigo-900" data-tab="interventions">Interventions</button>
-      <button class="sidebar-link w-full text-left px-4 py-2 rounded hover:bg-indigo-100 dark:hover:bg-indigo-900" data-tab="custom">Custom</button>
     </nav>
     <div class="p-4 border-t border-gray-200 dark:border-gray-700">
       <input id="search-box" type="text" placeholder="Search..." class="w-full px-3 py-2 rounded border border-gray-300 dark:bg-gray-700 dark:border-gray-600 focus:outline-none" />
@@ -35,8 +34,6 @@
 
   <!-- Main content -->
   <main class="ml-56 min-h-screen p-8 transition-colors duration-300">
-    <!-- Filters & Sorting -->
-    <div id="filters-sorting" class="flex flex-wrap items-center gap-2 mb-4"></div>
     <!-- Used this session -->
     <div id="used-this-session" class="mb-4"></div>
     <!-- Dynamic content area -->
@@ -51,62 +48,6 @@
       </button>
       <h2 id="modal-title" class="text-xl font-bold mb-2"></h2>
       <div id="modal-body" class="text-gray-800 dark:text-gray-200 overflow-y-auto"></div>
-      <div class="flex justify-between mt-4">
-        <button id="prev-scenario" class="bg-gray-200 dark:bg-gray-700 px-3 py-1 rounded text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600 text-xs">Previous</button>
-        <button id="next-scenario" class="bg-gray-200 dark:bg-gray-700 px-3 py-1 rounded text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600 text-xs">Next</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal for creating/editing custom scenarios -->
-  <div id="custom-modal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-xl w-full relative p-6 max-h-[90vh] flex flex-col">
-      <button id="close-custom-modal" class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200">
-        <i data-lucide="x" class="w-6 h-6"></i>
-      </button>
-      <h2 class="text-xl font-bold mb-4" id="custom-modal-title">Add Custom Scenario</h2>
-      <form id="custom-scenario-form" class="space-y-4">
-        <input type="hidden" id="custom-edit-id">
-        <div>
-          <label class="block mb-1 text-sm font-medium">Title</label>
-          <input id="custom-title" type="text" required class="w-full px-3 py-2 rounded border border-gray-300 dark:bg-gray-700 dark:border-gray-600 focus:outline-none" />
-        </div>
-        <div>
-          <label class="block mb-1 text-sm font-medium">Content (Markdown Supported)</label>
-          <textarea id="custom-content" required class="w-full px-3 py-2 rounded border border-gray-300 dark:bg-gray-700 dark:border-gray-600 focus:outline-none" rows="4"></textarea>
-        </div>
-        <div>
-          <label class="block mb-1 text-sm font-medium">Tags (comma separated)</label>
-          <input id="custom-tags" type="text" class="w-full px-3 py-2 rounded border border-gray-300 dark:bg-gray-700 dark:border-gray-600 focus:outline-none" />
-        </div>
-        <div>
-          <label class="block mb-1 text-sm font-medium">Zone/Category</label>
-          <select id="custom-category" class="w-full px-3 py-2 rounded border border-gray-300 dark:bg-gray-700 dark:border-gray-600 focus:outline-none">
-            <option value="">Uncategorized</option>
-            <option value="Red Zone">Red Zone</option>
-            <option value="Orange Zone">Orange Zone</option>
-            <option value="Yellow Zone">Yellow Zone</option>
-            <option value="Green Zone">Green Zone</option>
-            <option value="Intervention">Intervention</option>
-            <option value="Custom">Custom</option>
-          </select>
-        </div>
-        <div>
-          <label class="block mb-1 text-sm font-medium">Color</label>
-          <select id="custom-color" class="w-full px-3 py-2 rounded border border-gray-300 dark:bg-gray-700 dark:border-gray-600 focus:outline-none">
-            <option value="indigo">Indigo</option>
-            <option value="red">Red</option>
-            <option value="orange">Orange</option>
-            <option value="yellow">Yellow</option>
-            <option value="green">Green</option>
-            <option value="blue">Blue</option>
-          </select>
-        </div>
-        <div class="flex gap-2 mt-4">
-          <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 text-sm font-semibold">Save</button>
-          <button type="button" id="cancel-custom" class="bg-gray-300 dark:bg-gray-700 text-black dark:text-white px-4 py-2 rounded hover:bg-gray-400 dark:hover:bg-gray-600 text-sm">Cancel</button>
-        </div>
-      </form>
     </div>
   </div>
 
@@ -115,16 +56,6 @@
 
   <script>
     // ---- STATE AND DATA ----
-    const LS_KEYS = {
-      favorites: "cdash_favorites_v2",
-      checked: "cdash_checked_v2",
-      recents: "cdash_recents_v2",
-      notes: "cdash_notes_v2",
-      custom: "cdash_custom_v2",
-      sorting: "cdash_sorting_v2",
-      filter: "cdash_filter_v2"
-    };
-
     const state = {
       favorites: [],
       checkedScenarios: [],
@@ -132,12 +63,6 @@
       contentMap: new Map(),
       currentView: 'dashboard',
       currentOpenScenario: null,
-      currentViewItems: [],
-      currentModalIndex: 0,
-      notes: {}, // {scenarioId: noteText}
-      customScenarios: [],
-      sorting: { by: "default", dir: "asc" },
-      filter: "",
     };
 
     // Color mappings for scenarios
@@ -150,11 +75,248 @@
       blue: { border: "border-l-4 border-blue-500" },
     };
 
-    // --- (Omitted) --- Clinical/Intervention data block, unchanged from original for brevity ---
-    // --- (Retain the clinicalData and interventionsData blocks as in previous version) ---
+    // Data from CLINICALX document
+    const clinicalData = [
+      // 🔴 Red Zone
+      {
+        id: "red-1",
+        title: "Suicidal Ideation – Safety Assessment",
+        content: `**ASSESS**
+"Before we go any deeper, our priority is always your safety. I’d like to ask a few questions that help us understand how you’re doing and what kind of support might help keep you safe right now.
+#1: Have you wished you were dead or that you could go to sleep and not wake up?
+#2: Have you actually had any thoughts of killing yourself?
+#3: In the past 48 hours, have you been thinking about how you might do this?
+#4: In the past 48 hours, have you had these thoughts and had some intention of acting on them?
+#5: In the past 48 hours, have you started to work out any details for how to kill yourself? Do you intend to carry out this plan?
+#6: In the past 48 hours have you done anything to prepare to end your life?
 
-    // For brevity, include the clinicalData and interventionsData blocks from original code here
-    // ... COPY FROM ORIGINAL ...
+*If Yes to 4, 5, or 6? Ask scaling questions:*
+"On a scale of 1-5, one meaning you feel you can stay safe today, and five meaning that you're going to make an attempt today, where would you place yourself right now?"
+
+**SAFETY PLAN**
+**Need to escalate:** "Thank you for telling me that. If it sounds like things are starting to feel more intense or harder to manage on your own, I’d like to connect you with a Crisis Manager..."
+**Warning Signs:** "What are some early signs you notice when things start to spiral?"
+**Internal Coping:** "What can you try on your own that sometimes helps, even a little?"
+**Social Distractions:** "Who or what helps you shift your focus?"
+**People to Reach Out To:** "If things feel too big to hold alone, who could you reach out to?"
+**Professional Resources:** "Do you have Charlie Health’s 24/7 crisis line saved in your phone?"
+**Safety at Home:** "Is there anything nearby that might feel unsafe to have around right now?"
+**Reasons to Stay:** "When things get dark, what’s something — or someone — that reminds you there’s still a reason to hang on?"`,
+        tags: ["crisis", "safety", "suicide"],
+        color: "red",
+        category: "Red Zone",
+      },
+      {
+        id: "red-2",
+        title: "Self-Harm Urges (Non-Suicidal Self-Injury)",
+        content: `**Direct Check-In:** "Thank you for telling me. I need to ask: Are you having urges to hurt yourself right now?"
+**Clarify Intent:** "When you self-harmed, was it because you wanted to die, or was it more about coping with pain or numbness?"
+**Validate & Normalize:** "That urge makes sense given what you’re carrying. A part of you is trying to survive and find relief..."
+**Offer Alternatives (TIPP skills):** "Sometimes our body needs a very strong sensation to release that tension. We could try holding something frozen (like ice)..."
+**Urge Surfing Technique:** "Remember, urges are like waves — they build, peak, and eventually become less intense."
+**Safe Physical Release:** "Would it help to rip up some paper, squeeze a stress ball, stomp your feet, or even scream into a pillow?"`,
+        tags: ["crisis", "self-harm", "nssi"],
+        color: "red",
+        category: "Red Zone",
+      },
+      {
+        id: "red-3",
+        title: "Hallucinations or Disturbing Perceptual Experiences",
+        content: `**Acknowledge Experience:** "Thank you for telling me. I can imagine this feels really intense and scary. I want you to know I’m here with you, and I believe that you’re experiencing this."
+**Safety Check:** "Are the things you’re hearing or seeing telling you to hurt yourself or anyone else?"
+**Orient to Present:** "Let’s try something together to bring you into the here and now with me, okay? Put your feet flat on the floor for me."`,
+        tags: ["crisis", "psychosis", "hallucinations"],
+        color: "red",
+        category: "Red Zone",
+      },
+      {
+        id: "red-4",
+        title: "Acute Medical Crisis",
+        content: `**Immediate Action – Take Charge:** "Okay, I see/hear that something serious might be happening physically. The most important thing right now is getting you medical help immediately."
+**Instruct to Call Emergency:** "Are you able to call 911 (or your local emergency number) right now? Is there someone with you who can call for you?"
+**Offer to Call:** "It sounds like you can’t call on your own. I’m going to get you help. Do I have your permission to call 911 for you right now to get an ambulance?"`,
+        tags: ["crisis", "medical", "emergency"],
+        color: "red",
+        category: "Red Zone",
+      },
+      {
+        id: "red-5",
+        title: "Substance Overdose or Severe Intoxication",
+        content: `**Recognize Seriousness:** "I can tell this is serious. I’m very concerned that you might be experiencing a medical emergency from substances."
+**Instruct to Call Emergency:** "This is urgent. Are you able to call 911 right now for medical attention?"
+**Keep Them Awake & Oriented:** "Stay with me, okay? Help is coming. Try to stay awake and keep talking to me."`,
+        tags: ["crisis", "overdose", "substance use"],
+        color: "red",
+        category: "Red Zone",
+      },
+      {
+        id: "red-6",
+        title: "Unsafe Home Environment / Domestic Violence",
+        content: `**Express Empathy and Belief:** "Thank you for sharing this with me. I can’t imagine how hard it was to say that out loud. I want you to know I believe you, and you didn’t deserve any of this."
+**Assess Immediate Safety:** "Are you safe right now? Is the person who hurt you nearby or likely to return soon?"
+**Provide Control & Options:** "You know your situation best, and I’m here to support whatever you choose to do. For example, have you heard of the National Domestic Violence Hotline?"`,
+        tags: ["crisis", "safety", "abuse", "dv"],
+        color: "red",
+        category: "Red Zone",
+      },
+      // 🟠 Orange Zone
+      {
+        id: "orange-1",
+        title: "Highly Agitated or Escalating",
+        content: `**Center and Slow:** "I can see (or hear) how agitated you are. Let’s take a pause for a second. I’m right here with you. You don’t have to go through this moment alone."
+**After Calming:** "I know you’re still upset, but you’re also in control right now — you’re talking to me and breathing, and that’s a big win."`,
+        tags: ["distress", "agitation", "escalation"],
+        color: "orange",
+        category: "Orange Zone",
+      },
+      {
+        id: "orange-2",
+        title: "Acute Anxiety or Panic Attack",
+        content: `**Normalize & Reassure:** "What you’re experiencing is a panic attack. It feels really scary, but I promise it’s not life-threatening. You are going to be okay. I’m right here."
+**Orient to Safety (5-4-3-2-1 technique):** "Let’s name five things you see in the room. Good. Now four things you can feel... three things you can hear... two things you can smell... and one thing you can taste."
+**Permission to Pause:** "We don’t need to unpack everything right now. In fact, we shouldn’t dive deeper into anything heavy at this moment."`,
+        tags: ["distress", "anxiety", "panic"],
+        color: "orange",
+        category: "Orange Zone",
+      },
+       {
+        id: "orange-3",
+        title: "Overwhelmed & Emotionally Flooded",
+        content: `**Contain and Validate:** "It’s all feeling like too much, isn’t it? I hear you. What you’re experiencing right now makes so much sense given everything you’re carrying."
+**Permission to Pause:** "We don’t need to unpack everything right now. In fact, we shouldn’t dive deeper into anything heavy at this moment, because I want to make sure you don’t leave here feeling even worse."
+**If they are silent or shut down:** "It’s alright if you can’t put it into words. You don’t owe me any explanation."`,
+        tags: ["distress", "overwhelm", "flooded"],
+        color: "orange",
+        category: "Orange Zone",
+      },
+      // 🟨 Yellow Zone
+      {
+        id: "yellow-1",
+        title: "“Manipulative” or Testing Behaviors",
+        content: `**Look Under the Behavior:** "It seems like you really need something right now – maybe reassurance, or to feel in control? I want to understand what you need, because I don’t think you’re doing these things for no reason."
+**Call Out Needs, Not Character:** "I don’t see you as ‘manipulative.’ I see someone who’s trying hard to get their needs met."
+**Encourage Direct Communication:** "You shouldn’t have to test me to see if I’ll support you. I want you to know: if you need something, you can ask me as plainly as possible."`,
+        tags: ["challenge", "behavior", "testing"],
+        color: "yellow",
+        category: "Yellow Zone",
+      },
+      {
+        id: "yellow-2",
+        title: "Shut Down, Withdrawn, or Minimizing",
+        content: `**Gently Call It Out:** "I notice you’re getting really quiet (or you keep saying you’re fine). Sometimes when people get really quiet, it’s because the feelings are too much or too hard to put into words."
+**Permission to Be Silent:** "We can sit here together without talking for a bit if that’s what you need. I’m not uncomfortable with the silence if you aren’t."`,
+        tags: ["challenge", "withdrawn", "shutdown"],
+        color: "yellow",
+        category: "Yellow Zone",
+      },
+      {
+        id: "yellow-3",
+        title: "Shame, Self-Hatred, or Guilt",
+        content: `**Validate:** "It sounds like you’re holding yourself to an impossible standard. Whatever you did (or think you did), it doesn’t make you worthless or evil. It makes you human."
+**Get Specific:** "Can we talk about what’s making you feel so ashamed? What do you believe you did that’s so unforgivable?"
+**Self-Compassion:** "Think about what you would say to a close friend if they were feeling exactly what you’re feeling. You deserve that same kindness."`,
+        tags: ["challenge", "shame", "guilt", "self-hatred"],
+        color: "yellow",
+        category: "Yellow Zone",
+      },
+      // 💚 Green Zone
+      {
+        id: "green-1",
+        title: "Political/Global Events Anxiety",
+        content: `**Validate:** "It makes complete sense that you’re feeling [anxious/angry/overwhelmed] given what’s happening in the world. These are heavy and uncertain times."
+**Address Fears of Death/Cosmic Insignificance:** "A lot of existential dread comes from realizing our own mortality or how small we are in the vast universe."
+**Intervention Insight:** Use Circles of Control, Influence, and Concern to focus energy effectively.`,
+        tags: ["growth", "anxiety", "global events"],
+        color: "green",
+        category: "Green Zone",
+      },
+      {
+        id: "green-2",
+        title: "Chronic Pain or Health Challenges",
+        content: `**Acknowledge Difficulty:** "Dealing with chronic pain (or a chronic illness) is really tough. Not only are you physically hurting, but it wears on you emotionally too."
+**Discuss Coping Strategies:** "What helps on the days when the pain or symptoms are a bit more manageable?"
+**Intervention Insight:** Practice Radical Acceptance of the current reality.`,
+        tags: ["growth", "chronic pain", "health"],
+        color: "green",
+        category: "Green Zone",
+      },
+      {
+        id: "green-3",
+        title: "Struggling to Identify or Express Needs",
+        content: `**Highlight the Pattern:** "It sounds like you often find yourself feeling unsatisfied or hurt because your needs aren’t met – but at the same time, you have a hard time even knowing or saying what those needs are."
+**Practice in the Moment:** "Let’s practice right now in a small way: How are you feeling in this moment with me? Do you need anything?"
+**Intervention Insight:** Use the Nonviolent Communication (NVC) Framework.`,
+        tags: ["growth", "needs", "communication"],
+        color: "green",
+        category: "Green Zone",
+      },
+    ];
+
+    const interventionsData = [
+       {
+        id: "int-1",
+        title: "TIPP Skill for Rapid Distress Reduction",
+        content: `Core Rationale: TIPP skills directly target the body's acute stress response, changing your body chemistry and creating a window to re-engage your thinking brain.
+**T - Temperature:** "First, let's try to change your body temperature... go splash some cold water on your face - really let it cover your cheeks and the area under your eyes."
+**I - Intense Exercise:** "If you're feeling a lot of restless, built-up energy, a very short burst of exercise - maybe 60 seconds to a couple of minutes."
+**P - Paced Breathing:** "Now, let's focus on slowing your breath. We're going to make your exhale longer than your inhale."
+**P - Paired Muscle Relaxation:** "We can try Paired Muscle Relaxation. This means relaxing your muscles as you exhale."`,
+        tags: ["intervention", "dbt", "distress tolerance"],
+        color: "blue",
+        category: "Intervention",
+      },
+      {
+        id: "int-2",
+        title: "ACCEPTS: For Distress Tolerance (Distraction)",
+        content: `An acronym for skills used to tolerate and survive moments of high distress without making things worse.
+**A - Activities:** "What healthy, absorbing activities could you do to take your mind off things?"
+**C - Contributing:** "Can you contribute by doing something helpful or kind for someone else?"
+**C - Comparisons:** (Use with caution) "Can you compare yourself to a time you felt even worse?"
+**E - Emotions:** "Can you generate different emotions? (e.g., Watch a comedy)."
+**P - Pushing Away:** "Can you temporarily push away the painful thoughts or situation?"
+**T - Thoughts:** "Can you occupy your mind with other thoughts? (e.g., Count backwards from 100)."
+**S - Sensations:** "Can you use intense sensations (non-harmful) to shift focus? (e.g., Hold an ice cube)."`,
+        tags: ["intervention", "dbt", "distraction"],
+        color: "blue",
+        category: "Intervention",
+      },
+      {
+        id: "int-3",
+        title: "Radical Acceptance",
+        content: `Accepting reality as it is, without judgment, approval, or bitterness. It is about letting go of the fight against what you cannot change.
+"Radical acceptance is about acknowledging the facts of reality, even if we don't like them. It's not approval; it's letting go of the fight. Let's remind ourselves, 'This is what happened. I cannot change it.' What would it feel like to stop fighting this reality?"`,
+        tags: ["intervention", "dbt", "acceptance"],
+        color: "blue",
+        category: "Intervention",
+      },
+      {
+        id: "int-4",
+        title: "DEAR MAN: For Interpersonal Effectiveness",
+        content: `A structured way to ask for something you want or to say "no" effectively and assertively.
+**D - Describe:** "Just the facts. What is the specific, objective situation?"
+**E - Express:** "Clearly state your feelings using 'I-statements'."
+**A - Assert:** "Clearly state what you need or want. Be direct."
+**R - Reinforce:** "Explain the positive outcome if your request is met."
+**M - (Stay) Mindful:** "Keep your focus on your goal."
+**A - Appear Confident:** "Use a confident tone and body language."
+**N - Negotiate:** "Be willing to listen and find a workable compromise."`,
+        tags: ["intervention", "dbt", "communication"],
+        color: "blue",
+        category: "Intervention",
+      },
+      {
+        id: "int-5",
+        title: "Self-Compassion Break (Kristin Neff)",
+        content: `A brief, structured practice to offer oneself kindness in moments of suffering.
+**1. Acknowledge the Pain (Mindfulness):** "Right now, it sounds like you're really going through a hard time. Can we just pause and acknowledge that?... 'This is a moment of suffering,'/'This really hurts.'"
+**2. Connect to Common Humanity:** "Now, can you remind yourself that suffering and feeling [the specific feeling] is part of being human?... You're not alone in feeling this way..."
+**3. Offer Self-Kindness:** "And now, if you feel comfortable, maybe place a hand on your heart... Ask yourself, 'What do I need to hear right now?'... Try saying something gentle, like 'May I be kind to myself,'..."`,
+        tags: ["intervention", "self-compassion", "mindfulness"],
+        color: "blue",
+        category: "Intervention",
+      }
+    ];
+
 
     // ---- DOM REFERENCES ----
     const dom = {
@@ -166,140 +328,14 @@
       modalBody: document.getElementById('modal-body'),
       closeModal: document.getElementById('close-modal'),
       usedThisSession: document.getElementById('used-this-session'),
-      filtersSorting: document.getElementById('filters-sorting'),
-      prevScenario: null,
-      nextScenario: null,
-      // Custom scenario modal
-      customModal: document.getElementById('custom-modal'),
-      closeCustomModal: document.getElementById('close-custom-modal'),
-      customForm: document.getElementById('custom-scenario-form'),
-      customTitle: document.getElementById('custom-title'),
-      customContent: document.getElementById('custom-content'),
-      customTags: document.getElementById('custom-tags'),
-      customCategory: document.getElementById('custom-category'),
-      customColor: document.getElementById('custom-color'),
-      customEditId: document.getElementById('custom-edit-id'),
-      cancelCustom: document.getElementById('cancel-custom'),
     };
 
-    // ---- LOCAL STORAGE ----
-    function saveToStorage() {
-      localStorage.setItem(LS_KEYS.favorites, JSON.stringify(state.favorites));
-      localStorage.setItem(LS_KEYS.checked, JSON.stringify(state.checkedScenarios));
-      localStorage.setItem(LS_KEYS.recents, JSON.stringify(state.recentlyViewed));
-      localStorage.setItem(LS_KEYS.notes, JSON.stringify(state.notes));
-      localStorage.setItem(LS_KEYS.custom, JSON.stringify(state.customScenarios));
-      localStorage.setItem(LS_KEYS.sorting, JSON.stringify(state.sorting));
-      localStorage.setItem(LS_KEYS.filter, state.filter || "");
-    }
-    function loadFromStorage() {
-      try {
-        state.favorites = JSON.parse(localStorage.getItem(LS_KEYS.favorites) || "[]");
-        state.checkedScenarios = JSON.parse(localStorage.getItem(LS_KEYS.checked) || "[]");
-        state.recentlyViewed = JSON.parse(localStorage.getItem(LS_KEYS.recents) || "[]");
-        state.notes = JSON.parse(localStorage.getItem(LS_KEYS.notes) || "{}");
-        state.customScenarios = JSON.parse(localStorage.getItem(LS_KEYS.custom) || "[]");
-        state.sorting = JSON.parse(localStorage.getItem(LS_KEYS.sorting) || '{"by":"default","dir":"asc"}');
-        state.filter = localStorage.getItem(LS_KEYS.filter) || "";
-      } catch (e) {
-        // fallback in case of corruption
-        state.favorites = [];
-        state.checkedScenarios = [];
-        state.recentlyViewed = [];
-        state.notes = {};
-        state.customScenarios = [];
-        state.sorting = { by: "default", dir: "asc" };
-        state.filter = "";
-      }
-    }
-
-    // ---- DATA INITIALIZATION ----
+    // ---- INITIALIZATION ----
     function initializeDataMap() {
       // Load clinical scenarios into the content map
       clinicalData.forEach(s => state.contentMap.set(s.id, s));
+      // Load interventions
       interventionsData.forEach(s => state.contentMap.set(s.id, s));
-      state.customScenarios.forEach(s => state.contentMap.set(s.id, s));
-    }
-
-    // ---- FILTERS AND SORTING ----
-    function renderFiltersAndSorting() {
-      const filters = [
-        { label: "All", value: "" },
-        { label: "Red Zone", value: "Red Zone" },
-        { label: "Orange Zone", value: "Orange Zone" },
-        { label: "Yellow Zone", value: "Yellow Zone" },
-        { label: "Green Zone", value: "Green Zone" },
-      ];
-      // Zone Filters
-      let html = '<div class="flex gap-2 flex-wrap">';
-      filters.forEach(f => {
-        html += `<button class="zone-filter px-3 py-1 rounded ${state.filter === f.value ? "bg-indigo-600 text-white" : "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100"} text-xs font-semibold" data-zone="${f.value}">${f.label}</button>`;
-      });
-      html += '</div>';
-
-      // Sorting options
-      html += `
-      <div class="ml-auto flex gap-2">
-        <label class="text-xs font-semibold mt-2 mr-1">Sort:</label>
-        <select id="sort-select" class="text-xs px-2 py-1 rounded border border-gray-300 dark:bg-gray-700 dark:border-gray-600">
-          <option value="default">Default</option>
-          <option value="title">Title</option>
-          <option value="color">Color/Acuity</option>
-          <option value="used">Most Used</option>
-        </select>
-      </div>
-      `;
-      // Add button for custom scenario
-      if(state.currentView === "custom") {
-        html += `
-        <button id="add-custom-btn" class="ml-4 bg-indigo-500 text-white px-3 py-1 rounded hover:bg-indigo-600 text-xs font-bold flex items-center gap-1">
-          <i data-lucide="plus" class="w-4 h-4"></i> Add Custom
-        </button>`;
-      }
-      dom.filtersSorting.innerHTML = html;
-      // Set sorting select value
-      document.getElementById('sort-select').value = state.sorting.by;
-
-      // Attach events
-      dom.filtersSorting.querySelectorAll('.zone-filter').forEach(btn => {
-        btn.onclick = () => {
-          state.filter = btn.dataset.zone;
-          saveToStorage();
-          switchView(state.currentView);
-        }
-      });
-      document.getElementById('sort-select').onchange = (e) => {
-        state.sorting.by = e.target.value;
-        saveToStorage();
-        switchView(state.currentView);
-      };
-      if(document.getElementById('add-custom-btn')) {
-        document.getElementById('add-custom-btn').onclick = () => openCustomModal();
-      }
-      lucide.createIcons();
-    }
-
-    function getSortedFilteredItems(items) {
-      // Filter
-      let filtered = items;
-      if (state.currentView === 'dashboard' && state.filter) {
-        filtered = filtered.filter(item => item.category === state.filter);
-      }
-      // Sorting
-      let sorted = filtered.slice(); // copy
-      if (state.sorting.by === "title") {
-        sorted.sort((a, b) => a.title.localeCompare(b.title));
-      } else if (state.sorting.by === "color") {
-        const order = { red: 1, orange: 2, yellow: 3, green: 4, blue: 5, indigo: 6 };
-        sorted.sort((a, b) => (order[a.color] || 99) - (order[b.color] || 99));
-      } else if (state.sorting.by === "used") {
-        sorted.sort((a, b) => {
-          const aUsed = state.checkedScenarios.includes(a.id) ? 1 : 0;
-          const bUsed = state.checkedScenarios.includes(b.id) ? 1 : 0;
-          return bUsed - aUsed; // most used first
-        });
-      }
-      return sorted;
     }
 
     // ---- RENDERING ----
@@ -313,7 +349,7 @@
         : '';
       const usedBadge = isUsed ? `<span class="ml-2 px-2 py-0.5 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded text-xs" aria-label="Used">Used</span>` : '';
       const favBadge = isFavorited ? `<i data-lucide="star" class="inline h-4 w-4 text-yellow-400 mr-1" aria-label="Favorite"></i>` : '';
-      // Card
+
       const card = document.createElement('div');
       card.className = `scenario-card bg-white dark:bg-gray-800 p-4 rounded-lg cursor-pointer flex flex-col justify-between relative ${colors.border} shadow transition-transform hover:scale-105 duration-200`;
       card.dataset.id = scenario.id;
@@ -333,11 +369,10 @@
           <button class="copy-btn text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400" title="Copy Script"><i data-lucide="copy" class="h-5 w-5"></i></button>
           <button class="mark-used-btn text-gray-400 dark:text-gray-500 hover:text-green-600 dark:hover:text-green-400" title="Mark as Used"><i data-lucide="check" class="h-5 w-5"></i></button>
           <button class="show-more-btn ml-auto text-xs text-indigo-600 dark:text-indigo-400 hover:underline" aria-label="Show details for ${scenario.title}">Details</button>
-          ${scenario.isCustom ? `<button class="edit-custom-btn ml-2 text-xs text-gray-500 hover:text-indigo-600" title="Edit Custom"><i data-lucide="edit" class="w-4 h-4"></i></button>
-          <button class="delete-custom-btn ml-2 text-xs text-gray-500 hover:text-red-600" title="Delete Custom"><i data-lucide="trash" class="w-4 h-4"></i></button>` : ""}
         </div>
       `;
-      // Event delegation
+
+      // Event delegation for better performance
       card.addEventListener('click', (e) => {
         if (e.target.closest('.favorite-star')) {
           toggleFavorite(scenario.id);
@@ -348,18 +383,13 @@
         } else if (e.target.closest('.mark-used-btn')) {
           markScenarioUsed(scenario.id);
           e.stopPropagation();
-        } else if (e.target.closest('.edit-custom-btn')) {
-          openCustomModal(scenario);
-          e.stopPropagation();
-        } else if (e.target.closest('.delete-custom-btn')) {
-          deleteCustomScenario(scenario.id)
-          e.stopPropagation();
         } else {
           openModal(scenario);
         }
       });
       return card;
     }
+
     function renderCardList(container, items, emptyMessage) {
       if (!container) return;
       container.innerHTML = '';
@@ -372,6 +402,7 @@
       });
       lucide.createIcons();
     }
+
     function renderUsedThisSession() {
       if (!dom.usedThisSession) return;
       if (!state.checkedScenarios.length) {
@@ -390,40 +421,10 @@
     // ---- MODAL LOGIC ----
     function openModal(scenario) {
       if (!scenario) return;
-      // Find the list for modal navigation (filtered/sorted, current view)
-      state.currentViewItems = getCurrentViewItems();
-      state.currentModalIndex = state.currentViewItems.findIndex(s => s.id === scenario.id);
-
-      updateScenarioModal();
-      dom.scenarioModal.classList.remove('hidden');
-      addToRecentlyViewed(scenario.id);
-      lucide.createIcons();
-
-      // Modal navigation
-      dom.prevScenario = document.getElementById('prev-scenario');
-      dom.nextScenario = document.getElementById('next-scenario');
-      dom.prevScenario.onclick = () => {
-        if(state.currentModalIndex > 0) {
-          state.currentModalIndex--;
-          updateScenarioModal();
-        }
-      }
-      dom.nextScenario.onclick = () => {
-        if(state.currentModalIndex < state.currentViewItems.length-1) {
-          state.currentModalIndex++;
-          updateScenarioModal();
-        }
-      }
-    }
-    function updateScenarioModal() {
-      const scenario = state.currentViewItems[state.currentModalIndex];
-      if(!scenario) return;
       state.currentOpenScenario = scenario;
       const tagBadges = Array.isArray(scenario.tags) && scenario.tags.length
         ? scenario.tags.map(tag => `<span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-xs rounded mr-1" aria-label="Tag: ${tag}">${tag}</span>`).join('')
         : '';
-      // Notes
-      const noteText = state.notes[scenario.id] || "";
       dom.modalTitle.innerHTML = `${scenario.title} <div class="mt-1">${tagBadges}</div>`;
       dom.modalBody.innerHTML = `
         <div class="flex flex-wrap gap-2 mb-4">
@@ -431,23 +432,15 @@
           <button id="markUsed" class="bg-green-100 dark:bg-green-800 px-3 py-1 rounded text-xs text-green-700 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-700">Mark as Used</button>
         </div>
         <div class="prose prose-sm dark:prose-invert max-w-none">${marked.parse(scenario.content)}</div>
-        <div class="mt-4">
-          <label class="font-semibold text-xs mb-1 block">Personal Notes</label>
-          <textarea id="user-notes" class="w-full px-2 py-1 rounded border border-gray-300 dark:bg-gray-700 dark:border-gray-600 text-sm" rows="2" placeholder="Add your personal notes...">${noteText}</textarea>
-        </div>
       `;
+      dom.scenarioModal.classList.remove('hidden');
+      addToRecentlyViewed(scenario.id);
+      lucide.createIcons();
       document.getElementById('copyScript')?.addEventListener('click', () => copyToClipboard(scenario.content));
       document.getElementById('markUsed')?.addEventListener('click', () => {
         markScenarioUsed(scenario.id);
         dom.scenarioModal.classList.add('hidden');
       });
-      document.getElementById('user-notes')?.addEventListener('input', (e) => {
-        state.notes[scenario.id] = e.target.value;
-        saveToStorage();
-      });
-      // Modal navigation enable/disable
-      dom.prevScenario.disabled = state.currentModalIndex === 0;
-      dom.nextScenario.disabled = state.currentModalIndex === state.currentViewItems.length-1;
     }
     dom.closeModal?.addEventListener('click', () => {
       dom.scenarioModal.classList.add('hidden');
@@ -466,7 +459,6 @@
       } else {
         state.favorites.splice(idx, 1);
       }
-      saveToStorage();
       switchView(state.currentView);
     }
     function addToRecentlyViewed(scenarioId) {
@@ -474,7 +466,6 @@
       if (idx !== -1) state.recentlyViewed.splice(idx, 1);
       state.recentlyViewed.unshift(scenarioId);
       if (state.recentlyViewed.length > 20) state.recentlyViewed.pop();
-      saveToStorage();
     }
 
     // ---- TABS ----
@@ -489,14 +480,12 @@
         link.classList.toggle('font-semibold', isSelected);
       });
       dom.contentArea.innerHTML = '';
-      renderFiltersAndSorting();
       renderUsedThisSession();
       let items = [];
       let message = 'No items found.';
       if (viewId === 'dashboard') {
         items = Array.from(state.contentMap.values()).filter(item => item.category && item.category.includes('Zone'));
         message = 'No scenarios found.';
-        items = getSortedFilteredItems(items);
       } else if (viewId === 'favorites') {
         items = state.favorites.map(id => state.contentMap.get(id)).filter(Boolean);
         message = 'No favorites yet. Click the star on a card to add one.';
@@ -506,27 +495,8 @@
       } else if (viewId === 'interventions') {
         items = Array.from(state.contentMap.values()).filter(item => item.category === 'Intervention');
         message = 'No interventions found.';
-      } else if (viewId === 'custom') {
-        items = state.customScenarios;
-        message = 'No custom scenarios. Add your own!';
       }
       renderCardList(dom.contentArea, items, message);
-    }
-    function getCurrentViewItems() {
-      // Used for modal navigation, must match current content list
-      if (state.currentView === 'dashboard') {
-        let items = Array.from(state.contentMap.values()).filter(item => item.category && item.category.includes('Zone'));
-        return getSortedFilteredItems(items);
-      } else if (state.currentView === 'favorites') {
-        return state.favorites.map(id => state.contentMap.get(id)).filter(Boolean);
-      } else if (state.currentView === 'recents') {
-        return state.recentlyViewed.map(id => state.contentMap.get(id)).filter(Boolean);
-      } else if (state.currentView === 'interventions') {
-        return Array.from(state.contentMap.values()).filter(item => item.category === 'Intervention');
-      } else if (state.currentView === 'custom') {
-        return state.customScenarios;
-      }
-      return [];
     }
 
     // ---- SEARCH ----
@@ -566,7 +536,6 @@
 
     // ---- MAIN ----
     function main() {
-      loadFromStorage();
       initializeDataMap();
       // Sidebar tab logic
       document.querySelectorAll('.sidebar-link').forEach(link => {
@@ -584,77 +553,21 @@
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = marked.parse(text);
       const plainText = tempDiv.textContent || "";
+
       navigator.clipboard.writeText(plainText)
         .then(() => showToast("Script copied to clipboard!", false))
         .catch(() => showToast("Failed to copy.", true));
     }
+
     function markScenarioUsed(id) {
       if (!state.checkedScenarios.includes(id)) {
         state.checkedScenarios.push(id);
-        saveToStorage();
       }
       renderUsedThisSession();
       showToast("Marked as used.", true);
+      // Re-render the current view to show the "Used" badge
       switchView(state.currentView);
     }
-
-    // ---- CUSTOM SCENARIOS ----
-    function openCustomModal(scenario = null) {
-      dom.customModal.classList.remove('hidden');
-      dom.customForm.reset();
-      dom.customEditId.value = scenario ? scenario.id : "";
-      dom.customTitle.value = scenario ? scenario.title : "";
-      dom.customContent.value = scenario ? scenario.content : "";
-      dom.customTags.value = scenario ? scenario.tags?.join(", ") : "";
-      dom.customCategory.value = scenario ? scenario.category : "";
-      dom.customColor.value = scenario ? scenario.color : "indigo";
-      document.getElementById('custom-modal-title').textContent = scenario ? "Edit Custom Scenario" : "Add Custom Scenario";
-    }
-    dom.closeCustomModal?.addEventListener('click', () => {
-      dom.customModal.classList.add('hidden');
-    });
-    dom.cancelCustom?.addEventListener('click', () => {
-      dom.customModal.classList.add('hidden');
-    });
-    dom.customForm?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const id = dom.customEditId.value || "custom-" + Date.now();
-      const scenario = {
-        id,
-        title: dom.customTitle.value,
-        content: dom.customContent.value,
-        tags: dom.customTags.value ? dom.customTags.value.split(',').map(t => t.trim()).filter(Boolean) : [],
-        category: dom.customCategory.value || "Custom",
-        color: dom.customColor.value || "indigo",
-        isCustom: true,
-      };
-      // Update or add
-      const idx = state.customScenarios.findIndex(s => s.id === id);
-      if(idx >= 0) {
-        state.customScenarios[idx] = scenario;
-        showToast("Custom scenario updated.");
-      } else {
-        state.customScenarios.push(scenario);
-        showToast("Custom scenario added.");
-      }
-      // Update contentMap
-      state.contentMap.set(scenario.id, scenario);
-      saveToStorage();
-      dom.customModal.classList.add('hidden');
-      switchView('custom');
-    });
-    function deleteCustomScenario(id) {
-      const idx = state.customScenarios.findIndex(s => s.id === id);
-      if(idx < 0) return;
-      if(confirm("Delete this custom scenario?")) {
-        state.customScenarios.splice(idx, 1);
-        state.contentMap.delete(id);
-        saveToStorage();
-        showToast("Custom scenario deleted.");
-        switchView('custom');
-      }
-    }
-
   </script>
 </body>
 </html>
