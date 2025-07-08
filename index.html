@@ -1,242 +1,340 @@
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-    // ------------------- DATA & STATE -------------------
-    const clinicalData = { /* ... your clinicalData ... */ };
-    const interventionsData = { /* ... your interventionsData ... */ };
-
-    const dom = {};
-    const state = {
-        currentView: 'dashboard',
-        favorites: [],
-        recentlyViewed: [],
-        customContent: {},
-        contextualNotes: {},
-        generalNote: "",
-        isAuthorMode: false,
-        contentMap: new Map(),
-        categoryOrders: {},
-    };
-    let debouncedSaveState;
-
-    const colorMap = {
-        red: { bg: 'bg-red-500/10', border: 'border-red-500', text: 'text-red-600', darkBg: 'dark:bg-red-800/20', darkBorder: 'dark:border-red-600', darkText: 'dark:text-red-400' },
-        orange: { bg: 'bg-orange-500/10', border: 'border-orange-500', text: 'text-orange-600', darkBg: 'dark:bg-orange-800/20', darkBorder: 'dark:border-orange-600', darkText: 'dark:text-orange-400' },
-        yellow: { bg: 'bg-yellow-500/10', border: 'border-yellow-500', text: 'text-yellow-600', darkBg: 'dark:bg-yellow-800/20', darkBorder: 'dark:border-yellow-600', darkText: 'dark:text-yellow-400' },
-        green: { bg: 'bg-green-500/10', border: 'border-green-500', text: 'text-green-600', darkBg: 'dark:bg-green-800/20', darkBorder: 'dark:border-green-600', darkText: 'dark:text-green-400' },
-        indigo: { bg: 'bg-indigo-500/10', border: 'border-indigo-500', text: 'text-indigo-600', darkBg: 'dark:bg-indigo-800/20', darkBorder: 'dark:border-indigo-600', darkText: 'dark:text-indigo-400' },
-    };
-
-    // ------------------- DOM & HELPERS -------------------
-    function populateDomObject() {
-        const ids = [
-            'sidebar-nav', 'content-area', 'searchInput', 'timer-display', 'start-pause-btn', 'reset-btn',
-            'user-id-display', 'author-mode-toggle', 'theme-toggle', 'theme-icon-light', 'theme-icon-dark',
-            'modalTitle', 'modalBody', 'scenarioModal', 'toast'
-        ];
-        ids.forEach(id => {
-            const camelCaseId = id.replace(/-./g, x => x[1].toUpperCase());
-            dom[camelCaseId] = document.getElementById(id);
-        });
-        dom.timerPresetBtns = document.querySelectorAll('.timer-preset-btn');
-        dom.richTextBtns = document.querySelectorAll('.rich-text-btn');
-    }
-
-    function showToast(message, isSubtle = false) {
-        dom.toast.textContent = message;
-        dom.toast.className = `fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg z-50 ${isSubtle ? 'bg-gray-600 dark:bg-gray-700' : 'bg-green-500'}`;
-        dom.toast.classList.remove('hidden');
-        setTimeout(() => { dom.toast.classList.add('hidden'); }, 3000);
-    }
-
-    function initializeDataMap() {
-        state.contentMap.clear();
-        Object.values(clinicalData).forEach(zone => {
-            zone.scenarios.forEach(s => state.contentMap.set(s.id, {...s, category: zone.title, color: zone.color}));
-        });
-        Object.entries(interventionsData).forEach(([category, items]) => {
-            items.forEach(item => state.contentMap.set(item.id, {...item, category, color: 'indigo'}));
-        });
-        Object.values(state.customContent).forEach(item => state.contentMap.set(item.id, item));
-    }
-
-    function renderCardList(container, items, emptyMessage) {
-        if (!container) return;
-        container.innerHTML = '';
-        if (items.length === 0) {
-            container.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400 p-8 col-span-full">${emptyMessage}</p>`;
-            return;
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClinicalX: Interactive Dashboard v7.9</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <style>
+        :root { --sidebar-width: 260px; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9fafb;
+            color: #1f2937;
+            transition: background-color 0.3s, color 0.3s;
         }
-        items.forEach(item => {
-            if (item) container.appendChild(createScenarioCard(item));
-        });
-        lucide.createIcons();
-    }
-
-    // ------------------- FAVORITES & RECENTS -------------------
-    function toggleFavorite(scenarioId) {
-        const idx = state.favorites.indexOf(scenarioId);
-        if (idx === -1) {
-            state.favorites.unshift(scenarioId);
-        } else {
-            state.favorites.splice(idx, 1);
+        .dark body { background-color: #111827; color: #d1d5db; }
+        .sidebar { width: var(--sidebar-width); }
+        .main-content { margin-left: var(--sidebar-width); }
+        .sidebar-link { transition: background-color 0.2s, color 0.2s; }
+        .sidebar-link.active { background-color: #eef2ff; color: #4338ca; }
+        .dark .sidebar-link.active { background-color: #312e81; color: #e0e7ff; }
+        .scenario-card {
+            transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s;
+            border-left-width: 4px;
         }
-        debouncedSaveState && debouncedSaveState();
-        switchView(state.currentView);
-    }
-    function addToRecentlyViewed(scenarioId) {
-        const idx = state.recentlyViewed.indexOf(scenarioId);
-        if (idx !== -1) state.recentlyViewed.splice(idx, 1);
-        state.recentlyViewed.unshift(scenarioId);
-        if (state.recentlyViewed.length > 10) state.recentlyViewed.pop();
-        debouncedSaveState && debouncedSaveState();
-    }
-
-    // ------------------- CARD & MODAL -------------------
-    function createScenarioCard(scenario) {
-        const isFavorited = state.favorites.includes(scenario.id);
-        const card = document.createElement('div');
-        const colors = colorMap[scenario.color] || colorMap.indigo;
-        card.className = `scenario-card bg-white dark:bg-gray-800 p-4 rounded-lg cursor-pointer flex flex-col justify-between relative ${colors.border}`;
-        card.dataset.id = scenario.id;
-        card.innerHTML = `
-            <div class="flex-1">
-                <h3 class="font-semibold pr-2 text-gray-800 dark:text-gray-200">${scenario.title}</h3>
+        .scenario-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 7px 14px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+        }
+        .dark .scenario-card:hover {
+            box-shadow: 0 7px 14px -3px rgba(0,0,0,0.25), 0 4px 6px -2px rgba(0,0,0,0.2);
+        }
+        .loader {
+            width: 20px; height: 20px; border: 2px solid #f3f3f3; border-top: 2px solid #4f46e5;
+            border-radius: 50%; animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .modal-content, .toast-notification { animation: slide-up 0.3s ease-out; }
+        @keyframes slide-up { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    </style>
+</head>
+<body>
+<div class="flex">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar fixed top-0 left-0 h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col p-4">
+        <div class="flex items-center gap-3 mb-8">
+            <div class="bg-indigo-600 p-2 rounded-lg">
+                <i data-lucide="activity" class="text-white"></i>
             </div>
-            <div class="favorite-star self-end mt-2 text-gray-400 dark:text-gray-600 ${isFavorited ? 'favorited' : ''}" style="z-index:2;">
-                <i data-lucide="star" class="h-5 w-5"></i>
-            </div>`;
-        card.querySelector('.favorite-star').addEventListener('click', (e) => {
-            e.stopPropagation();
-            toggleFavorite(scenario.id);
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-white">ClinicalX</h1>
+        </div>
+        <nav id="sidebar-nav" class="flex-grow space-y-2"></nav>
+        <div class="mt-auto">
+            <div id="user-id-display" class="text-xs text-center text-gray-400 dark:text-gray-600 mt-1 font-mono">Connecting...</div>
+            <div class="flex items-center justify-center space-x-2 mt-4">
+                <button id="author-mode-toggle" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700" title="Toggle Author Mode">
+                    <i data-lucide="pencil" class="h-5 w-5"></i>
+                </button>
+                <button id="theme-toggle" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700" title="Toggle Theme">
+                    <i data-lucide="sun" id="theme-icon-light" class="h-5 w-5 hidden"></i>
+                    <i data-lucide="moon" id="theme-icon-dark" class="h-5 w-5"></i>
+                </button>
+            </div>
+        </div>
+    </aside>
+    <!-- Main Content -->
+    <main class="main-content w-full p-6 md:p-10">
+        <div id="content-area" class="mt-8"></div>
+    </main>
+</div>
+
+<!-- Modals -->
+<div id="scenarioModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
+    <div class="modal-content bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+        <div class="modal-header flex justify-between items-center p-5 border-b border-gray-200 dark:border-gray-700">
+            <h3 id="modalTitle" class="text-2xl font-bold flex-1 pr-4"></h3>
+            <button id="closeModal" class="text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors p-2 ml-2" title="Close">
+                <i data-lucide="x" class="h-6 w-6"></i>
+            </button>
+        </div>
+        <div id="modalBody" class="modal-body p-6 overflow-y-auto"></div>
+    </div>
+</div>
+<div id="toast" class="hidden fixed bottom-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg z-50"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+// ---- Example Data (Replace with your own in production) ----
+const clinicalData = {
+    "Red": {
+        title: "🔴 Red Zone – Immediate Risk & Crisis",
+        color: "red",
+        scenarios: [
+            { id: "suicidal-ideation-assessment", title: "Suicidal Ideation – Safety Assessment", content: "## Assess for intent, plan, means, and support.\n- Ask directly about thoughts of suicide.\n- Remove means if possible." }
+        ]
+    }
+};
+const interventionsData = {
+    "Distress Tolerance": [
+        { id: "tipp-skill", title: "TIPP Skill", content: "Try the **TIPP** skill: Temperature, Intense Exercise, Paced Breathing, Paired Muscle Relaxation." }
+    ]
+};
+// ---- End Example Data ----
+
+const MAIN_TABS = [
+    { id: 'dashboard', icon: 'layout-dashboard', label: 'Dashboard' },
+    { id: 'favorites', icon: 'star', label: 'Favorites' },
+    { id: 'recents', icon: 'clock', label: 'Recents' },
+    { id: 'interventions', icon: 'activity', label: 'Interventions' }
+];
+const colorMap = {
+    red: { border: 'border-red-500' },
+    orange: { border: 'border-orange-500' },
+    yellow: { border: 'border-yellow-500' },
+    green: { border: 'border-green-500' },
+    indigo: { border: 'border-indigo-500' }
+};
+
+const dom = {};
+const state = {
+    currentView: 'dashboard',
+    favorites: [],
+    recentlyViewed: [],
+    customContent: {},
+    contentMap: new Map()
+};
+let db, userId, appId = 'clinical-dashboard';
+let debouncedSaveState;
+
+function populateDomObject() {
+    [
+        'sidebar-nav', 'content-area', 'user-id-display',
+        'modalTitle', 'modalBody', 'scenarioModal', 'closeModal', 'toast'
+    ].forEach(id => {
+        const camel = id.replace(/-([a-z])/g, g => g[1].toUpperCase());
+        dom[camel] = document.getElementById(id);
+    });
+}
+
+function showToast(message, isSubtle = false) {
+    dom.toast.textContent = message;
+    dom.toast.className = `fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg z-50 ${isSubtle ? 'bg-gray-600 dark:bg-gray-700' : 'bg-green-500'}`;
+    dom.toast.classList.remove('hidden');
+    setTimeout(() => { dom.toast.classList.add('hidden'); }, 3000);
+}
+
+function initializeDataMap() {
+    state.contentMap.clear();
+    Object.values(clinicalData).forEach(zone => {
+        zone.scenarios.forEach(s => state.contentMap.set(s.id, {...s, category: zone.title, color: zone.color}));
+    });
+    Object.entries(interventionsData).forEach(([category, items]) => {
+        items.forEach(item => state.contentMap.set(item.id, {...item, category, color: 'indigo'}));
+    });
+    Object.values(state.customContent).forEach(item => state.contentMap.set(item.id, item));
+}
+
+// ---- Sidebar Tabs ----
+function renderSidebarTabs() {
+    const nav = dom.sidebarNav;
+    nav.innerHTML = '';
+    MAIN_TABS.forEach(tab => {
+        const btn = document.createElement('button');
+        btn.className = `sidebar-link w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left font-medium transition-colors${state.currentView === tab.id ? ' active' : ''}`;
+        btn.dataset.tab = tab.id;
+        btn.innerHTML = `<i data-lucide="${tab.icon}" class="h-5 w-5"></i> <span>${tab.label}</span>`;
+        btn.addEventListener('click', () => switchView(tab.id));
+        nav.appendChild(btn);
+    });
+    lucide.createIcons();
+}
+
+// ---- Tab Switching ----
+function switchView(viewId) {
+    state.currentView = viewId;
+    document.querySelectorAll('.sidebar-link').forEach(link => {
+        link.classList.toggle('active', link.dataset.tab === viewId);
+    });
+    dom.contentArea.innerHTML = '';
+
+    if (viewId === 'dashboard') {
+        const dashboardItems = Array.from(state.contentMap.values()).filter(item => item.category && item.category.includes('Zone'));
+        renderCardList(dom.contentArea, dashboardItems, 'No scenarios found.');
+    } else if (viewId === 'favorites') {
+        const items = state.favorites.map(id => state.contentMap.get(id)).filter(Boolean);
+        renderCardList(dom.contentArea, items, 'No favorites yet.');
+    } else if (viewId === 'recents') {
+        const items = state.recentlyViewed.map(id => state.contentMap.get(id)).filter(Boolean);
+        renderCardList(dom.contentArea, items, 'No recently viewed scenarios.');
+    } else if (viewId === 'interventions') {
+        const items = [];
+        Object.entries(interventionsData).forEach(([cat, arr]) => items.push(...arr));
+        renderCardList(dom.contentArea, items, 'No interventions found.');
+    }
+}
+
+// ---- Cards ----
+function renderCardList(container, items, emptyMessage) {
+    if (!container) return;
+    container.innerHTML = '';
+    if (items.length === 0) {
+        container.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400 p-8 col-span-full">${emptyMessage}</p>`;
+        return;
+    }
+    items.forEach(item => {
+        if (item) container.appendChild(createScenarioCard(item));
+    });
+    lucide.createIcons();
+}
+function createScenarioCard(scenario) {
+    const isFavorited = state.favorites.includes(scenario.id);
+    const card = document.createElement('div');
+    const colors = colorMap[scenario.color] || colorMap.indigo;
+    card.className = `scenario-card bg-white dark:bg-gray-800 p-4 rounded-lg cursor-pointer flex flex-col justify-between relative ${colors.border}`;
+    card.dataset.id = scenario.id;
+    card.innerHTML = `
+        <div class="flex-1">
+            <h3 class="font-semibold pr-2 text-gray-800 dark:text-gray-200">${scenario.title}</h3>
+        </div>
+        <div class="favorite-star self-end mt-2 text-gray-400 dark:text-gray-600 ${isFavorited ? 'favorited' : ''}" style="z-index:2;">
+            <i data-lucide="star" class="h-5 w-5"></i>
+        </div>`;
+    card.querySelector('.favorite-star').addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleFavorite(scenario.id);
+    });
+    card.addEventListener('click', () => openModal(scenario));
+    return card;
+}
+
+// ---- Modal ----
+function openModal(scenario) {
+    if (!scenario) return;
+    state.currentOpenScenario = scenario;
+    dom.modalTitle.textContent = scenario.title;
+    dom.modalBody.innerHTML = marked.parse(scenario.content);
+    dom.scenarioModal.classList.remove('hidden');
+    addToRecentlyViewed(scenario.id);
+    lucide.createIcons();
+}
+dom.closeModal?.addEventListener('click', () => {
+    dom.scenarioModal.classList.add('hidden');
+});
+
+// ---- Favorites & Recents ----
+function toggleFavorite(scenarioId) {
+    const idx = state.favorites.indexOf(scenarioId);
+    if (idx === -1) {
+        state.favorites.unshift(scenarioId);
+    } else {
+        state.favorites.splice(idx, 1);
+    }
+    debouncedSaveState && debouncedSaveState();
+    switchView(state.currentView);
+}
+function addToRecentlyViewed(scenarioId) {
+    const idx = state.recentlyViewed.indexOf(scenarioId);
+    if (idx !== -1) state.recentlyViewed.splice(idx, 1);
+    state.recentlyViewed.unshift(scenarioId);
+    if (state.recentlyViewed.length > 10) state.recentlyViewed.pop();
+    debouncedSaveState && debouncedSaveState();
+}
+
+// ---- Firestore ----
+function debouncedSaveStateFn() {
+    clearTimeout(debouncedSaveStateFn.timer);
+    debouncedSaveStateFn.timer = setTimeout(() => {
+        if (!db || !userId) return;
+        setDoc(doc(db, `artifacts/${appId}/users/${userId}/userData/appData`), {
+            favorites: state.favorites,
+            recentlyViewed: state.recentlyViewed,
+            customContent: state.customContent
+        }, { merge: true });
+    }, 1000);
+}
+debouncedSaveState = debouncedSaveStateFn;
+function initFirebase() {
+    try {
+        const firebaseConfig = {
+            apiKey: "AIzaSyBr3hTkM_2PlRreFvgK9kk4s4bQvx5y8xw",
+            authDomain: "my-dashboard-app-e1d1f.firebaseapp.com",
+            projectId: "my-dashboard-app-e1d1f",
+            storageBucket: "my-dashboard-app-e1d1f.appspot.com",
+            messagingSenderId: "969081281658",
+            appId: "1:969081281658:web:d479a7b003805625f02fc3"
+        };
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        const auth = getAuth(app);
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                userId = user.uid;
+                dom.userIdDisplay.textContent = `Online | User: ${user.uid.substring(0,8)}...`;
+                const userDoc = doc(db, `artifacts/${appId}/users/${userId}/userData/appData`);
+                onSnapshot(userDoc, (docSnap) => {
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        if (data.favorites) state.favorites = data.favorites;
+                        if (data.recentlyViewed) state.recentlyViewed = data.recentlyViewed;
+                        if (data.customContent) state.customContent = data.customContent;
+                        switchView(state.currentView);
+                    }
+                });
+            } else {
+                await signInAnonymously(auth);
+            }
         });
-        card.addEventListener('click', () => openModal(scenario));
-        return card;
+    } catch (error) {
+        console.error("Firebase initialization failed:", error);
+        dom.userIdDisplay.textContent = 'Connection Failed';
+        showToast("Firebase connection failed.", false);
     }
+}
 
-    function openModal(scenario) {
-        if (!scenario) return;
-        state.currentOpenScenario = scenario;
-        dom.modalTitle.textContent = scenario.title;
-        dom.modalBody.innerHTML = marked.parse(scenario.content);
-        dom.scenarioModal.classList.remove('hidden');
-        addToRecentlyViewed(scenario.id);
-        lucide.createIcons();
-    }
-
-    // ------------------- FIRESTORE -------------------
-    let db, userId, appId = 'clinical-dashboard';
-    function debouncedSaveStateFn() {
-        clearTimeout(debouncedSaveStateFn.timer);
-        debouncedSaveStateFn.timer = setTimeout(() => {
-            if (!db || !userId) return;
-            setDoc(doc(db, `artifacts/${appId}/users/${userId}/userData/appData`), {
-                favorites: state.favorites,
-                recentlyViewed: state.recentlyViewed,
-                generalNote: state.generalNote,
-                customContent: state.customContent
-            }, { merge: true });
-        }, 1000);
-    }
-    debouncedSaveState = debouncedSaveStateFn;
-
-    function initFirebase() {
-        try {
-            const firebaseConfig = {
-                apiKey: "AIzaSyBr3hTkM_2PlRreFvgK9kk4s4bQvx5y8xw",
-                authDomain: "my-dashboard-app-e1d1f.firebaseapp.com",
-                projectId: "my-dashboard-app-e1d1f",
-                storageBucket: "my-dashboard-app-e1d1f.appspot.com",
-                messagingSenderId: "969081281658",
-                appId: "1:969081281658:web:d479a7b003805625f02fc3"
-            };
-            const app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            const auth = getAuth(app);
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    userId = user.uid;
-                    dom.userIdDisplay.textContent = `Online | User: ${user.uid.substring(0,8)}...`;
-                    // Listen for user data
-                    const userDoc = doc(db, `artifacts/${appId}/users/${userId}/userData/appData`);
-                    onSnapshot(userDoc, (docSnap) => {
-                        if (docSnap.exists()) {
-                            const data = docSnap.data();
-                            if (data.favorites) state.favorites = data.favorites;
-                            if (data.recentlyViewed) state.recentlyViewed = data.recentlyViewed;
-                            if (data.generalNote) state.generalNote = data.generalNote;
-                            if (data.customContent) state.customContent = data.customContent;
-                            switchView(state.currentView);
-                        }
-                    });
-                } else {
-                    await signInAnonymously(auth);
-                }
-            });
-        } catch (error) {
-            console.error("Firebase initialization failed:", error);
-            dom.userIdDisplay.textContent = 'Connection Failed';
-            showToast("Firebase connection failed.", false);
-        }
-    }
-
-    // ------------------- MAIN TABS LOGIC -------------------
-    const MAIN_TABS = [
-        { id: 'dashboard', icon: 'layout-dashboard', label: 'Dashboard' },
-        { id: 'favorites', icon: 'star', label: 'Favorites' },
-        { id: 'recents', icon: 'clock', label: 'Recents' },
-        { id: 'interventions', icon: 'activity', label: 'Interventions' }
-    ];
-
-    function renderSidebarTabs() {
-        const nav = dom.sidebarNav;
-        nav.innerHTML = '';
-        MAIN_TABS.forEach(tab => {
-            const btn = document.createElement('button');
-            btn.className = `sidebar-link w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left font-medium transition-colors${state.currentView === tab.id ? ' active' : ''}`;
-            btn.dataset.tab = tab.id;
-            btn.innerHTML = `<i data-lucide="${tab.icon}" class="h-5 w-5"></i> <span>${tab.label}</span>`;
-            btn.addEventListener('click', () => switchView(tab.id));
-            nav.appendChild(btn);
-        });
-        lucide.createIcons();
-    }
-
-    function switchView(viewId) {
-        state.currentView = viewId;
-        document.querySelectorAll('.sidebar-link').forEach(link => {
-            link.classList.toggle('active', link.dataset.tab === viewId);
-        });
-        dom.contentArea.innerHTML = '';
-
-        if (viewId === 'dashboard') {
-            // Show all scenarios
-            const dashboardItems = Array.from(state.contentMap.values()).filter(item => item.category && item.category.includes('Zone'));
-            renderCardList(dom.contentArea, dashboardItems, 'No scenarios found.');
-        } else if (viewId === 'favorites') {
-            const items = state.favorites.map(id => state.contentMap.get(id)).filter(Boolean);
-            renderCardList(dom.contentArea, items, 'No favorites yet.');
-        } else if (viewId === 'recents') {
-            const items = state.recentlyViewed.map(id => state.contentMap.get(id)).filter(Boolean);
-            renderCardList(dom.contentArea, items, 'No recently viewed scenarios.');
-        } else if (viewId === 'interventions') {
-            const items = [];
-            Object.entries(interventionsData).forEach(([cat, arr]) => items.push(...arr));
-            renderCardList(dom.contentArea, items, 'No interventions found.');
-        }
-    }
-
-    // ------------------- MAIN ENTRY -------------------
-    function main() {
-        populateDomObject();
-        renderSidebarTabs();
-        initializeDataMap();
-        switchView(state.currentView || 'dashboard');
-        initFirebase();
-        // ... any other setup (timer, search, etc)
-    }
-
-    document.addEventListener('DOMContentLoaded', main);
+// ---- Main ----
+function main() {
+    populateDomObject();
+    renderSidebarTabs();
+    initializeDataMap();
+    switchView(state.currentView || 'dashboard');
+    initFirebase();
+    // Theme toggle
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+        document.documentElement.classList.toggle('dark');
+    });
+}
+document.addEventListener('DOMContentLoaded', main);
 </script>
+</body>
+</html>
