@@ -1,351 +1,242 @@
-<!DOCTYPE html>
-<html lang="en" class="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClinicalX: Interactive Dashboard v7.9</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-    
-    <style>
-        :root {
-            --sidebar-width: 260px;
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // ------------------- DATA & STATE -------------------
+    const clinicalData = { /* ... your clinicalData ... */ };
+    const interventionsData = { /* ... your interventionsData ... */ };
+
+    const dom = {};
+    const state = {
+        currentView: 'dashboard',
+        favorites: [],
+        recentlyViewed: [],
+        customContent: {},
+        contextualNotes: {},
+        generalNote: "",
+        isAuthorMode: false,
+        contentMap: new Map(),
+        categoryOrders: {},
+    };
+    let debouncedSaveState;
+
+    const colorMap = {
+        red: { bg: 'bg-red-500/10', border: 'border-red-500', text: 'text-red-600', darkBg: 'dark:bg-red-800/20', darkBorder: 'dark:border-red-600', darkText: 'dark:text-red-400' },
+        orange: { bg: 'bg-orange-500/10', border: 'border-orange-500', text: 'text-orange-600', darkBg: 'dark:bg-orange-800/20', darkBorder: 'dark:border-orange-600', darkText: 'dark:text-orange-400' },
+        yellow: { bg: 'bg-yellow-500/10', border: 'border-yellow-500', text: 'text-yellow-600', darkBg: 'dark:bg-yellow-800/20', darkBorder: 'dark:border-yellow-600', darkText: 'dark:text-yellow-400' },
+        green: { bg: 'bg-green-500/10', border: 'border-green-500', text: 'text-green-600', darkBg: 'dark:bg-green-800/20', darkBorder: 'dark:border-green-600', darkText: 'dark:text-green-400' },
+        indigo: { bg: 'bg-indigo-500/10', border: 'border-indigo-500', text: 'text-indigo-600', darkBg: 'dark:bg-indigo-800/20', darkBorder: 'dark:border-indigo-600', darkText: 'dark:text-indigo-400' },
+    };
+
+    // ------------------- DOM & HELPERS -------------------
+    function populateDomObject() {
+        const ids = [
+            'sidebar-nav', 'content-area', 'searchInput', 'timer-display', 'start-pause-btn', 'reset-btn',
+            'user-id-display', 'author-mode-toggle', 'theme-toggle', 'theme-icon-light', 'theme-icon-dark',
+            'modalTitle', 'modalBody', 'scenarioModal', 'toast'
+        ];
+        ids.forEach(id => {
+            const camelCaseId = id.replace(/-./g, x => x[1].toUpperCase());
+            dom[camelCaseId] = document.getElementById(id);
+        });
+        dom.timerPresetBtns = document.querySelectorAll('.timer-preset-btn');
+        dom.richTextBtns = document.querySelectorAll('.rich-text-btn');
+    }
+
+    function showToast(message, isSubtle = false) {
+        dom.toast.textContent = message;
+        dom.toast.className = `fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg z-50 ${isSubtle ? 'bg-gray-600 dark:bg-gray-700' : 'bg-green-500'}`;
+        dom.toast.classList.remove('hidden');
+        setTimeout(() => { dom.toast.classList.add('hidden'); }, 3000);
+    }
+
+    function initializeDataMap() {
+        state.contentMap.clear();
+        Object.values(clinicalData).forEach(zone => {
+            zone.scenarios.forEach(s => state.contentMap.set(s.id, {...s, category: zone.title, color: zone.color}));
+        });
+        Object.entries(interventionsData).forEach(([category, items]) => {
+            items.forEach(item => state.contentMap.set(item.id, {...item, category, color: 'indigo'}));
+        });
+        Object.values(state.customContent).forEach(item => state.contentMap.set(item.id, item));
+    }
+
+    function renderCardList(container, items, emptyMessage) {
+        if (!container) return;
+        container.innerHTML = '';
+        if (items.length === 0) {
+            container.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400 p-8 col-span-full">${emptyMessage}</p>`;
+            return;
         }
-        body { 
-            font-family: 'Inter', sans-serif; 
-            transition: background-color 0.3s, color 0.3s; 
-            background-color: #f9fafb; 
-            color: #1f2937;
+        items.forEach(item => {
+            if (item) container.appendChild(createScenarioCard(item));
+        });
+        lucide.createIcons();
+    }
+
+    // ------------------- FAVORITES & RECENTS -------------------
+    function toggleFavorite(scenarioId) {
+        const idx = state.favorites.indexOf(scenarioId);
+        if (idx === -1) {
+            state.favorites.unshift(scenarioId);
+        } else {
+            state.favorites.splice(idx, 1);
         }
-        .dark body { 
-            background-color: #111827; 
-            color: #d1d5db; 
-        }
+        debouncedSaveState && debouncedSaveState();
+        switchView(state.currentView);
+    }
+    function addToRecentlyViewed(scenarioId) {
+        const idx = state.recentlyViewed.indexOf(scenarioId);
+        if (idx !== -1) state.recentlyViewed.splice(idx, 1);
+        state.recentlyViewed.unshift(scenarioId);
+        if (state.recentlyViewed.length > 10) state.recentlyViewed.pop();
+        debouncedSaveState && debouncedSaveState();
+    }
 
-        .modal-content, .toast-notification { animation: slide-up 0.3s ease-out; }
-        @keyframes slide-up { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        
-        .scenario-card { transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s; border-left-width: 4px; }
-        .scenario-card:hover { transform: translateY(-4px); box-shadow: 0 7px 14px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); }
-        .dark .scenario-card:hover { box-shadow: 0 7px 14px -3px rgba(0,0,0,0.25), 0 4px 6px -2px rgba(0,0,0,0.2); }
-
-        .modal-body::-webkit-scrollbar, .rich-text-editor::-webkit-scrollbar { width: 8px; }
-        .modal-body::-webkit-scrollbar-track, .rich-text-editor::-webkit-scrollbar-track { background: #e5e7eb; }
-        .modal-body::-webkit-scrollbar-thumb, .rich-text-editor::-webkit-scrollbar-thumb { background-color: #9ca3af; border-radius: 10px; border: 2px solid #e5e7eb; }
-        .dark .modal-body::-webkit-scrollbar-track, .dark .rich-text-editor::-webkit-scrollbar-track { background: #2d3748; }
-        .dark .modal-body::-webkit-scrollbar-thumb, .dark .rich-text-editor::-webkit-scrollbar-thumb { background-color: #4a5568; border-radius: 10px; border: 2px solid #2d3748; }
-
-        .sidebar { width: var(--sidebar-width); }
-        .main-content { margin-left: var(--sidebar-width); }
-
-        .sidebar-link { transition: background-color 0.2s, color 0.2s; }
-        .sidebar-link.active { background-color: #eef2ff; color: #4338ca; }
-        .dark .sidebar-link.active { background-color: #312e81; color: #e0e7ff; }
-
-        .rich-text-editor { min-height: 100px; border: 1px solid transparent; border-radius: 0.5rem; padding: 0.75rem; overflow-y: auto; height: 100%; }
-        .rich-text-editor:focus { outline: none; }
-        .rich-text-editor ul { list-style-type: disc; padding-left: 1.5rem; }
-        .rich-text-editor strong, .rich-text-editor b { font-weight: bold; }
-        .rich-text-editor em, .rich-text-editor i { font-style: italic; }
-
-        .loader {
-            width: 20px; height: 20px; border: 2px solid #f3f3f3; border-top: 2px solid #4f46e5;
-            border-radius: 50%; animation: spin 1s linear infinite;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
-</head>
-<body>
-    <div class="flex">
-        <!-- Sidebar -->
-        <aside id="sidebar" class="sidebar fixed top-0 left-0 h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col p-4">
-            <div class="flex items-center gap-3 mb-8">
-                <div class="bg-indigo-600 p-2 rounded-lg">
-                    <i data-lucide="activity" class="text-white"></i>
-                </div>
-                <h1 class="text-2xl font-bold text-gray-800 dark:text-white">ClinicalX</h1>
+    // ------------------- CARD & MODAL -------------------
+    function createScenarioCard(scenario) {
+        const isFavorited = state.favorites.includes(scenario.id);
+        const card = document.createElement('div');
+        const colors = colorMap[scenario.color] || colorMap.indigo;
+        card.className = `scenario-card bg-white dark:bg-gray-800 p-4 rounded-lg cursor-pointer flex flex-col justify-between relative ${colors.border}`;
+        card.dataset.id = scenario.id;
+        card.innerHTML = `
+            <div class="flex-1">
+                <h3 class="font-semibold pr-2 text-gray-800 dark:text-gray-200">${scenario.title}</h3>
             </div>
-            <nav id="sidebar-nav" class="flex-grow space-y-2">
-                <!-- Sidebar links will be dynamically inserted here -->
-            </nav>
-            <div class="mt-auto">
-                <div id="user-id-display" class="text-xs text-center text-gray-400 dark:text-gray-600 mt-1 font-mono">Connecting...</div>
-                 <div class="flex items-center justify-center space-x-2 mt-4">
-                    <button id="author-mode-toggle" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700" title="Toggle Author Mode">
-                        <i data-lucide="pencil" class="h-5 w-5"></i>
-                    </button>
-                    <button id="theme-toggle" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700" title="Toggle Theme">
-                        <i data-lucide="sun" id="theme-icon-light" class="h-5 w-5 hidden"></i>
-                        <i data-lucide="moon" id="theme-icon-dark" class="h-5 w-5"></i>
-                    </button>
-                </div>
-            </div>
-        </aside>
+            <div class="favorite-star self-end mt-2 text-gray-400 dark:text-gray-600 ${isFavorited ? 'favorited' : ''}" style="z-index:2;">
+                <i data-lucide="star" class="h-5 w-5"></i>
+            </div>`;
+        card.querySelector('.favorite-star').addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleFavorite(scenario.id);
+        });
+        card.addEventListener('click', () => openModal(scenario));
+        return card;
+    }
 
-        <!-- Main Content -->
-        <main class="main-content w-full p-6 md:p-10">
-            <div id="timer-section" class="bg-white dark:bg-gray-800/50 p-4 rounded-2xl mb-8 max-w-lg mx-auto border border-gray-200 dark:border-gray-700">
-                <div id="timer-display" class="text-5xl font-mono text-center mb-3 text-gray-800 dark:text-gray-200">20:00</div>
-                <div class="flex flex-wrap justify-center items-center gap-2">
-                    <button id="start-pause-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded-full transition-colors">Start</button>
-                    <button id="reset-btn" class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 font-bold py-2 px-4 rounded-full transition-colors">Reset</button>
-                    <div class="w-full border-t border-gray-200 dark:border-gray-700 my-2"></div>
-                    <button class="timer-preset-btn bg-gray-100 dark:bg-gray-700/50 hover:bg-gray-200 dark:hover:bg-gray-600 text-sm py-1 px-3 rounded-full" data-time="120">2 min</button>
-                    <button class="timer-preset-btn bg-gray-100 dark:bg-gray-700/50 hover:bg-gray-200 dark:hover:bg-gray-600 text-sm py-1 px-3 rounded-full" data-time="300">5 min</button>
-                    <button class="timer-preset-btn bg-gray-100 dark:bg-gray-700/50 hover:bg-gray-200 dark:hover:bg-gray-600 text-sm py-1 px-3 rounded-full" data-time="600">10 min</button>
-                    <button class="timer-preset-btn bg-gray-100 dark:bg-gray-700/50 hover:bg-gray-200 dark:hover:bg-gray-600 text-sm py-1 px-3 rounded-full" data-time="900">15 min</button>
-                    <button class="timer-preset-btn bg-gray-100 dark:bg-gray-700/50 hover:bg-gray-200 dark:hover:bg-gray-600 text-sm py-1 px-3 rounded-full" data-time="1200">20 min</button>
-                </div>
-            </div>
-            <div class="relative mb-6">
-                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <i data-lucide="search" class="h-5 w-5 text-gray-500 dark:text-gray-400"></i>
-                </div>
-                <input type="text" id="searchInput" class="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-12 pr-4 py-3 rounded-full" placeholder="Search all content...">
-            </div>
-            <div id="content-area" class="mt-8">
-                <!-- Views will be dynamically inserted here -->
-            </div>
-        </main>
-    </div>
+    function openModal(scenario) {
+        if (!scenario) return;
+        state.currentOpenScenario = scenario;
+        dom.modalTitle.textContent = scenario.title;
+        dom.modalBody.innerHTML = marked.parse(scenario.content);
+        dom.scenarioModal.classList.remove('hidden');
+        addToRecentlyViewed(scenario.id);
+        lucide.createIcons();
+    }
 
-    <!-- Modals and Widgets (remain outside main flex container) -->
-    <div id="scenarioModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-        <div class="modal-content bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
-            <div class="modal-header flex justify-between items-center p-5 border-b border-gray-200 dark:border-gray-700">
-                <button id="modal-back-btn" class="hidden text-gray-500 hover:text-indigo-500 transition-colors p-2 mr-2" title="Back">
-                    <i data-lucide="arrow-left" class="h-6 w-6"></i>
-                </button>
-                <h3 id="modalTitle" class="text-2xl font-bold flex-1 pr-4"></h3>
-                <div class="flex items-center">
-                    <button id="modal-summarize-btn" class="text-gray-500 hover:text-indigo-500 transition-colors p-2" title="Summarize with AI">
-                        <i data-lucide="sparkles" class="h-6 w-6"></i>
-                    </button>
-                    <button id="modal-edit-btn" class="author-control text-gray-500 hover:text-indigo-500 transition-colors p-2" title="Edit Scenario">
-                        <i data-lucide="file-pen-line" class="h-6 w-6"></i>
-                    </button>
-                    <button id="modal-favorite-btn" class="favorite-star text-gray-500 hover:text-yellow-400 transition-colors p-2" title="Favorite">
-                        <i data-lucide="star" class="h-7 w-7"></i>
-                    </button>
-                    <button id="closeModal" class="text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors p-2 ml-2" title="Close">
-                        <i data-lucide="x" class="h-6 w-6"></i>
-                    </button>
-                </div>
-            </div>
-            <div id="modalBody" class="modal-body p-6 overflow-y-auto">
-                 <!-- Main content injected here -->
-            </div>
-            <div id="ai-summary-output" class="p-6 border-t border-gray-200 dark:border-gray-700 hidden"></div>
-        </div>
-    </div>
-    
-    <!-- Other modals and widgets here... -->
-    <div id="toast" class="hidden fixed bottom-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg z-50"></div>
-    <div id="notes-widget-container" class="fixed bottom-5 right-5 z-40">
-        <button id="notes-widget-toggle" class="bg-indigo-600 text-white rounded-full p-4 shadow-lg hover:bg-indigo-500 transition-colors flex items-center justify-center">
-            <i data-lucide="notebook" class="h-6 w-6"></i>
-        </button>
-        <div id="notes-widget-content" class="hidden absolute bottom-0 right-0 w-80 h-96 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl flex flex-col origin-bottom-right border border-gray-200 dark:border-gray-700">
-            <div class="flex justify-between items-center p-3 border-b border-gray-200 dark:border-gray-700">
-                <h4 id="notes-widget-title" class="font-semibold text-gray-800 dark:text-gray-200 text-sm">Session Scratchpad</h4>
-                <div class="flex items-center space-x-2">
-                    <button id="notes-widget-close" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600" title="Close">
-                        <i data-lucide="x" class="h-5 w-5 text-gray-500 dark:text-gray-400"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="flex items-center space-x-1 p-2 border-b border-gray-200 dark:border-gray-700">
-                <button class="rich-text-btn p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-600" data-command="bold" title="Bold"><i data-lucide="bold" class="h-4 w-4"></i></button>
-                <button class="rich-text-btn p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-600" data-command="italic" title="Italic"><i data-lucide="italic" class="h-4 w-4"></i></button>
-                <button class="rich-text-btn p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-600" data-command="insertUnorderedList" title="Bullet List"><i data-lucide="list" class="h-4 w-4"></i></button>
-                <div class="border-l h-5 mx-1 border-gray-300 dark:border-gray-600"></div>
-                <button id="scratchpad-timestamp-btn" class="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-600" title="Insert Timestamp"><i data-lucide="calendar-plus" class="h-4 w-4"></i></button>
-                <button id="scratchpad-copy-btn" class="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-600" title="Copy All Notes"><i data-lucide="copy" class="h-4 w-4"></i></button>
-            </div>
-            <div id="scratchpad-editor" contenteditable="true" class="rich-text-editor w-full h-full p-3 bg-transparent focus:outline-none resize-none" placeholder="Jot down your session notes here..."></div>
-        </div>
-    </div>
+    // ------------------- FIRESTORE -------------------
+    let db, userId, appId = 'clinical-dashboard';
+    function debouncedSaveStateFn() {
+        clearTimeout(debouncedSaveStateFn.timer);
+        debouncedSaveStateFn.timer = setTimeout(() => {
+            if (!db || !userId) return;
+            setDoc(doc(db, `artifacts/${appId}/users/${userId}/userData/appData`), {
+                favorites: state.favorites,
+                recentlyViewed: state.recentlyViewed,
+                generalNote: state.generalNote,
+                customContent: state.customContent
+            }, { merge: true });
+        }, 1000);
+    }
+    debouncedSaveState = debouncedSaveStateFn;
 
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        const clinicalData = { "Red": { title: "🔴 Red Zone – Immediate Risk & Crisis", color: "red", scenarios: [ { id: "suicidal-ideation-assessment", title: "Suicidal Ideation – Safety Assessment", content: `<h3>Opening and Assessment Questions</h3> <p>“Before we go any deeper, our priority is always your safety. I’d like to ask a few direct questions to help us understand what’s happening and how to keep you safe. Is that okay?”</p> <p>“Thank you for telling me. I know that’s not easy. Have you wished you were dead or that you could go to sleep and not wake up?”</p> <h3>Safety Planning Questions</h3> <p>“Let's think about a safety plan together. What are some early signs you notice when things start to spiral for you?”</p>` }, { id: "self-harm-urges", title: "Self-Harm Urges (Non-Suicidal Self-Injury)", content: `<h3>Checking In</h3> <p>“Thank you for telling me. I need to ask directly: Are you having urges to hurt yourself right now?”</p> <h3>Validation</h3> <p>“That urge makes complete sense given everything you’re carrying. It sounds like a part of you is just trying to survive and find relief, even if it’s in a way that ends up hurting you. Let’s see if we can work with that part in a safer way.”</p>` } ] }, "Orange": { title: "🟠 Orange Zone – High Distress", color: "orange", scenarios: [ { id: "highly-agitated-escalating", title: "Highly Agitated or Escalating", content: `<h3>Centering and Slowing Down</h3> <p>“I can see how agitated you are. Let’s take a pause for a second. I’m right here with you. You don’t have to go through this moment alone.”</p>` }, { id: "acute-anxiety-panic-attack", title: "Acute Anxiety or Panic Attack", content: `<h3>Normalizing and Reassuring</h3> <p>“What you’re experiencing is a panic attack. It feels really scary, I know, but I promise it’s not life-threatening and it will pass. You are going to be okay. I’m right here with you.”</p>` } ] }, "Yellow": { title: "🟨 Yellow Zone – Moderate Challenges", color: "yellow", scenarios: [ { id: "manipulative-testing-behaviors", title: "“Manipulative” or Testing Behaviors", content: `<h3>Looking for the Unmet Need</h3> <p>“It seems like you really need something right now – maybe reassurance, or to feel in control? I want to understand what you need, because I don’t think you’re doing these things for no reason.”</p>` }, { id: "shut-down-withdrawn-minimizing", title: "Shut Down, Withdrawn, or Minimizing", content: `<h3>Gently Noticing</h3> <p>“I notice you’re getting really quiet, or you keep saying you’re fine. Sometimes when we do that, it’s because the feelings are too big or too hard to put into words. Does that feel true for you right now?”</p>` } ] }, "Green": { title: "💚 Green Zone – Growth & Skill-Building", color: "green", scenarios: [ { id: "political-global-events-anxiety", title: "Political/Global Events Anxiety", content: `<h3>Validating the Feeling</h3> <p>“It makes complete sense that you’re feeling anxious given what’s happening in the world. These are heavy times, and your feelings are a very understandable response.”</p>` }, { id: "chronic-pain-health-challenges", title: "Chronic Pain or Health Challenges", content: `<h3>Acknowledging the Struggle</h3> <p>“Dealing with chronic pain is really tough. Not only are you physically hurting, but it wears on you emotionally too. It’s completely valid to feel frustrated, exhausted, or down about it.”</p>` } ] } };
-        const interventionsData = { "Distress Tolerance": [ { id: "tipp-skill", title: "TIPP Skill", content: `<h3>Let's try the TIPP skill</h3> <p>“When you feel completely overwhelmed and your emotions are at a 10, we can use a skill called TIPP to help your body's chemistry change and calm down quickly. Would you be willing to try it with me?”</p>` }, { id: "radical-acceptance", title: "Radical Acceptance", content: `<h3>Let's talk about Radical Acceptance</h3> <p>“Sometimes we turn pain into suffering by fighting against a reality we can't change. Radical acceptance is about acknowledging the facts of the situation, without judging or approving of them. It’s about letting go of the fight.”</p>` } ], "Interpersonal Skills": [ { id: "dear-man", title: "DEAR MAN", content: `<h3>Let's use DEAR MAN to structure your request.</h3> <p>“When you need to ask for something important or say no, it can be helpful to have a clear structure. Let's walk through the DEAR MAN steps for your situation.”</p>` } ], "Cognitive & ACT": [ { id: "act-defusion", title: "Defusion (from ACT)", content: `<h3>Let's try to get some distance from that thought.</h3> <p>“When a difficult thought gets sticky and feels like an absolute fact, we can use a skill called defusion to see it as just a thought, not a command. Would you be willing to try one?”</p>` } ], "Grounding & Somatic": [ { id: "grounding-54321", title: "5-4-3-2-1 Technique", content: `<h3>Let's ground ourselves in the present moment.</h3> <p>“When your mind is spinning or you feel disconnected, this technique can bring you back to the here and now by using your senses. Let's do it together.”</p>` } ], "Session Scripts": [ { id: "boundary-setting-script", title: "Boundary Setting Scripts", content: `<h3>Foundational Role Setting</h3> <p><strong>Standard:</strong> “Before we get started—my role isn’t for processing, but to make sure you’re safe and help you get grounded so you can rejoin group. We’ve got about 20 minutes, can you tell me what’s going on?”</p>` } ], "When It's Not Landing": [ { id: "not-landing-resistance", title: "For Resistance / Stonewalling", content: `<h3>Acknowledge and Validate the Resistance</h3> <p>"I notice you're hesitant to talk right now, or maybe what I'm suggesting isn't feeling right. That's completely okay. It sounds like a part of you is putting the brakes on, and I want to respect that. That part is probably trying to protect you in some way."</p>` } ], "MI": [ { id: "mi-ambivalence", title: "Exploring Ambivalence", content: `<h3>Let's explore both sides of this.</h3> <p>“It sounds like there's a part of you that wants to make a change, and another part that's hesitant or sees good reasons to stay the same. That's completely normal. My role isn't to convince you, but to help you explore your own thoughts.”</p>` } ], "Coping Skills": [ { id: "coping-problem-solving", title: "Structured Problem-Solving", content: `<h3>Let's break this problem down.</h3> <p>“When a problem feels too big, it can be overwhelming. Let's try to tackle it with a structured approach.”</p>` } ], "Psychoeducation": [ { id: "psychoed-stress-response", title: "The Stress Response: Fight, Flight, & Freeze", content: `<h3>Let's talk about what happens in your brain during stress.</h3> <p>“Think of your brain as having an ancient alarm system, the amygdala. When this alarm senses a threat—whether it’s a real danger or an intense emotion—it can instantly trigger a 'code red.' This floods your body with adrenaline and cortisol, getting you ready to either Fight, Flee (run away), or Freeze (shut down). This happens before your thinking brain has a chance to catch up, which is why it's so hard to 'think' your way out of panic or intense anger.”</p>` } ] };
-        
-        const dom = {};
-        const state = { currentView: 'dashboard', favorites: [], recentlyViewed: [], customContent: {}, customCategories: {}, categoryOrders: {}, contextualNotes: {}, generalNote: "", isAuthorMode: true, timer: { id: null, timeRemaining: 1200, isPaused: true, initialTime: 1200 }, currentOpenScenario: null, confirmCallback: null, contentMap: new Map(), modalHistory: [], sortableInstances: [] };
-        let debouncedSaveState;
-
-        const colorMap = {
-            red: { bg: 'bg-red-500/10', border: 'border-red-500', text: 'text-red-600', darkBg: 'dark:bg-red-800/20', darkBorder: 'dark:border-red-600', darkText: 'dark:text-red-400' },
-            orange: { bg: 'bg-orange-500/10', border: 'border-orange-500', text: 'text-orange-600', darkBg: 'dark:bg-orange-800/20', darkBorder: 'dark:border-orange-600', darkText: 'dark:text-orange-400' },
-            yellow: { bg: 'bg-yellow-500/10', border: 'border-yellow-500', text: 'text-yellow-600', darkBg: 'dark:bg-yellow-800/20', darkBorder: 'dark:border-yellow-600', darkText: 'dark:text-yellow-400' },
-            green: { bg: 'bg-green-500/10', border: 'border-green-500', text: 'text-green-600', darkBg: 'dark:bg-green-800/20', darkBorder: 'dark:border-green-600', darkText: 'dark:text-green-400' },
-            indigo: { bg: 'bg-indigo-500/10', border: 'border-indigo-500', text: 'text-indigo-600', darkBg: 'dark:bg-indigo-800/20', darkBorder: 'dark:border-indigo-600', darkText: 'dark:text-indigo-400' }
-        };
-        
-        function populateDomObject() {
-            const ids = [ 'sidebar-nav', 'content-area', 'searchInput', 'timer-display', 'start-pause-btn', 'reset-btn', 'user-id-display', 'author-mode-toggle', 'theme-toggle', 'theme-icon-light', 'theme-icon-dark', 'scenarioModal', 'modalTitle', 'modalBody', 'modal-back-btn', 'closeModal', 'modal-favorite-btn', 'modal-edit-btn', 'modal-summarize-btn', 'ai-summary-output', 'toast', 'notes-widget-container', 'notes-widget-toggle', 'notes-widget-content', 'notes-widget-title', 'notes-widget-close', 'scratchpad-editor', 'scratchpad-copy-btn', 'scratchpad-timestamp-btn' ];
-            ids.forEach(id => {
-                const camelCaseId = id.replace(/-./g, x => x[1].toUpperCase());
-                dom[camelCaseId] = document.getElementById(id);
+    function initFirebase() {
+        try {
+            const firebaseConfig = {
+                apiKey: "AIzaSyBr3hTkM_2PlRreFvgK9kk4s4bQvx5y8xw",
+                authDomain: "my-dashboard-app-e1d1f.firebaseapp.com",
+                projectId: "my-dashboard-app-e1d1f",
+                storageBucket: "my-dashboard-app-e1d1f.appspot.com",
+                messagingSenderId: "969081281658",
+                appId: "1:969081281658:web:d479a7b003805625f02fc3"
+            };
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            const auth = getAuth(app);
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    userId = user.uid;
+                    dom.userIdDisplay.textContent = `Online | User: ${user.uid.substring(0,8)}...`;
+                    // Listen for user data
+                    const userDoc = doc(db, `artifacts/${appId}/users/${userId}/userData/appData`);
+                    onSnapshot(userDoc, (docSnap) => {
+                        if (docSnap.exists()) {
+                            const data = docSnap.data();
+                            if (data.favorites) state.favorites = data.favorites;
+                            if (data.recentlyViewed) state.recentlyViewed = data.recentlyViewed;
+                            if (data.generalNote) state.generalNote = data.generalNote;
+                            if (data.customContent) state.customContent = data.customContent;
+                            switchView(state.currentView);
+                        }
+                    });
+                } else {
+                    await signInAnonymously(auth);
+                }
             });
-            dom.timerPresetBtns = document.querySelectorAll('.timer-preset-btn');
-            dom.richTextBtns = document.querySelectorAll('.rich-text-btn');
+        } catch (error) {
+            console.error("Firebase initialization failed:", error);
+            dom.userIdDisplay.textContent = 'Connection Failed';
+            showToast("Firebase connection failed.", false);
         }
+    }
 
-        function showToast(message, isSubtle = false) {
-            dom.toast.textContent = message;
-            dom.toast.className = `fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg z-50 ${isSubtle ? 'bg-gray-600 dark:bg-gray-700' : 'bg-green-500'}`;
-            setTimeout(() => { dom.toast.classList.add('hidden'); }, 3000);
-        }
+    // ------------------- MAIN TABS LOGIC -------------------
+    const MAIN_TABS = [
+        { id: 'dashboard', icon: 'layout-dashboard', label: 'Dashboard' },
+        { id: 'favorites', icon: 'star', label: 'Favorites' },
+        { id: 'recents', icon: 'clock', label: 'Recents' },
+        { id: 'interventions', icon: 'activity', label: 'Interventions' }
+    ];
 
-        function initializeDataMap() {
-            state.contentMap.clear();
-            Object.values(clinicalData).forEach(zone => {
-                zone.scenarios.forEach(s => state.contentMap.set(s.id, {...s, category: zone.title, color: zone.color}));
-            });
-            Object.entries(interventionsData).forEach(([category, items]) => {
-                items.forEach(item => state.contentMap.set(item.id, {...item, category, color: 'indigo'}));
-            });
-            Object.values(state.customContent).forEach(item => state.contentMap.set(item.id, item));
-        }
-        
-        function renderCardList(container, items, emptyMessage) {
-            if (!container) return;
-            container.innerHTML = '';
-            if (items.length === 0) {
-                container.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400 p-8 col-span-full">${emptyMessage}</p>`;
-                return;
-            }
-            items.forEach(item => {
-                if (item) container.appendChild(createScenarioCard(item));
-            });
-             lucide.createIcons();
-        }
+    function renderSidebarTabs() {
+        const nav = dom.sidebarNav;
+        nav.innerHTML = '';
+        MAIN_TABS.forEach(tab => {
+            const btn = document.createElement('button');
+            btn.className = `sidebar-link w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left font-medium transition-colors${state.currentView === tab.id ? ' active' : ''}`;
+            btn.dataset.tab = tab.id;
+            btn.innerHTML = `<i data-lucide="${tab.icon}" class="h-5 w-5"></i> <span>${tab.label}</span>`;
+            btn.addEventListener('click', () => switchView(tab.id));
+            nav.appendChild(btn);
+        });
+        lucide.createIcons();
+    }
 
-        // --- FAVORITES & RECENTS LOGIC ---
-        function toggleFavorite(scenarioId) {
-            const idx = state.favorites.indexOf(scenarioId);
-            if (idx === -1) {
-                state.favorites.unshift(scenarioId);
-            } else {
-                state.favorites.splice(idx, 1);
-            }
-            debouncedSaveState && debouncedSaveState();
-            switchView(state.currentView);
-        }
-        function addToRecentlyViewed(scenarioId) {
-            const idx = state.recentlyViewed.indexOf(scenarioId);
-            if (idx !== -1) state.recentlyViewed.splice(idx, 1);
-            state.recentlyViewed.unshift(scenarioId);
-            if (state.recentlyViewed.length > 10) state.recentlyViewed.pop();
-            debouncedSaveState && debouncedSaveState();
-        }
+    function switchView(viewId) {
+        state.currentView = viewId;
+        document.querySelectorAll('.sidebar-link').forEach(link => {
+            link.classList.toggle('active', link.dataset.tab === viewId);
+        });
+        dom.contentArea.innerHTML = '';
 
-        // --- ENHANCED createScenarioCard ---
-        function createScenarioCard(scenario) {
-            const isFavorited = state.favorites.includes(scenario.id);
-            const card = document.createElement('div');
-            const colors = colorMap[scenario.color] || colorMap.indigo;
-            card.className = `scenario-card bg-white dark:bg-gray-800 p-4 rounded-lg cursor-pointer flex flex-col justify-between relative ${colors.border}`;
-            card.dataset.id = scenario.id;
-            card.innerHTML = `
-                <div class="flex-1">
-                    <h3 class="font-semibold pr-2 text-gray-800 dark:text-gray-200">${scenario.title}</h3>
-                </div>
-                <div class="favorite-star self-end mt-2 text-gray-400 dark:text-gray-600 ${isFavorited ? 'favorited' : ''}" style="z-index:2;">
-                    <i data-lucide="star" class="h-5 w-5"></i>
-                </div>`;
-            // Favorite star click
-            card.querySelector('.favorite-star').addEventListener('click', (e) => {
-                e.stopPropagation();
-                toggleFavorite(scenario.id);
-            });
-            // Card click
-            card.addEventListener('click', () => openModal(scenario));
-            return card;
+        if (viewId === 'dashboard') {
+            // Show all scenarios
+            const dashboardItems = Array.from(state.contentMap.values()).filter(item => item.category && item.category.includes('Zone'));
+            renderCardList(dom.contentArea, dashboardItems, 'No scenarios found.');
+        } else if (viewId === 'favorites') {
+            const items = state.favorites.map(id => state.contentMap.get(id)).filter(Boolean);
+            renderCardList(dom.contentArea, items, 'No favorites yet.');
+        } else if (viewId === 'recents') {
+            const items = state.recentlyViewed.map(id => state.contentMap.get(id)).filter(Boolean);
+            renderCardList(dom.contentArea, items, 'No recently viewed scenarios.');
+        } else if (viewId === 'interventions') {
+            const items = [];
+            Object.entries(interventionsData).forEach(([cat, arr]) => items.push(...arr));
+            renderCardList(dom.contentArea, items, 'No interventions found.');
         }
+    }
 
-        // --- ENHANCED openModal ---
-        function openModal(scenario) {
-            if (!scenario) return;
-            state.currentOpenScenario = scenario;
-            dom.modalTitle.textContent = scenario.title;
-            dom.modalBody.innerHTML = marked.parse(scenario.content);
-            dom.scenarioModal.classList.remove('hidden');
-            addToRecentlyViewed(scenario.id);
-            lucide.createIcons();
-        }
+    // ------------------- MAIN ENTRY -------------------
+    function main() {
+        populateDomObject();
+        renderSidebarTabs();
+        initializeDataMap();
+        switchView(state.currentView || 'dashboard');
+        initFirebase();
+        // ... any other setup (timer, search, etc)
+    }
 
-        // --- FIRESTORE PERSISTENCE ---
-        let db, userId, appId = 'clinical-dashboard';
-        function debouncedSaveStateFn() {
-            clearTimeout(debouncedSaveStateFn.timer);
-            debouncedSaveStateFn.timer = setTimeout(() => {
-                if (!db || !userId) return;
-                setDoc(doc(db, `artifacts/${appId}/users/${userId}/userData/appData`), {
-                    favorites: state.favorites,
-                    recentlyViewed: state.recentlyViewed,
-                    generalNote: state.generalNote,
-                    customContent: state.customContent
-                }, { merge: true });
-            }, 1000);
-        }
-        debouncedSaveState = debouncedSaveStateFn;
-
-        // --- ENHANCED initFirebase ---
-        function initFirebase() {
-            try {
-                const firebaseConfig = {
-                    apiKey: "AIzaSyBr3hTkM_2PlRreFvgK9kk4s4bQvx5y8xw",
-                    authDomain: "my-dashboard-app-e1d1f.firebaseapp.com",
-                    projectId: "my-dashboard-app-e1d1f",
-                    storageBucket: "my-dashboard-app-e1d1f.appspot.com",
-                    messagingSenderId: "969081281658",
-                    appId: "1:969081281658:web:d479a7b003805625f02fc3"
-                };
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                const auth = getAuth(app);
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        dom.userIdDisplay.textContent = `Online | User: ${user.uid.substring(0,8)}...`;
-                        // Listen for user data
-                        const userDoc = doc(db, `artifacts/${appId}/users/${userId}/userData/appData`);
-                        onSnapshot(userDoc, (docSnap) => {
-                            if (docSnap.exists()) {
-                                const data = docSnap.data();
-                                if (data.favorites) state.favorites = data.favorites;
-                                if (data.recentlyViewed) state.recentlyViewed = data.recentlyViewed;
-                                if (data.generalNote) state.generalNote = data.generalNote;
-                                if (data.customContent) state.customContent = data.customContent;
-                                switchView(state.currentView);
-                            }
-                        });
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                });
-            } catch (error) {
-                console.error("Firebase initialization failed:", error);
-                dom.userIdDisplay.textContent = 'Connection Failed';
-                showToast("Firebase connection failed.", false);
-            }
-        }
-        
-        document.addEventListener('DOMContentLoaded', main);
-
-    </script>
-</body>
-</html>
+    document.addEventListener('DOMContentLoaded', main);
+</script>
