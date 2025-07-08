@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClinicalX: Interactive Dashboard v6.2</title>
+    <title>ClinicalX: Interactive Dashboard v7.4</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,10 +14,13 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     
     <style>
+        :root {
+            --sidebar-width: 260px;
+        }
         body { 
             font-family: 'Inter', sans-serif; 
             transition: background-color 0.3s, color 0.3s; 
-            background-color: #f3f4f6; 
+            background-color: #f9fafb; 
             color: #1f2937;
         }
         .dark body { 
@@ -28,57 +31,22 @@
         .modal-content, .toast-notification { animation: slide-up 0.3s ease-out; }
         @keyframes slide-up { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         
-        .scenario-card { transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s; }
-        .scenario-card:hover { transform: translateY(-5px); }
-        
+        .scenario-card { transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s; border-left-width: 4px; }
+        .scenario-card:hover { transform: translateY(-4px); box-shadow: 0 7px 14px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); }
+        .dark .scenario-card:hover { box-shadow: 0 7px 14px -3px rgba(0,0,0,0.25), 0 4px 6px -2px rgba(0,0,0,0.2); }
+
         .modal-body::-webkit-scrollbar, .rich-text-editor::-webkit-scrollbar { width: 8px; }
         .modal-body::-webkit-scrollbar-track, .rich-text-editor::-webkit-scrollbar-track { background: #e5e7eb; }
         .modal-body::-webkit-scrollbar-thumb, .rich-text-editor::-webkit-scrollbar-thumb { background-color: #9ca3af; border-radius: 10px; border: 2px solid #e5e7eb; }
         .dark .modal-body::-webkit-scrollbar-track, .dark .rich-text-editor::-webkit-scrollbar-track { background: #2d3748; }
         .dark .modal-body::-webkit-scrollbar-thumb, .dark .rich-text-editor::-webkit-scrollbar-thumb { background-color: #4a5568; border-radius: 10px; border: 2px solid #2d3748; }
 
-        .scenario-card, .modal-content, #timer-section, .content-section, .resource-card, .dashboard-card { background-color: white; border: 1px solid #e5e7eb; }
-        .scenario-card:hover, .resource-card:hover, .dashboard-card:hover { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); }
-        .dark .scenario-card, .dark .modal-content, .dark #timer-section, .dark .content-section, .dark .resource-card, .dark .dashboard-card { background-color: #1f2937; border: 1px solid #374151; }
-        .dark .scenario-card:hover, .dark .resource-card:hover, .dark .dashboard-card:hover { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2), 0 2px 4px -1px rgba(0,0,0,0.15); }
+        .sidebar { width: var(--sidebar-width); }
+        .main-content { margin-left: var(--sidebar-width); }
 
-        .tab-button-container { background-color: #e5e7eb; }
-        .dark .tab-button-container { background-color: #374151; }
-        .tab-button.active { background-color: white; color: #4f46e5; }
-        .dark .tab-button.active { background-color: #4f46e5; color: white; }
-        .tab-button { color: #4b5563; }
-        .dark .tab-button { color: #d1d5db; }
-
-        .sticky-header { background-color: rgba(243, 244, 246, 0.8); backdrop-filter: blur(8px); }
-        .dark .sticky-header { background-color: rgba(17, 24, 39, 0.8); }
-        
-        input, textarea, .rich-text-editor { background-color: #f9fafb; border-color: #d1d5db; color: #111827; }
-        .dark input, .dark textarea, .dark .rich-text-editor { background-color: #374151; border-color: #4b5563; color: #f9fafb; }
-        input::placeholder, textarea::placeholder, .rich-text-editor[placeholder]:empty:before { color: #6b7280; content: attr(placeholder); }
-        .dark input::placeholder, .dark textarea::placeholder, .dark .rich-text-editor[placeholder]:empty:before { color: #9ca3af; }
-        
-        .modal-header, .modal-footer { border-color: #e5e7eb; }
-        .dark .modal-header, .dark .modal-footer { border-color: #374151; }
-        
-        #modalBody h3, .content-section h3, .dashboard-grid h3 { font-size: 1.25rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.5rem; }
-        .dark #modalBody h3, .dark .content-section h3, .dark .dashboard-grid h3 { color: #9ca3af; }
-        #modalBody h4, .content-section h4 { font-size: 1.1rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.5rem; }
-        .dark #modalBody h4, .dark .content-section h4 { color: #8b94a3; }
-        #modalBody p, #modalBody li, .content-section p { margin-bottom: 0.75rem; line-height: 1.6; }
-        #modalBody ol, #modalBody ul, .content-section ul { padding-left: 1.5rem; list-style-type: disc; }
-        
-        .favorite-star.favorited i { fill: #facc15; color: #facc15; }
-        .intervention-link { color: #60a5fa; text-decoration: underline; cursor: pointer; font-weight: 600; }
-
-        .author-control { display: none !important; }
-        .author-mode-active .author-control { display: flex !important; }
-        #author-mode-toggle.active svg { color: #4f46e5; }
-        
-        .sortable-ghost { background-color: #4f46e520; border: 2px dashed #4f46e5; }
-        .author-mode-active .scenario-card .drag-handle { display: block; cursor: grab; }
-
-        .accordion-header .accordion-icon { transition: transform 0.3s; }
-        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out; }
+        .sidebar-link { transition: background-color 0.2s, color 0.2s; }
+        .sidebar-link.active { background-color: #eef2ff; color: #4338ca; }
+        .dark .sidebar-link.active { background-color: #312e81; color: #e0e7ff; }
 
         .rich-text-editor { min-height: 100px; border: 1px solid transparent; border-radius: 0.5rem; padding: 0.75rem; overflow-y: auto; height: 100%; }
         .rich-text-editor:focus { outline: none; }
@@ -86,9 +54,6 @@
         .rich-text-editor strong, .rich-text-editor b { font-weight: bold; }
         .rich-text-editor em, .rich-text-editor i { font-style: italic; }
 
-        .ai-summary-container { border-left: 3px solid #6366f1; padding-left: 1rem; margin-top: 1rem; }
-        .ai-summary-container blockquote { font-style: italic; color: #6b7280; }
-        .dark .ai-summary-container blockquote { color: #9ca3af; }
         .loader {
             width: 20px; height: 20px; border: 2px solid #f3f3f3; border-top: 2px solid #4f46e5;
             border-radius: 50%; animation: spin 1s linear infinite;
@@ -96,63 +61,64 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="author-mode-active">
-    <div class="container mx-auto p-4 md:p-8">
-        <header class="text-center mb-6 relative">
-            <h1 class="text-4xl md:text-5xl font-bold">ClinicalX Dashboard</h1>
-            <p class="text-lg md:text-xl text-gray-500 dark:text-gray-400 mt-2">Your Real-Time Guide for Care Coaching</p>
-            <div id="user-id-display" class="text-xs text-gray-400 dark:text-gray-600 mt-1 font-mono">Connecting...</div>
-            <div class="absolute top-0 right-0 flex items-center space-x-2">
-                <button id="author-mode-toggle" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700" title="Toggle Author Mode">
-                    <i data-lucide="pencil" class="h-6 w-6"></i>
-                </button>
-                <button id="theme-toggle" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700" title="Toggle Theme">
-                    <i data-lucide="sun" id="theme-icon-light" class="h-6 w-6 hidden"></i>
-                    <i data-lucide="moon" id="theme-icon-dark" class="h-6 w-6"></i>
-                </button>
-            </div>
-        </header>
-
-        <!-- Timer Section -->
-        <div id="timer-section" class="max-w-md mx-auto p-4 rounded-2xl mb-8">
-            <div id="timer-display" class="text-5xl font-mono text-center mb-3">20:00</div>
-            <div class="flex flex-wrap justify-center items-center gap-2">
-                <button id="start-pause-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded-full transition-colors">Start</button>
-                <button id="reset-btn" class="bg-gray-500 hover:bg-gray-400 text-white font-bold py-2 px-4 rounded-full transition-colors">Reset</button>
-                <div class="w-full border-t border-gray-200 dark:border-gray-700 my-2"></div>
-                <button class="timer-preset-btn bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-sm py-1 px-3 rounded-full" data-time="120">2 min</button>
-                <button class="timer-preset-btn bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-sm py-1 px-3 rounded-full" data-time="300">5 min</button>
-                <button class="timer-preset-btn bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-sm py-1 px-3 rounded-full" data-time="600">10 min</button>
-                <button class="timer-preset-btn bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-sm py-1 px-3 rounded-full" data-time="900">15 min</button>
-                <button class="timer-preset-btn bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-sm py-1 px-3 rounded-full" data-time="1200">20 min</button>
-            </div>
-        </div>
-
-        <!-- Sticky Header with Search and Tabs -->
-        <div class="sticky-header sticky top-0 backdrop-blur-sm py-4 z-10">
-            <div class="max-w-5xl mx-auto">
-                <div class="relative mb-4">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i data-lucide="search" class="h-5 w-5 text-gray-500 dark:text-gray-400"></i>
-                    </div>
-                    <input type="text" id="searchInput" class="focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 pr-3 py-3 rounded-full" placeholder="Search all content...">
+<body>
+    <div class="flex">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar fixed top-0 left-0 h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col p-4">
+            <div class="flex items-center gap-3 mb-8">
+                <div class="bg-indigo-600 p-2 rounded-lg">
+                    <i data-lucide="activity" class="text-white"></i>
                 </div>
-                <div id="tabs-container" class="tab-button-container flex justify-center space-x-1 p-1 rounded-full overflow-x-auto">
-                    <!-- Tabs will be dynamically inserted here -->
+                <h1 class="text-2xl font-bold text-gray-800 dark:text-white">ClinicalX</h1>
+            </div>
+            <nav id="sidebar-nav" class="flex-grow space-y-2">
+                <!-- Sidebar links will be dynamically inserted here -->
+            </nav>
+            <div class="mt-auto">
+                <div id="user-id-display" class="text-xs text-center text-gray-400 dark:text-gray-600 mt-1 font-mono">Connecting...</div>
+                 <div class="flex items-center justify-center space-x-2 mt-4">
+                    <button id="author-mode-toggle" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700" title="Toggle Author Mode">
+                        <i data-lucide="pencil" class="h-5 w-5"></i>
+                    </button>
+                    <button id="theme-toggle" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700" title="Toggle Theme">
+                        <i data-lucide="sun" id="theme-icon-light" class="h-5 w-5 hidden"></i>
+                        <i data-lucide="moon" id="theme-icon-dark" class="h-5 w-5"></i>
+                    </button>
                 </div>
             </div>
-        </div>
+        </aside>
 
-        <!-- Content Area -->
-        <div id="content-area" class="mt-8">
-            <!-- Views will be dynamically inserted here -->
-        </div>
+        <!-- Main Content -->
+        <main class="main-content w-full p-6 md:p-10">
+            <div id="timer-section" class="bg-white dark:bg-gray-800/50 p-4 rounded-2xl mb-8 max-w-lg mx-auto border border-gray-200 dark:border-gray-700">
+                <div id="timer-display" class="text-5xl font-mono text-center mb-3 text-gray-800 dark:text-gray-200">20:00</div>
+                <div class="flex flex-wrap justify-center items-center gap-2">
+                    <button id="start-pause-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded-full transition-colors">Start</button>
+                    <button id="reset-btn" class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 font-bold py-2 px-4 rounded-full transition-colors">Reset</button>
+                    <div class="w-full border-t border-gray-200 dark:border-gray-700 my-2"></div>
+                    <button class="timer-preset-btn bg-gray-100 dark:bg-gray-700/50 hover:bg-gray-200 dark:hover:bg-gray-600 text-sm py-1 px-3 rounded-full" data-time="120">2 min</button>
+                    <button class="timer-preset-btn bg-gray-100 dark:bg-gray-700/50 hover:bg-gray-200 dark:hover:bg-gray-600 text-sm py-1 px-3 rounded-full" data-time="300">5 min</button>
+                    <button class="timer-preset-btn bg-gray-100 dark:bg-gray-700/50 hover:bg-gray-200 dark:hover:bg-gray-600 text-sm py-1 px-3 rounded-full" data-time="600">10 min</button>
+                    <button class="timer-preset-btn bg-gray-100 dark:bg-gray-700/50 hover:bg-gray-200 dark:hover:bg-gray-600 text-sm py-1 px-3 rounded-full" data-time="900">15 min</button>
+                    <button class="timer-preset-btn bg-gray-100 dark:bg-gray-700/50 hover:bg-gray-200 dark:hover:bg-gray-600 text-sm py-1 px-3 rounded-full" data-time="1200">20 min</button>
+                </div>
+            </div>
+            <div class="relative mb-6">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <i data-lucide="search" class="h-5 w-5 text-gray-500 dark:text-gray-400"></i>
+                </div>
+                <input type="text" id="searchInput" class="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-12 pr-4 py-3 rounded-full" placeholder="Search all content...">
+            </div>
+            <div id="content-area" class="mt-8">
+                <!-- Views will be dynamically inserted here -->
+            </div>
+        </main>
     </div>
 
-    <!-- Scenario Modal -->
+    <!-- Modals and Widgets (remain outside main flex container) -->
     <div id="scenarioModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-        <div class="modal-content rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
-            <div class="modal-header flex justify-between items-center p-5 border-b">
+        <div class="modal-content bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+            <div class="modal-header flex justify-between items-center p-5 border-b border-gray-200 dark:border-gray-700">
                 <button id="modal-back-btn" class="hidden text-gray-500 hover:text-indigo-500 transition-colors p-2 mr-2" title="Back">
                     <i data-lucide="arrow-left" class="h-6 w-6"></i>
                 </button>
@@ -178,56 +144,9 @@
             <div id="ai-summary-output" class="p-6 border-t border-gray-200 dark:border-gray-700 hidden"></div>
         </div>
     </div>
-
-    <!-- Edit/Create Modal -->
-    <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-        <div class="modal-content rounded-2xl shadow-xl w-full max-w-2xl flex flex-col">
-            <div class="modal-header flex justify-between items-center p-5 border-b">
-                <h3 id="editModalTitle" class="text-2xl font-bold">Create Scenario</h3>
-                <button id="closeEditModal" class="text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors p-2 ml-2" title="Close">
-                    <i data-lucide="x" class="h-6 w-6"></i>
-                </button>
-            </div>
-            <div class="p-6 space-y-4">
-                <div>
-                    <label for="editScenarioTitle" class="block text-sm font-medium mb-1">Title</label>
-                    <input type="text" id="editScenarioTitle" class="w-full rounded-lg p-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter scenario title...">
-                </div>
-                <div>
-                    <label for="editScenarioContent" class="block text-sm font-medium mb-1">Content (Markdown supported)</label>
-                    <textarea id="editScenarioContent" rows="10" class="w-full rounded-lg p-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter content. Use ### for headers, * for bullet points..."></textarea>
-                    <button id="ai-generate-content-btn" class="mt-2 flex items-center gap-2 bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 text-sm font-semibold py-2 px-3 rounded-lg hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors">
-                        <i data-lucide="sparkles" class="h-4 w-4"></i>
-                        Generate with AI
-                    </button>
-                </div>
-            </div>
-            <div class="modal-footer p-4 border-t flex justify-end space-x-2">
-                <button id="cancelEdit" class="bg-gray-500 hover:bg-gray-400 text-white font-bold py-2 px-4 rounded-full transition-colors">Cancel</button>
-                <button id="saveEdit" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded-full transition-colors">Save</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Confirm Modal -->
-    <div id="confirmModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-        <div class="modal-content rounded-2xl shadow-xl w-full max-w-sm flex flex-col">
-            <div class="p-6 text-center">
-                <i data-lucide="alert-triangle" class="h-12 w-12 text-red-500 mx-auto mb-4"></i>
-                <h3 id="confirmModalTitle" class="text-lg font-bold mb-2">Are you sure?</h3>
-                <p id="confirmModalText" class="text-sm text-gray-500 dark:text-gray-400">This action cannot be undone.</p>
-            </div>
-            <div class="modal-footer p-4 flex justify-center space-x-4">
-                <button id="confirmCancel" class="bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 font-bold py-2 px-6 rounded-full transition-colors">Cancel</button>
-                <button id="confirmAction" class="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-6 rounded-full transition-colors">Confirm</button>
-            </div>
-        </div>
-    </div>
     
-    <!-- Toast Notification -->
-    <div id="toast" class="hidden fixed bottom-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg"></div>
-
-    <!-- Floating Notes Widget -->
+    <!-- Other modals and widgets here... -->
+    <div id="toast" class="hidden fixed bottom-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg z-50"></div>
     <div id="notes-widget-container" class="fixed bottom-5 right-5 z-40">
         <button id="notes-widget-toggle" class="bg-indigo-600 text-white rounded-full p-4 shadow-lg hover:bg-indigo-500 transition-colors flex items-center justify-center">
             <i data-lucide="notebook" class="h-6 w-6"></i>
@@ -241,7 +160,6 @@
                     </button>
                 </div>
             </div>
-            <!-- Rich Text Editor Toolbar -->
             <div class="flex items-center space-x-1 p-2 border-b border-gray-200 dark:border-gray-700">
                 <button class="rich-text-btn p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-600" data-command="bold" title="Bold"><i data-lucide="bold" class="h-4 w-4"></i></button>
                 <button class="rich-text-btn p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-600" data-command="italic" title="Italic"><i data-lucide="italic" class="h-4 w-4"></i></button>
@@ -260,60 +178,23 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- FULL BASE DATA ---
         const clinicalData = { "Red": { title: "🔴 Red Zone – Immediate Risk & Crisis", color: "red", scenarios: [ { id: "suicidal-ideation-assessment", title: "Suicidal Ideation – Safety Assessment", content: `<h3>Opening and Assessment Questions</h3> <p>“Before we go any deeper, our priority is always your safety. I’d like to ask a few direct questions to help us understand what’s happening and how to keep you safe. Is that okay?”</p> <p>“Thank you for telling me. I know that’s not easy. Have you wished you were dead or that you could go to sleep and not wake up?”</p> <h3>Safety Planning Questions</h3> <p>“Let's think about a safety plan together. What are some early signs you notice when things start to spiral for you?”</p>` }, { id: "self-harm-urges", title: "Self-Harm Urges (Non-Suicidal Self-Injury)", content: `<h3>Checking In</h3> <p>“Thank you for telling me. I need to ask directly: Are you having urges to hurt yourself right now?”</p> <h3>Validation</h3> <p>“That urge makes complete sense given everything you’re carrying. It sounds like a part of you is just trying to survive and find relief, even if it’s in a way that ends up hurting you. Let’s see if we can work with that part in a safer way.”</p>` } ] }, "Orange": { title: "🟠 Orange Zone – High Distress", color: "orange", scenarios: [ { id: "highly-agitated-escalating", title: "Highly Agitated or Escalating", content: `<h3>Centering and Slowing Down</h3> <p>“I can see how agitated you are. Let’s take a pause for a second. I’m right here with you. You don’t have to go through this moment alone.”</p>` }, { id: "acute-anxiety-panic-attack", title: "Acute Anxiety or Panic Attack", content: `<h3>Normalizing and Reassuring</h3> <p>“What you’re experiencing is a panic attack. It feels really scary, I know, but I promise it’s not life-threatening and it will pass. You are going to be okay. I’m right here with you.”</p>` } ] }, "Yellow": { title: "🟨 Yellow Zone – Moderate Challenges", color: "yellow", scenarios: [ { id: "manipulative-testing-behaviors", title: "“Manipulative” or Testing Behaviors", content: `<h3>Looking for the Unmet Need</h3> <p>“It seems like you really need something right now – maybe reassurance, or to feel in control? I want to understand what you need, because I don’t think you’re doing these things for no reason.”</p>` }, { id: "shut-down-withdrawn-minimizing", title: "Shut Down, Withdrawn, or Minimizing", content: `<h3>Gently Noticing</h3> <p>“I notice you’re getting really quiet, or you keep saying you’re fine. Sometimes when we do that, it’s because the feelings are too big or too hard to put into words. Does that feel true for you right now?”</p>` } ] }, "Green": { title: "💚 Green Zone – Growth & Skill-Building", color: "green", scenarios: [ { id: "political-global-events-anxiety", title: "Political/Global Events Anxiety", content: `<h3>Validating the Feeling</h3> <p>“It makes complete sense that you’re feeling anxious given what’s happening in the world. These are heavy times, and your feelings are a very understandable response.”</p>` }, { id: "chronic-pain-health-challenges", title: "Chronic Pain or Health Challenges", content: `<h3>Acknowledging the Struggle</h3> <p>“Dealing with chronic pain is really tough. Not only are you physically hurting, but it wears on you emotionally too. It’s completely valid to feel frustrated, exhausted, or down about it.”</p>` } ] } };
         const interventionsData = { "Distress Tolerance": [ { id: "tipp-skill", title: "TIPP Skill", content: `<h3>Let's try the TIPP skill</h3> <p>“When you feel completely overwhelmed and your emotions are at a 10, we can use a skill called TIPP to help your body's chemistry change and calm down quickly. Would you be willing to try it with me?”</p>` }, { id: "radical-acceptance", title: "Radical Acceptance", content: `<h3>Let's talk about Radical Acceptance</h3> <p>“Sometimes we turn pain into suffering by fighting against a reality we can't change. Radical acceptance is about acknowledging the facts of the situation, without judging or approving of them. It’s about letting go of the fight.”</p>` } ], "Interpersonal Skills": [ { id: "dear-man", title: "DEAR MAN", content: `<h3>Let's use DEAR MAN to structure your request.</h3> <p>“When you need to ask for something important or say no, it can be helpful to have a clear structure. Let's walk through the DEAR MAN steps for your situation.”</p>` } ], "Cognitive & ACT": [ { id: "act-defusion", title: "Defusion (from ACT)", content: `<h3>Let's try to get some distance from that thought.</h3> <p>“When a difficult thought gets sticky and feels like an absolute fact, we can use a skill called defusion to see it as just a thought, not a command. Would you be willing to try one?”</p>` } ], "Grounding & Somatic": [ { id: "grounding-54321", title: "5-4-3-2-1 Technique", content: `<h3>Let's ground ourselves in the present moment.</h3> <p>“When your mind is spinning or you feel disconnected, this technique can bring you back to the here and now by using your senses. Let's do it together.”</p>` } ], "Session Scripts": [ { id: "boundary-setting-script", title: "Boundary Setting Scripts", content: `<h3>Foundational Role Setting</h3> <p><strong>Standard:</strong> “Before we get started—my role isn’t for processing, but to make sure you’re safe and help you get grounded so you can rejoin group. We’ve got about 20 minutes, can you tell me what’s going on?”</p>` } ], "When It's Not Landing": [ { id: "not-landing-resistance", title: "For Resistance / Stonewalling", content: `<h3>Acknowledge and Validate the Resistance</h3> <p>"I notice you're hesitant to talk right now, or maybe what I'm suggesting isn't feeling right. That's completely okay. It sounds like a part of you is putting the brakes on, and I want to respect that. That part is probably trying to protect you in some way."</p>` } ], "MI": [ { id: "mi-ambivalence", title: "Exploring Ambivalence", content: `<h3>Let's explore both sides of this.</h3> <p>“It sounds like there's a part of you that wants to make a change, and another part that's hesitant or sees good reasons to stay the same. That's completely normal. My role isn't to convince you, but to help you explore your own thoughts.”</p>` } ], "Coping Skills": [ { id: "coping-problem-solving", title: "Structured Problem-Solving", content: `<h3>Let's break this problem down.</h3> <p>“When a problem feels too big, it can be overwhelming. Let's try to tackle it with a structured approach.”</p>` } ], "Psychoeducation": [ { id: "psychoed-stress-response", title: "The Stress Response: Fight, Flight, & Freeze", content: `<h3>Let's talk about what happens in your brain during stress.</h3> <p>“Think of your brain as having an ancient alarm system, the amygdala. When this alarm senses a threat—whether it’s a real danger or an intense emotion—it can instantly trigger a 'code red.' This floods your body with adrenaline and cortisol, getting you ready to either Fight, Flee (run away), or Freeze (shut down). This happens before your thinking brain has a chance to catch up, which is why it's so hard to 'think' your way out of panic or intense anger.”</p>` } ] };
         
-        const dom = {}; // Intentionally empty, will be populated after DOM loads
-
-        const state = {
-            currentView: 'dashboard',
-            currentZone: null,
-            favorites: [],
-            recentlyViewed: [],
-            customContent: {},
-            customCategories: {},
-            categoryOrders: {},
-            contextualNotes: {},
-            generalNote: "",
-            isAuthorMode: true,
-            timer: { id: null, timeRemaining: 1200, isPaused: true, initialTime: 1200 },
-            currentOpenScenario: null,
-            confirmCallback: null,
-            contentMap: new Map(),
-            modalHistory: [],
-            sortableInstances: [],
-            tabs: [
-                { id: 'dashboard', name: 'Dashboard', icon: 'layout-dashboard' },
-                { id: 'zones', name: 'Zones', icon: 'radio-tower' },
-                { id: 'toolkit', name: 'Toolkit', icon: 'briefcase' },
-                { id: 'scripts', name: 'Session Scripts', icon: 'scroll-text' },
-                { id: 'not-landing', name: 'Not Landing', icon: 'message-circle-off' },
-                { id: 'mi', name: 'MI', icon: 'users' },
-                { id: 'coping', name: 'Coping', icon: 'heart-pulse' },
-                { id: 'psychoed', name: 'Psychoed', icon: 'brain-circuit' },
-                { id: 'resources', name: 'Resources', icon: 'life-buoy' },
-                { id: 'favorites', name: 'Favorites', icon: 'star' },
-                { id: 'recent', name: 'Recent', icon: 'history' },
-            ]
-        };
-
-        let userDocRef;
+        const dom = {};
+        const state = { currentView: 'dashboard', favorites: [], recentlyViewed: [], customContent: {}, customCategories: {}, categoryOrders: {}, contextualNotes: {}, generalNote: "", isAuthorMode: true, timer: { id: null, timeRemaining: 1200, isPaused: true, initialTime: 1200 }, currentOpenScenario: null, confirmCallback: null, contentMap: new Map(), modalHistory: [], sortableInstances: [] };
         let debouncedSaveState;
+
+        const colorMap = {
+            red: { bg: 'bg-red-500/10', border: 'border-red-500', text: 'text-red-600', darkBg: 'dark:bg-red-800/20', darkBorder: 'dark:border-red-600', darkText: 'dark:text-red-400' },
+            orange: { bg: 'bg-orange-500/10', border: 'border-orange-500', text: 'text-orange-600', darkBg: 'dark:bg-orange-800/20', darkBorder: 'dark:border-orange-600', darkText: 'dark:text-orange-400' },
+            yellow: { bg: 'bg-yellow-500/10', border: 'border-yellow-500', text: 'text-yellow-600', darkBg: 'dark:bg-yellow-800/20', darkBorder: 'dark:border-yellow-600', darkText: 'dark:text-yellow-400' },
+            green: { bg: 'bg-green-500/10', border: 'border-green-500', text: 'text-green-600', darkBg: 'dark:bg-green-800/20', darkBorder: 'dark:border-green-600', darkText: 'dark:text-green-400' },
+            indigo: { bg: 'bg-indigo-500/10', border: 'border-indigo-500', text: 'text-indigo-600', darkBg: 'dark:bg-indigo-800/20', darkBorder: 'dark:border-indigo-600', darkText: 'dark:text-indigo-400' }
+        };
         
         function populateDomObject() {
-            const ids = [
-                'body', 'html', 'content-area', 'tabs-container', 'searchInput', 'modal', 
-                'modalTitle', 'modalBody', 'modal-back-btn', 'closeModal', 'modal-favorite-btn', 
-                'modal-edit-btn', 'modal-summarize-btn', 'ai-summary-output', 'timer-display', 
-                'start-pause-btn', 'reset-btn', 'theme-toggle', 'theme-icon-light', 
-                'theme-icon-dark', 'toast', 'author-mode-toggle', 'editModal', 'editModalTitle', 
-                'closeEditModal', 'editScenarioTitle', 'editScenarioContent', 'ai-generate-content-btn', 
-                'cancelEdit', 'saveEdit', 'confirmModal', 'confirmModalTitle', 'confirmModalText', 
-                'confirmCancel', 'confirmAction', 'notes-widget-container', 'notes-widget-toggle', 
-                'notes-widget-content', 'notes-widget-title', 'notes-widget-close', 'scratchpad-editor', 
-                'scratchpad-copy-btn', 'scratchpad-timestamp-btn', 'user-id-display'
-            ];
+            const ids = [ 'sidebar-nav', 'content-area', 'searchInput', 'timer-display', 'start-pause-btn', 'reset-btn', 'user-id-display', 'author-mode-toggle', 'theme-toggle', 'theme-icon-light', 'theme-icon-dark', 'scenarioModal', 'modalTitle', 'modalBody', 'modal-back-btn', 'closeModal', 'modal-favorite-btn', 'modal-edit-btn', 'modal-summarize-btn', 'ai-summary-output', 'toast', 'notes-widget-container', 'notes-widget-toggle', 'notes-widget-content', 'notes-widget-title', 'notes-widget-close', 'scratchpad-editor', 'scratchpad-copy-btn', 'scratchpad-timestamp-btn' ];
             ids.forEach(id => {
                 const camelCaseId = id.replace(/-./g, x => x[1].toUpperCase());
                 dom[camelCaseId] = document.getElementById(id);
@@ -324,125 +205,17 @@
 
         function showToast(message, isSubtle = false) {
             dom.toast.textContent = message;
-            if (isSubtle) {
-                dom.toast.classList.add('bg-gray-600', 'dark:bg-gray-700');
-                dom.toast.classList.remove('bg-green-500');
-            } else {
-                dom.toast.classList.remove('bg-gray-600', 'dark:bg-gray-700');
-                dom.toast.classList.add('bg-green-500');
-            }
-            dom.toast.classList.remove('hidden');
-            setTimeout(() => dom.toast.classList.add('hidden'), 2000);
-        }
-
-        function debounce(func, delay) {
-            let timeout;
-            return function(...args) {
-                const context = this;
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(context, args), delay);
-            };
-        }
-
-        async function callGeminiAPI(prompt) {
-            const apiKey = ""; // Provided by environment
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-            const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
-            try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                if (!response.ok) throw new Error(`API request failed with status ${response.status}`);
-                const data = await response.json();
-                if (data.candidates && data.candidates.length > 0) {
-                    return data.candidates[0].content.parts[0].text;
-                }
-                return "AI response could not be generated.";
-            } catch (error) {
-                console.error("Gemini API call failed:", error);
-                showToast("Error connecting to AI service.");
-                return null;
-            }
-        }
-
-        async function handleSummarize() {
-            const scenario = state.currentOpenScenario;
-            if (!scenario) return;
-            const summaryOutput = dom.aiSummaryOutput;
-            summaryOutput.innerHTML = '<div class="flex items-center gap-2"><div class="loader"></div><span>Generating summary...</span></div>';
-            summaryOutput.classList.remove('hidden');
-            const prompt = `Please provide a concise summary of the following clinical coaching script. Focus on the key objectives and intervention strategies. Format the output as a simple paragraph or a few bullet points. Script: \n\nTitle: ${scenario.title}\nContent:\n${scenario.content.replace(/<[^>]*>/g, ' ')}`;
-            const summary = await callGeminiAPI(prompt);
-            if (summary) {
-                summaryOutput.innerHTML = `<h4 class="text-lg font-semibold mb-2 flex items-center gap-2"><i data-lucide="sparkles" class="h-5 w-5 text-indigo-500"></i>AI Summary</h4><blockquote class="text-gray-600 dark:text-gray-400">${marked.parse(summary)}</blockquote>`;
-                lucide.createIcons();
-            } else {
-                summaryOutput.innerHTML = 'Failed to generate summary.';
-            }
-        }
-
-        async function handleGenerateContent() {
-            const title = dom.editScenarioTitle.value;
-            if (!title) {
-                showToast("Please enter a title first to generate content.");
-                return;
-            }
-            const btn = dom.aiGenerateContentBtn;
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<div class="loader"></div>';
-            btn.disabled = true;
-            const prompt = `Create a clinical coaching script for a scenario titled "${title}". The script should be for a care coach to use in a brief, in-the-moment intervention (not a full therapy session). Structure it with clear headings using Markdown (e.g., '### Opening', '### Validation', '### Key Questions', '### Skill Suggestion'). The tone should be empathetic, validating, and action-oriented.`;
-            const generatedContent = await callGeminiAPI(prompt);
-            if (generatedContent) {
-                dom.editScenarioContent.value = generatedContent;
-            }
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            lucide.createIcons();
-        }
-
-        function getAllContent() {
-            const allContent = {
-                zones: {},
-                toolkit: {},
-                other: {}
-            };
-
-            // Deep copy base data
-            allContent.zones = JSON.parse(JSON.stringify(clinicalData));
-            allContent.toolkit = JSON.parse(JSON.stringify(interventionsData));
-            
-            // This is a simplified merge, a more robust solution would be needed for complex data
-            const otherCategories = ["Session Scripts", "When It's Not Landing", "MI", "Coping Skills", "Psychoeducation"];
-            otherCategories.forEach(cat => {
-                if (interventionsData[cat]) {
-                    allContent.other[cat] = JSON.parse(JSON.stringify(interventionsData[cat]));
-                }
-            });
-
-            // Merge custom content
-            Object.values(state.customContent).forEach(item => {
-                // This logic needs to be improved to handle custom categories
-                // For now, it assumes custom content goes into existing structures
-            });
-
-            return allContent;
+            dom.toast.className = `fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg z-50 ${isSubtle ? 'bg-gray-600 dark:bg-gray-700' : 'bg-green-500'}`;
+            setTimeout(() => { dom.toast.classList.add('hidden'); }, 3000);
         }
 
         function initializeDataMap() {
             state.contentMap.clear();
-            const allContent = getAllContent();
-            
-            Object.values(allContent.zones).forEach(zone => {
+            Object.values(clinicalData).forEach(zone => {
                 zone.scenarios.forEach(s => state.contentMap.set(s.id, {...s, category: zone.title, color: zone.color}));
             });
-            Object.entries(allContent.toolkit).forEach(([category, items]) => {
-                items.forEach(item => state.contentMap.set(item.id, {...item, category}));
-            });
-             Object.entries(allContent.other).forEach(([category, items]) => {
-                items.forEach(item => state.contentMap.set(item.id, {...item, category}));
+            Object.entries(interventionsData).forEach(([category, items]) => {
+                items.forEach(item => state.contentMap.set(item.id, {...item, category, color: 'indigo'}));
             });
             Object.values(state.customContent).forEach(item => state.contentMap.set(item.id, item));
         }
@@ -457,270 +230,221 @@
             items.forEach(item => {
                 if (item) container.appendChild(createScenarioCard(item));
             });
+             lucide.createIcons();
         }
 
         function createScenarioCard(scenario) {
             const isFavorited = state.favorites.includes(scenario.id);
             const card = document.createElement('div');
-            card.className = `scenario-card p-4 rounded-lg cursor-pointer flex flex-col justify-between relative`;
+            const colors = colorMap[scenario.color] || colorMap.indigo;
+            card.className = `scenario-card bg-white dark:bg-gray-800 p-4 rounded-lg cursor-pointer flex flex-col justify-between relative ${colors.border}`;
             card.dataset.id = scenario.id;
             
             card.innerHTML = `
                 <div class="flex-1">
-                    <div class="absolute top-1 right-1 flex items-center">
-                        <i data-lucide="grip-vertical" class="drag-handle h-5 w-5 text-gray-400 dark:text-gray-600 hidden mr-2"></i>
-                        <button class="author-control edit-custom-btn text-gray-400 hover:text-indigo-500 p-1" title="Edit"><i data-lucide="file-pen-line" class="h-4 w-4"></i></button>
-                        <button class="author-control delete-custom-btn text-gray-400 hover:text-red-500 p-1" title="Delete"><i data-lucide="trash-2" class="h-4 w-4"></i></button>
-                    </div>
-                    <h3 class="font-semibold pr-12">${scenario.title}</h3>
-                    ${scenario.snippet ? `<p class="text-sm text-gray-500 dark:text-gray-400 mt-2 search-snippet">${scenario.snippet}</p>` : ''}
+                    <h3 class="font-semibold pr-2 text-gray-800 dark:text-gray-200">${scenario.title}</h3>
                 </div>
                 <div class="favorite-star self-end mt-2 text-gray-400 dark:text-gray-600 ${isFavorited ? 'favorited' : ''}">
                     <i data-lucide="star" class="h-5 w-5"></i>
                 </div>`;
 
-            card.querySelector('.favorite-star').addEventListener('click', (e) => {
-                e.stopPropagation();
-                toggleFavorite(scenario.id);
-            });
             card.addEventListener('click', () => openModal(scenario));
-            
-            // Simplified logic for custom buttons
-            if (scenario.isCustom) {
-                card.querySelector('.edit-custom-btn').addEventListener('click', (e) => { e.stopPropagation(); openEditModal(scenario); });
-                card.querySelector('.delete-custom-btn').addEventListener('click', (e) => { e.stopPropagation(); /* ... delete logic ... */ });
-            } else {
-                 card.querySelector('.edit-custom-btn').style.display = 'none';
-                 card.querySelector('.delete-custom-btn').style.display = 'none';
-            }
-            
             return card;
+        }
+
+        function openModal(scenario) {
+            if (!scenario) return;
+            state.currentOpenScenario = scenario;
+            dom.modalTitle.textContent = scenario.title;
+            dom.modalBody.innerHTML = marked.parse(scenario.content);
+            dom.scenarioModal.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function hideModal() {
+            dom.scenarioModal.classList.add('hidden');
         }
 
         function renderDashboard() {
             const view = document.getElementById('dashboard-view');
             view.innerHTML = `
+                <h2 class="text-3xl font-bold mb-6 text-gray-800 dark:text-gray-200">Dashboard</h2>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div>
-                        <h3 class="text-2xl font-bold mb-4 flex items-center gap-2"><i data-lucide="star" class="text-yellow-500"></i>Favorites</h3>
+                        <h3 class="text-xl font-bold mb-4 flex items-center gap-2 text-gray-700 dark:text-gray-300"><i data-lucide="star" class="text-yellow-500"></i>Favorites</h3>
                         <div id="dashboard-favorites" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
                     </div>
                     <div>
-                        <h3 class="text-2xl font-bold mb-4 flex items-center gap-2"><i data-lucide="history" class="text-blue-500"></i>Recently Viewed</h3>
+                        <h3 class="text-xl font-bold mb-4 flex items-center gap-2 text-gray-700 dark:text-gray-300"><i data-lucide="history" class="text-blue-500"></i>Recently Viewed</h3>
                         <div id="dashboard-recent" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
                     </div>
-                    <div class="lg:col-span-2">
-                        <h3 class="text-2xl font-bold mb-4 flex items-center gap-2"><i data-lucide="notebook" class="text-indigo-500"></i>Scratchpad</h3>
-                        <div id="dashboard-scratchpad" class="dashboard-card p-4 rounded-lg min-h-[150px]">${state.generalNote || '<p class="text-gray-400">Your notes will appear here...</p>'}</div>
-                    </div>
-                </div>
-            `;
+                </div>`;
             const favItems = state.favorites.map(id => state.contentMap.get(id)).filter(Boolean).slice(0, 4);
             const recentItems = state.recentlyViewed.map(id => state.contentMap.get(id)).filter(Boolean).slice(0, 4);
-
             renderCardList(document.getElementById('dashboard-favorites'), favItems, "No favorites yet.");
             renderCardList(document.getElementById('dashboard-recent'), recentItems, "No recent items.");
-            lucide.createIcons();
         }
 
         function renderZones() {
             const view = document.getElementById('zones-view');
-            view.innerHTML = '';
-            const allContent = getAllContent();
-            Object.entries(allContent.zones).forEach(([zoneKey, zone]) => {
+            view.innerHTML = `<h2 class="text-3xl font-bold mb-6 text-gray-800 dark:text-gray-200">Clinical Zones</h2>`;
+            const grid = document.createElement('div');
+            grid.className = 'grid grid-cols-1 md:grid-cols-2 gap-6';
+            
+            Object.values(clinicalData).forEach(zone => {
                 const card = document.createElement('div');
-                card.className = `zone-card bg-${zone.color}-500/10 dark:bg-${zone.color}-800/20 border border-${zone.color}-200 dark:border-${zone.color}-600 p-6 rounded-2xl cursor-pointer hover:bg-${zone.color}-500/20 dark:hover:bg-${zone.color}-700/30`;
-                card.innerHTML = `<h2 class="text-3xl font-bold text-${zone.color}-600 dark:text-${zone.color}-400">${zone.title}</h2><p class="text-gray-500 dark:text-${zone.color}-300 mt-2">${zoneKey} Zone</p>`;
-                card.addEventListener('click', () => {
-                    // Logic to show scenarios for this zone
-                });
-                view.appendChild(card);
+                const colors = colorMap[zone.color];
+                card.className = `zone-card p-6 rounded-2xl cursor-pointer ${colors.bg} ${colors.darkBg} border ${colors.border} ${colors.darkBorder}`;
+                card.innerHTML = `<h3 class="text-2xl font-bold ${colors.text} ${colors.darkText}">${zone.title}</h3>`;
+                card.addEventListener('click', () => { /* show scenarios for this zone */ });
+                grid.appendChild(card);
             });
+            view.appendChild(grid);
         }
 
-        function renderToolkit() {
-            const view = document.getElementById('toolkit-view');
-            view.innerHTML = '';
-            const allContent = getAllContent();
-            const toolkitCategories = Object.keys(allContent.toolkit);
-
-            toolkitCategories.forEach(categoryName => {
-                const categoryEl = document.createElement('div');
-                categoryEl.className = 'mb-4 border rounded-lg overflow-hidden';
-                
-                const header = document.createElement('div');
-                header.className = 'accordion-header flex justify-between items-center p-4 cursor-pointer bg-gray-100 dark:bg-gray-800';
-                header.innerHTML = `<h2 class="text-xl font-bold text-indigo-600 dark:text-indigo-400">${categoryName}</h2><i data-lucide="chevron-down" class="accordion-icon h-6 w-6"></i>`;
-
-                const content = document.createElement('div');
-                content.className = 'accordion-content p-4';
-                const gridEl = document.createElement('div');
-                gridEl.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4';
-                gridEl.dataset.category = categoryName;
-
-                const items = allContent.toolkit[categoryName] || [];
-                renderCardList(gridEl, items, "No items in this category.");
-                
-                content.appendChild(gridEl);
-                categoryEl.appendChild(header);
-                categoryEl.appendChild(content);
-                view.appendChild(categoryEl);
-
-                header.addEventListener('click', () => {
-                    const icon = header.querySelector('.accordion-icon');
-                    if (content.style.maxHeight) {
-                        content.style.maxHeight = null;
-                        icon.style.transform = 'rotate(0deg)';
-                    } else {
-                        content.style.maxHeight = content.scrollHeight + "px";
-                        icon.style.transform = 'rotate(180deg)';
-                    }
-                });
-
-                if (state.isAuthorMode) {
-                    state.sortableInstances.push(Sortable.create(gridEl, {
-                        group: 'toolkit', animation: 150, ghostClass: 'sortable-ghost', handle: '.drag-handle',
-                        onEnd: (evt) => { showToast(`Moved item in ${categoryName}`); /* ... save order logic ... */ }
-                    }));
-                }
-            });
-            lucide.createIcons();
-        }
-
-        function renderGenericView(viewId, categoryKey) {
+        function renderGenericView(viewId, title, data) {
             const view = document.getElementById(viewId);
-            view.innerHTML = '';
-            const allContent = getAllContent();
-            const items = allContent.other[categoryKey] || [];
-            const gridEl = document.createElement('div');
-            gridEl.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4';
-            renderCardList(gridEl, items, "No items in this category.");
-            view.appendChild(gridEl);
+            view.innerHTML = `<h2 class="text-3xl font-bold mb-6 text-gray-800 dark:text-gray-200">${title}</h2>`;
+            const grid = document.createElement('div');
+            grid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4';
+            renderCardList(grid, data, "No items in this category.");
+            view.appendChild(grid);
         }
 
         function switchView(viewId) {
             state.currentView = viewId;
             document.querySelectorAll('.view-content').forEach(v => v.classList.add('hidden'));
-            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.sidebar-link').forEach(b => b.classList.remove('active'));
             
             const viewEl = document.getElementById(`${viewId}-view`);
-            const tabEl = document.getElementById(`tab-${viewId}`);
+            const linkEl = document.getElementById(`nav-${viewId}`);
             if(viewEl) viewEl.classList.remove('hidden');
-            if(tabEl) tabEl.classList.add('active');
+            if(linkEl) linkEl.classList.add('active');
 
-            // Clear previous sortable instances
             state.sortableInstances.forEach(s => s.destroy());
             state.sortableInstances = [];
 
             switch(viewId) {
                 case 'dashboard': renderDashboard(); break;
                 case 'zones': renderZones(); break;
-                case 'toolkit': renderToolkit(); break;
-                case 'scripts': renderGenericView('scripts-view', 'Session Scripts'); break;
-                case 'not-landing': renderGenericView('not-landing-view', 'When It\'s Not Landing'); break;
-                case 'mi': renderGenericView('mi-view', 'MI'); break;
-                case 'coping': renderGenericView('coping-view', 'Coping Skills'); break;
-                case 'psychoed': renderGenericView('psychoed-view', 'Psychoeducation'); break;
-                case 'favorites': /* render favorites view */ break;
-                case 'recent': /* render recent view */ break;
-                case 'resources': /* render resources view */ break;
+                case 'toolkit': renderGenericView('toolkit-view', 'Clinical Toolkit', Object.values(interventionsData).flat()); break;
+                case 'favorites': renderGenericView('favorites-view', 'Favorites', state.favorites.map(id => state.contentMap.get(id)).filter(Boolean)); break;
+                case 'recent': renderGenericView('recent-view', 'Recently Viewed', state.recentlyViewed.map(id => state.contentMap.get(id)).filter(Boolean)); break;
             }
             lucide.createIcons();
         }
 
-        function renderInitialUI() {
-            // Create view containers
-            state.tabs.forEach(tab => {
-                const viewDiv = document.createElement('div');
-                viewDiv.id = `${tab.id}-view`;
-                viewDiv.className = 'view-content hidden';
-                dom.contentArea.appendChild(viewDiv);
-            });
-
-            // Create tabs
-            dom.tabsContainer.innerHTML = '';
-            state.tabs.forEach(tab => {
-                const button = document.createElement('button');
-                button.id = `tab-${tab.id}`;
-                button.className = 'tab-button flex-shrink-0 py-2 px-4 rounded-full text-sm font-semibold transition-colors flex items-center gap-2';
-                button.innerHTML = `<i data-lucide="${tab.icon}" class="h-4 w-4"></i><span>${tab.name}</span>`;
-                button.addEventListener('click', () => switchView(tab.id));
-                dom.tabsContainer.appendChild(button);
+        function renderSidebar() {
+            const navItems = [
+                { id: 'dashboard', name: 'Dashboard', icon: 'layout-dashboard' },
+                { id: 'zones', name: 'Zones', icon: 'radio-tower' },
+                { id: 'toolkit', name: 'Toolkit', icon: 'briefcase' },
+                { type: 'divider' },
+                { id: 'favorites', name: 'Favorites', icon: 'star' },
+                { id: 'recent', name: 'Recent', icon: 'history' },
+            ];
+            dom.sidebarNav.innerHTML = '';
+            navItems.forEach(item => {
+                if (item.type === 'divider') {
+                    dom.sidebarNav.innerHTML += `<hr class="my-2 border-gray-200 dark:border-gray-700">`;
+                    return;
+                }
+                const link = document.createElement('a');
+                link.href = '#';
+                link.id = `nav-${item.id}`;
+                link.className = 'sidebar-link flex items-center gap-3 p-3 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800';
+                link.innerHTML = `<i data-lucide="${item.icon}" class="h-5 w-5"></i><span class="font-medium">${item.name}</span>`;
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    switchView(item.id);
+                });
+                dom.sidebarNav.appendChild(link);
             });
         }
         
         function setupEventListeners() {
-            // Main event listeners setup
-            dom.modalSummarizeBtn.addEventListener('click', handleSummarize);
-            dom.aiGenerateContentBtn.addEventListener('click', handleGenerateContent);
-            dom.scratchpadTimestampBtn.addEventListener('click', () => {
-                const timestamp = new Date().toLocaleString();
-                document.execCommand('insertHTML', false, `<strong>${timestamp}:</strong>&nbsp;`);
-            });
+            dom.closeModal.addEventListener('click', hideModal);
+            dom.scenarioModal.addEventListener('click', (e) => { if (e.target === dom.scenarioModal) hideModal(); });
+            
+            dom.startPauseBtn.addEventListener('click', startPauseTimer);
+            dom.resetBtn.addEventListener('click', resetTimer);
+            dom.timerPresetBtns.forEach(btn => btn.addEventListener('click', () => setTimer(parseInt(btn.dataset.time))));
+        }
 
-            dom.richTextBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.execCommand(btn.dataset.command, false, null);
-                    dom.scratchpadEditor.focus();
-                });
-            });
-            // ... other listeners
+        function startPauseTimer() {
+            if (state.timer.isPaused) {
+                state.timer.isPaused = false;
+                dom.startPauseBtn.textContent = 'Pause';
+                if (!state.timer.id) {
+                    state.timer.id = setInterval(timerTick, 1000);
+                }
+            } else {
+                state.timer.isPaused = true;
+                dom.startPauseBtn.textContent = 'Start';
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(state.timer.id);
+            state.timer.id = null;
+            state.timer.isPaused = true;
+            state.timer.timeRemaining = state.timer.initialTime;
+            updateTimerDisplay();
+            dom.startPauseBtn.textContent = 'Start';
+        }
+
+        function setTimer(seconds) {
+            resetTimer();
+            state.timer.timeRemaining = seconds;
+            state.timer.initialTime = seconds;
+            updateTimerDisplay();
+        }
+
+        function timerTick() {
+            if (!state.timer.isPaused && state.timer.timeRemaining > 0) {
+                state.timer.timeRemaining--;
+                updateTimerDisplay();
+            } else if (state.timer.timeRemaining <= 0) {
+                resetTimer();
+                new Tone.Synth().toDestination().triggerAttackRelease("C5", "8n");
+                showToast("Timer finished!");
+            }
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(state.timer.timeRemaining / 60);
+            const seconds = state.timer.timeRemaining % 60;
+            dom.timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
         
-        // This function is called after Firebase has authenticated a user
-        function loadUserSpecificData(db, user) {
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'clinicalx-dashboard-default';
-            const userDocRef = doc(db, 'artifacts', appId, 'users', user.uid, 'userData', 'appData');
-
-            onSnapshot(userDocRef, (doc) => {
-                if (doc.exists()) {
-                    const data = doc.data();
-                    // Load state from Firestore
-                    state.favorites = data.favorites || [];
-                    state.recentlyViewed = data.recentlyViewed || [];
-                    state.generalNote = data.generalNote || "";
-                    // ... load other state properties
-                    showToast("Personalized data loaded", true);
-                } else {
-                    showToast("Welcome! Creating a new profile.", true);
-                }
-                // Re-render the current view with the new data
-                switchView(state.currentView);
-            }, (error) => {
-                console.error("Firestore snapshot error:", error);
-                showToast("Could not load saved data.", true);
-            });
-        }
-
-        // Main application entry point
         function main() {
             populateDomObject();
             initializeDataMap();
-            renderInitialUI();
+            renderSidebar();
+
+            const navViews = [ 'dashboard', 'zones', 'toolkit', 'favorites', 'recent' ];
+            navViews.forEach(id => {
+                const viewDiv = document.createElement('div');
+                viewDiv.id = `${id}-view`;
+                viewDiv.className = 'view-content hidden';
+                dom.contentArea.appendChild(viewDiv);
+            });
+
             setupEventListeners();
-            switchView('dashboard'); // Start at the dashboard
-            initFirebase(); // Attempt to connect to Firebase after UI is ready
+            switchView('dashboard');
+            initFirebase();
         }
         
         function initFirebase() {
              try {
-                // Use environment variables for Firebase config, with a hardcoded fallback
-                let firebaseConfig = typeof __firebase_config !== 'undefined'
-                    ? JSON.parse(__firebase_config)
-                    : null;
-
-                if (!firebaseConfig || !firebaseConfig.apiKey) {
-                    // Fallback to the hardcoded config if environment variable is missing
-                    firebaseConfig = {
-                        apiKey: "AIzaSyBr3hTkM_2PlRreFvgK9kk4s4bQvx5y8xw",
-                        authDomain: "my-dashboard-app-e1d1f.firebaseapp.com",
-                        projectId: "my-dashboard-app-e1d1f",
-                        storageBucket: "my-dashboard-app-e1d1f.appspot.com",
-                        messagingSenderId: "969081281658",
-                        appId: "1:969081281658:web:d479a7b003805625f02fc3"
-                    };
-                    showToast("Using fallback configuration.", true);
-                }
+                const firebaseConfig = {
+                    apiKey: "AIzaSyBr3hTkM_2PlRreFvgK9kk4s4bQvx5y8xw",
+                    authDomain: "my-dashboard-app-e1d1f.firebaseapp.com",
+                    projectId: "my-dashboard-app-e1d1f",
+                    storageBucket: "my-dashboard-app-e1d1f.appspot.com",
+                    messagingSenderId: "969081281658",
+                    appId: "1:969081281658:web:d479a7b003805625f02fc3"
+                };
 
                 const app = initializeApp(firebaseConfig);
                 const auth = getAuth(app);
@@ -728,15 +452,10 @@
 
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
-                        dom.userIdDisplay.textContent = `UserID: ${user.uid.substring(0,8)}...`;
-                        loadUserSpecificData(db, user);
+                        dom.userIdDisplay.textContent = `Online | User: ${user.uid.substring(0,8)}...`;
+                        // loadUserSpecificData(db, user);
                     } else {
-                        // Use environment variable for custom token
-                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                            await signInWithCustomToken(auth, __initial_auth_token);
-                        } else {
-                            await signInAnonymously(auth);
-                        }
+                        await signInAnonymously(auth);
                     }
                 });
             } catch (error) {
