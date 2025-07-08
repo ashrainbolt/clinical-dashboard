@@ -248,7 +248,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- FULL BASE DATA ---
@@ -702,20 +702,21 @@
             }, (error) => {
                 console.error("Firestore snapshot error:", error);
                 // Handle error, maybe show a fallback view
+                initializeDataMap();
+                renderInitialUI();
+                setupEventListeners();
+                switchView('dashboard');
+                showToast("Couldn't load saved data.", true);
             });
         }
         
         function initFirebase() {
              try {
-                // IMPORTANT: Replace with your actual Firebase config
-                const firebaseConfig = {
-                    apiKey: "YOUR_API_KEY",
-                    authDomain: "YOUR_AUTH_DOMAIN",
-                    projectId: "YOUR_PROJECT_ID",
-                    storageBucket: "YOUR_STORAGE_BUCKET",
-                    messagingSenderId: "YOUR_SENDER_ID",
-                    appId: "YOUR_APP_ID"
-                };
+                // Use environment variables for Firebase config
+                const firebaseConfig = typeof __firebase_config !== 'undefined'
+                    ? JSON.parse(__firebase_config)
+                    : { apiKey: "DEMO_KEY_FOR_LOCAL_TESTING", authDomain: "demo.firebaseapp.com", projectId: "demo-project" };
+
                 const app = initializeApp(firebaseConfig);
                 const auth = getAuth(app);
                 const db = getFirestore(app);
@@ -723,12 +724,21 @@
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         const userId = user.uid;
-                        const appId = "clinicalx-dashboard"; // Use a consistent app ID
-                        userDocRef = doc(db, 'artifacts', appId, 'users', userId);
+                        // Use environment variable for app ID
+                        const appId = typeof __app_id !== 'undefined' ? __app_id : 'clinicalx-dashboard-default';
+                        
+                        // Corrected Firestore document path with an even number of segments
+                        userDocRef = doc(db, 'artifacts', appId, 'users', userId, 'userData', 'appData');
+                        
                         initApp(db, userDocRef);
                         document.getElementById('user-id-display').textContent = `UserID: ${userId.substring(0,8)}...`;
                     } else {
-                        await signInAnonymously(auth);
+                        // Use environment variable for custom token
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                            await signInWithCustomToken(auth, __initial_auth_token);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
                     }
                 });
             } catch (error) {
