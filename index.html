@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Clinical Dashboard</title>
-  <!-- Tailwind CSS CDN (for demonstration) -->
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide icons CDN -->
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
@@ -21,13 +21,13 @@
         <i data-lucide="moon" class="w-5 h-5"></i>
       </button>
     </div>
-    <nav class="flex-1 py-4 px-2 space-y-1">
+    <nav class="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
       <button class="sidebar-link w-full text-left px-4 py-2 rounded hover:bg-indigo-100 dark:hover:bg-indigo-900" data-tab="dashboard">Dashboard</button>
       <button class="sidebar-link w-full text-left px-4 py-2 rounded hover:bg-indigo-100 dark:hover:bg-indigo-900" data-tab="favorites">Favorites</button>
       <button class="sidebar-link w-full text-left px-4 py-2 rounded hover:bg-indigo-100 dark:hover:bg-indigo-900" data-tab="recents">Recently Viewed</button>
       <button class="sidebar-link w-full text-left px-4 py-2 rounded hover:bg-indigo-100 dark:hover:bg-indigo-900" data-tab="interventions">Interventions</button>
     </nav>
-    <div class="p-4">
+    <div class="p-4 border-t border-gray-200 dark:border-gray-700">
       <input id="search-box" type="text" placeholder="Search..." class="w-full px-3 py-2 rounded border border-gray-300 dark:bg-gray-700 dark:border-gray-600 focus:outline-none" />
     </div>
   </aside>
@@ -42,12 +42,12 @@
 
   <!-- Modal -->
   <div id="scenario-modal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-lg w-full relative p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-3xl w-full relative p-6 max-h-[90vh] flex flex-col">
       <button id="close-modal" class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200">
         <i data-lucide="x" class="w-6 h-6"></i>
       </button>
       <h2 id="modal-title" class="text-xl font-bold mb-2"></h2>
-      <div id="modal-body" class="text-gray-800 dark:text-gray-200"></div>
+      <div id="modal-body" class="text-gray-800 dark:text-gray-200 overflow-y-auto"></div>
     </div>
   </div>
 
@@ -70,52 +70,253 @@
       indigo: { border: "border-l-4 border-indigo-500" },
       green: { border: "border-l-4 border-green-500" },
       yellow: { border: "border-l-4 border-yellow-500" },
+      orange: { border: "border-l-4 border-orange-500" },
       red: { border: "border-l-4 border-red-500" },
       blue: { border: "border-l-4 border-blue-500" },
-      // Add more as needed
     };
 
-    // Example scenarios (replace with your real data loading)
-    const exampleScenarios = [
+    // Data from CLINICALX document
+    const clinicalData = [
+      // 🔴 Red Zone
       {
-        id: "s1",
-        title: "Sepsis Alert",
-        content: "Patient presents with fever and hypotension.\n\n**Consider:**\n- Blood cultures\n- Broad spectrum antibiotics",
-        tags: ["critical", "ICU"],
+        id: "red-1",
+        title: "Suicidal Ideation – Safety Assessment",
+        content: `**ASSESS**
+"Before we go any deeper, our priority is always your safety. I’d like to ask a few questions that help us understand how you’re doing and what kind of support might help keep you safe right now.
+#1: Have you wished you were dead or that you could go to sleep and not wake up?
+#2: Have you actually had any thoughts of killing yourself?
+#3: In the past 48 hours, have you been thinking about how you might do this?
+#4: In the past 48 hours, have you had these thoughts and had some intention of acting on them?
+#5: In the past 48 hours, have you started to work out any details for how to kill yourself? Do you intend to carry out this plan?
+#6: In the past 48 hours have you done anything to prepare to end your life?
+
+*If Yes to 4, 5, or 6? Ask scaling questions:*
+"On a scale of 1-5, one meaning you feel you can stay safe today, and five meaning that you're going to make an attempt today, where would you place yourself right now?"
+
+**SAFETY PLAN**
+**Need to escalate:** "Thank you for telling me that. If it sounds like things are starting to feel more intense or harder to manage on your own, I’d like to connect you with a Crisis Manager..."
+**Warning Signs:** "What are some early signs you notice when things start to spiral?"
+**Internal Coping:** "What can you try on your own that sometimes helps, even a little?"
+**Social Distractions:** "Who or what helps you shift your focus?"
+**People to Reach Out To:** "If things feel too big to hold alone, who could you reach out to?"
+**Professional Resources:** "Do you have Charlie Health’s 24/7 crisis line saved in your phone?"
+**Safety at Home:** "Is there anything nearby that might feel unsafe to have around right now?"
+**Reasons to Stay:** "When things get dark, what’s something — or someone — that reminds you there’s still a reason to hang on?"`,
+        tags: ["crisis", "safety", "suicide"],
         color: "red",
-        category: ["Zone 1"],
+        category: "Red Zone",
       },
       {
-        id: "s2",
-        title: "Chest Pain",
-        content: "Patient reports chest pain radiating to left arm.\n\n**Actions:**\n- EKG\n- Cardiac enzymes",
-        tags: ["urgent", "ED"],
+        id: "red-2",
+        title: "Self-Harm Urges (Non-Suicidal Self-Injury)",
+        content: `**Direct Check-In:** "Thank you for telling me. I need to ask: Are you having urges to hurt yourself right now?"
+**Clarify Intent:** "When you self-harmed, was it because you wanted to die, or was it more about coping with pain or numbness?"
+**Validate & Normalize:** "That urge makes sense given what you’re carrying. A part of you is trying to survive and find relief..."
+**Offer Alternatives (TIPP skills):** "Sometimes our body needs a very strong sensation to release that tension. We could try holding something frozen (like ice)..."
+**Urge Surfing Technique:** "Remember, urges are like waves — they build, peak, and eventually become less intense."
+**Safe Physical Release:** "Would it help to rip up some paper, squeeze a stress ball, stomp your feet, or even scream into a pillow?"`,
+        tags: ["crisis", "self-harm", "nssi"],
+        color: "red",
+        category: "Red Zone",
+      },
+      {
+        id: "red-3",
+        title: "Hallucinations or Disturbing Perceptual Experiences",
+        content: `**Acknowledge Experience:** "Thank you for telling me. I can imagine this feels really intense and scary. I want you to know I’m here with you, and I believe that you’re experiencing this."
+**Safety Check:** "Are the things you’re hearing or seeing telling you to hurt yourself or anyone else?"
+**Orient to Present:** "Let’s try something together to bring you into the here and now with me, okay? Put your feet flat on the floor for me."`,
+        tags: ["crisis", "psychosis", "hallucinations"],
+        color: "red",
+        category: "Red Zone",
+      },
+      {
+        id: "red-4",
+        title: "Acute Medical Crisis",
+        content: `**Immediate Action – Take Charge:** "Okay, I see/hear that something serious might be happening physically. The most important thing right now is getting you medical help immediately."
+**Instruct to Call Emergency:** "Are you able to call 911 (or your local emergency number) right now? Is there someone with you who can call for you?"
+**Offer to Call:** "It sounds like you can’t call on your own. I’m going to get you help. Do I have your permission to call 911 for you right now to get an ambulance?"`,
+        tags: ["crisis", "medical", "emergency"],
+        color: "red",
+        category: "Red Zone",
+      },
+      {
+        id: "red-5",
+        title: "Substance Overdose or Severe Intoxication",
+        content: `**Recognize Seriousness:** "I can tell this is serious. I’m very concerned that you might be experiencing a medical emergency from substances."
+**Instruct to Call Emergency:** "This is urgent. Are you able to call 911 right now for medical attention?"
+**Keep Them Awake & Oriented:** "Stay with me, okay? Help is coming. Try to stay awake and keep talking to me."`,
+        tags: ["crisis", "overdose", "substance use"],
+        color: "red",
+        category: "Red Zone",
+      },
+      {
+        id: "red-6",
+        title: "Unsafe Home Environment / Domestic Violence",
+        content: `**Express Empathy and Belief:** "Thank you for sharing this with me. I can’t imagine how hard it was to say that out loud. I want you to know I believe you, and you didn’t deserve any of this."
+**Assess Immediate Safety:** "Are you safe right now? Is the person who hurt you nearby or likely to return soon?"
+**Provide Control & Options:** "You know your situation best, and I’m here to support whatever you choose to do. For example, have you heard of the National Domestic Violence Hotline?"`,
+        tags: ["crisis", "safety", "abuse", "dv"],
+        color: "red",
+        category: "Red Zone",
+      },
+      // 🟠 Orange Zone
+      {
+        id: "orange-1",
+        title: "Highly Agitated or Escalating",
+        content: `**Center and Slow:** "I can see (or hear) how agitated you are. Let’s take a pause for a second. I’m right here with you. You don’t have to go through this moment alone."
+**After Calming:** "I know you’re still upset, but you’re also in control right now — you’re talking to me and breathing, and that’s a big win."`,
+        tags: ["distress", "agitation", "escalation"],
+        color: "orange",
+        category: "Orange Zone",
+      },
+      {
+        id: "orange-2",
+        title: "Acute Anxiety or Panic Attack",
+        content: `**Normalize & Reassure:** "What you’re experiencing is a panic attack. It feels really scary, but I promise it’s not life-threatening. You are going to be okay. I’m right here."
+**Orient to Safety (5-4-3-2-1 technique):** "Let’s name five things you see in the room. Good. Now four things you can feel... three things you can hear... two things you can smell... and one thing you can taste."
+**Permission to Pause:** "We don’t need to unpack everything right now. In fact, we shouldn’t dive deeper into anything heavy at this moment."`,
+        tags: ["distress", "anxiety", "panic"],
+        color: "orange",
+        category: "Orange Zone",
+      },
+       {
+        id: "orange-3",
+        title: "Overwhelmed & Emotionally Flooded",
+        content: `**Contain and Validate:** "It’s all feeling like too much, isn’t it? I hear you. What you’re experiencing right now makes so much sense given everything you’re carrying."
+**Permission to Pause:** "We don’t need to unpack everything right now. In fact, we shouldn’t dive deeper into anything heavy at this moment, because I want to make sure you don’t leave here feeling even worse."
+**If they are silent or shut down:** "It’s alright if you can’t put it into words. You don’t owe me any explanation."`,
+        tags: ["distress", "overwhelm", "flooded"],
+        color: "orange",
+        category: "Orange Zone",
+      },
+      // 🟨 Yellow Zone
+      {
+        id: "yellow-1",
+        title: "“Manipulative” or Testing Behaviors",
+        content: `**Look Under the Behavior:** "It seems like you really need something right now – maybe reassurance, or to feel in control? I want to understand what you need, because I don’t think you’re doing these things for no reason."
+**Call Out Needs, Not Character:** "I don’t see you as ‘manipulative.’ I see someone who’s trying hard to get their needs met."
+**Encourage Direct Communication:** "You shouldn’t have to test me to see if I’ll support you. I want you to know: if you need something, you can ask me as plainly as possible."`,
+        tags: ["challenge", "behavior", "testing"],
         color: "yellow",
-        category: ["Zone 2"],
+        category: "Yellow Zone",
       },
       {
-        id: "s3",
-        title: "Routine Checkup",
-        content: "Annual checkup for middle-aged patient.",
-        tags: ["routine"],
+        id: "yellow-2",
+        title: "Shut Down, Withdrawn, or Minimizing",
+        content: `**Gently Call It Out:** "I notice you’re getting really quiet (or you keep saying you’re fine). Sometimes when people get really quiet, it’s because the feelings are too much or too hard to put into words."
+**Permission to Be Silent:** "We can sit here together without talking for a bit if that’s what you need. I’m not uncomfortable with the silence if you aren’t."`,
+        tags: ["challenge", "withdrawn", "shutdown"],
+        color: "yellow",
+        category: "Yellow Zone",
+      },
+      {
+        id: "yellow-3",
+        title: "Shame, Self-Hatred, or Guilt",
+        content: `**Validate:** "It sounds like you’re holding yourself to an impossible standard. Whatever you did (or think you did), it doesn’t make you worthless or evil. It makes you human."
+**Get Specific:** "Can we talk about what’s making you feel so ashamed? What do you believe you did that’s so unforgivable?"
+**Self-Compassion:** "Think about what you would say to a close friend if they were feeling exactly what you’re feeling. You deserve that same kindness."`,
+        tags: ["challenge", "shame", "guilt", "self-hatred"],
+        color: "yellow",
+        category: "Yellow Zone",
+      },
+      // 💚 Green Zone
+      {
+        id: "green-1",
+        title: "Political/Global Events Anxiety",
+        content: `**Validate:** "It makes complete sense that you’re feeling [anxious/angry/overwhelmed] given what’s happening in the world. These are heavy and uncertain times."
+**Address Fears of Death/Cosmic Insignificance:** "A lot of existential dread comes from realizing our own mortality or how small we are in the vast universe."
+**Intervention Insight:** Use Circles of Control, Influence, and Concern to focus energy effectively.`,
+        tags: ["growth", "anxiety", "global events"],
         color: "green",
-        category: ["Zone 3"],
+        category: "Green Zone",
+      },
+      {
+        id: "green-2",
+        title: "Chronic Pain or Health Challenges",
+        content: `**Acknowledge Difficulty:** "Dealing with chronic pain (or a chronic illness) is really tough. Not only are you physically hurting, but it wears on you emotionally too."
+**Discuss Coping Strategies:** "What helps on the days when the pain or symptoms are a bit more manageable?"
+**Intervention Insight:** Practice Radical Acceptance of the current reality.`,
+        tags: ["growth", "chronic pain", "health"],
+        color: "green",
+        category: "Green Zone",
+      },
+      {
+        id: "green-3",
+        title: "Struggling to Identify or Express Needs",
+        content: `**Highlight the Pattern:** "It sounds like you often find yourself feeling unsatisfied or hurt because your needs aren’t met – but at the same time, you have a hard time even knowing or saying what those needs are."
+**Practice in the Moment:** "Let’s practice right now in a small way: How are you feeling in this moment with me? Do you need anything?"
+**Intervention Insight:** Use the Nonviolent Communication (NVC) Framework.`,
+        tags: ["growth", "needs", "communication"],
+        color: "green",
+        category: "Green Zone",
+      },
+    ];
+
+    const interventionsData = [
+       {
+        id: "int-1",
+        title: "TIPP Skill for Rapid Distress Reduction",
+        content: `Core Rationale: TIPP skills directly target the body's acute stress response, changing your body chemistry and creating a window to re-engage your thinking brain.
+**T - Temperature:** "First, let's try to change your body temperature... go splash some cold water on your face - really let it cover your cheeks and the area under your eyes."
+**I - Intense Exercise:** "If you're feeling a lot of restless, built-up energy, a very short burst of exercise - maybe 60 seconds to a couple of minutes."
+**P - Paced Breathing:** "Now, let's focus on slowing your breath. We're going to make your exhale longer than your inhale."
+**P - Paired Muscle Relaxation:** "We can try Paired Muscle Relaxation. This means relaxing your muscles as you exhale."`,
+        tags: ["intervention", "dbt", "distress tolerance"],
+        color: "blue",
+        category: "Intervention",
+      },
+      {
+        id: "int-2",
+        title: "ACCEPTS: For Distress Tolerance (Distraction)",
+        content: `An acronym for skills used to tolerate and survive moments of high distress without making things worse.
+**A - Activities:** "What healthy, absorbing activities could you do to take your mind off things?"
+**C - Contributing:** "Can you contribute by doing something helpful or kind for someone else?"
+**C - Comparisons:** (Use with caution) "Can you compare yourself to a time you felt even worse?"
+**E - Emotions:** "Can you generate different emotions? (e.g., Watch a comedy)."
+**P - Pushing Away:** "Can you temporarily push away the painful thoughts or situation?"
+**T - Thoughts:** "Can you occupy your mind with other thoughts? (e.g., Count backwards from 100)."
+**S - Sensations:** "Can you use intense sensations (non-harmful) to shift focus? (e.g., Hold an ice cube)."`,
+        tags: ["intervention", "dbt", "distraction"],
+        color: "blue",
+        category: "Intervention",
+      },
+      {
+        id: "int-3",
+        title: "Radical Acceptance",
+        content: `Accepting reality as it is, without judgment, approval, or bitterness. It is about letting go of the fight against what you cannot change.
+"Radical acceptance is about acknowledging the facts of reality, even if we don't like them. It's not approval; it's letting go of the fight. Let's remind ourselves, 'This is what happened. I cannot change it.' What would it feel like to stop fighting this reality?"`,
+        tags: ["intervention", "dbt", "acceptance"],
+        color: "blue",
+        category: "Intervention",
+      },
+      {
+        id: "int-4",
+        title: "DEAR MAN: For Interpersonal Effectiveness",
+        content: `A structured way to ask for something you want or to say "no" effectively and assertively.
+**D - Describe:** "Just the facts. What is the specific, objective situation?"
+**E - Express:** "Clearly state your feelings using 'I-statements'."
+**A - Assert:** "Clearly state what you need or want. Be direct."
+**R - Reinforce:** "Explain the positive outcome if your request is met."
+**M - (Stay) Mindful:** "Keep your focus on your goal."
+**A - Appear Confident:** "Use a confident tone and body language."
+**N - Negotiate:** "Be willing to listen and find a workable compromise."`,
+        tags: ["intervention", "dbt", "communication"],
+        color: "blue",
+        category: "Intervention",
+      },
+      {
+        id: "int-5",
+        title: "Self-Compassion Break (Kristin Neff)",
+        content: `A brief, structured practice to offer oneself kindness in moments of suffering.
+**1. Acknowledge the Pain (Mindfulness):** "Right now, it sounds like you're really going through a hard time. Can we just pause and acknowledge that?... 'This is a moment of suffering,'/'This really hurts.'"
+**2. Connect to Common Humanity:** "Now, can you remind yourself that suffering and feeling [the specific feeling] is part of being human?... You're not alone in feeling this way..."
+**3. Offer Self-Kindness:** "And now, if you feel comfortable, maybe place a hand on your heart... Ask yourself, 'What do I need to hear right now?'... Try saying something gentle, like 'May I be kind to myself,'..."`,
+        tags: ["intervention", "self-compassion", "mindfulness"],
+        color: "blue",
+        category: "Intervention",
       }
     ];
 
-    // Example interventions data (replace with your actual data)
-    const interventionsData = {
-      default: [
-        {
-          id: "i1",
-          title: "Oxygen Therapy",
-          content: "Administer oxygen at 2L/min via nasal cannula.",
-          tags: ["respiratory", "support"],
-          color: "blue",
-          category: ["Intervention"],
-        },
-      ],
-    };
 
     // ---- DOM REFERENCES ----
     const dom = {
@@ -131,12 +332,10 @@
 
     // ---- INITIALIZATION ----
     function initializeDataMap() {
-      // Load scenarios into the content map
-      exampleScenarios.forEach(s => state.contentMap.set(s.id, s));
+      // Load clinical scenarios into the content map
+      clinicalData.forEach(s => state.contentMap.set(s.id, s));
       // Load interventions
-      if (interventionsData.default) {
-        interventionsData.default.forEach(s => state.contentMap.set(s.id, s));
-      }
+      interventionsData.forEach(s => state.contentMap.set(s.id, s));
     }
 
     // ---- RENDERING ----
@@ -144,7 +343,7 @@
       const isFavorited = state.favorites.includes(scenario.id);
       const isUsed = state.checkedScenarios.includes(scenario.id);
       const colors = colorMap[scenario.color] || colorMap.indigo;
-      const firstParagraph = scenario.content.split('\n').find(p => p.trim());
+      const firstParagraph = scenario.content.split('\n\n')[0] || scenario.content.split('\n')[0];
       const tagBadges = Array.isArray(scenario.tags) && scenario.tags.length
         ? scenario.tags.map(tag => `<span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-xs rounded mr-1" aria-label="Tag: ${tag}">${tag}</span>`).join('')
         : '';
@@ -152,34 +351,30 @@
       const favBadge = isFavorited ? `<i data-lucide="star" class="inline h-4 w-4 text-yellow-400 mr-1" aria-label="Favorite"></i>` : '';
 
       const card = document.createElement('div');
-      card.className = `scenario-card bg-white dark:bg-gray-800 p-4 rounded-lg cursor-pointer flex flex-col justify-between relative ${colors.border} shadow transition-colors duration-200`;
+      card.className = `scenario-card bg-white dark:bg-gray-800 p-4 rounded-lg cursor-pointer flex flex-col justify-between relative ${colors.border} shadow transition-transform hover:scale-105 duration-200`;
       card.dataset.id = scenario.id;
       card.setAttribute('tabindex', '0');
       card.innerHTML = `
         <div>
-          <div class="flex items-center">
-            <h3 class="font-semibold pr-2 text-gray-800 dark:text-gray-200">${favBadge}${scenario.title}${usedBadge}</h3>
+          <div class="flex items-start">
+            <h3 class="font-semibold pr-2 text-gray-800 dark:text-gray-200 flex-1">${favBadge}${scenario.title}${usedBadge}</h3>
           </div>
-          <div class="scenario-summary mt-2 text-gray-600 dark:text-gray-400">${marked.parseInline(firstParagraph)}</div>
-          <div class="mt-2">${tagBadges}</div>
-          <button class="show-more text-xs text-indigo-600 mt-2 underline" aria-expanded="false">Show more</button>
-          <div class="scenario-full-content hidden mt-3">${marked.parse(scenario.content)}</div>
+          <div class="scenario-summary mt-2 text-sm text-gray-600 dark:text-gray-400">${marked.parseInline(firstParagraph)}</div>
+          <div class="mt-3 text-xs">${tagBadges}</div>
         </div>
-        <div class="flex mt-2 space-x-2">
-          <button class="favorite-star text-gray-400 dark:text-gray-600 ${isFavorited ? 'favorited' : ''}" title="Toggle Favorite" aria-pressed="${isFavorited}">
+        <div class="flex mt-4 space-x-2 items-center">
+          <button class="favorite-star text-gray-400 dark:text-gray-500 hover:text-yellow-400 dark:hover:text-yellow-300 ${isFavorited ? 'favorited' : ''}" title="Toggle Favorite" aria-pressed="${isFavorited}">
             <i data-lucide="star" class="h-5 w-5"></i>
           </button>
-          <button class="copy-btn text-gray-400 dark:text-gray-600" title="Copy Script"><i data-lucide="copy" class="h-5 w-5"></i></button>
-          <button class="mark-used-btn text-gray-400 dark:text-gray-600" title="Mark as Used"><i data-lucide="check" class="h-5 w-5"></i></button>
+          <button class="copy-btn text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400" title="Copy Script"><i data-lucide="copy" class="h-5 w-5"></i></button>
+          <button class="mark-used-btn text-gray-400 dark:text-gray-500 hover:text-green-600 dark:hover:text-green-400" title="Mark as Used"><i data-lucide="check" class="h-5 w-5"></i></button>
+          <button class="show-more-btn ml-auto text-xs text-indigo-600 dark:text-indigo-400 hover:underline" aria-label="Show details for ${scenario.title}">Details</button>
         </div>
       `;
 
       // Event delegation for better performance
       card.addEventListener('click', (e) => {
-        if (e.target.closest('.show-more')) {
-          toggleShowMore(card);
-          e.stopPropagation();
-        } else if (e.target.closest('.favorite-star')) {
+        if (e.target.closest('.favorite-star')) {
           toggleFavorite(scenario.id);
           e.stopPropagation();
         } else if (e.target.closest('.copy-btn')) {
@@ -193,15 +388,6 @@
         }
       });
       return card;
-    }
-
-    function toggleShowMore(card) {
-      const full = card.querySelector('.scenario-full-content');
-      const showMoreBtn = card.querySelector('.show-more');
-      const expanded = !full.classList.contains('hidden');
-      full.classList.toggle('hidden');
-      showMoreBtn.textContent = expanded ? "Show more" : "Show less";
-      showMoreBtn.setAttribute('aria-expanded', !expanded);
     }
 
     function renderCardList(container, items, emptyMessage) {
@@ -225,9 +411,9 @@
       }
       const items = state.checkedScenarios.map(id => state.contentMap.get(id)).filter(Boolean);
       dom.usedThisSession.innerHTML = `
-        <div class="mb-2 text-sm font-semibold text-indigo-600">Used this session:</div>
+        <div class="mb-2 text-sm font-semibold text-indigo-600 dark:text-indigo-400">Used this session:</div>
         <div class="flex flex-wrap gap-2">
-          ${items.map(item => `<span class="px-2 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs">${item.title}</span>`).join('')}
+          ${items.map(item => `<span class="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-xs">${item.title}</span>`).join('')}
         </div>
       `;
     }
@@ -239,13 +425,13 @@
       const tagBadges = Array.isArray(scenario.tags) && scenario.tags.length
         ? scenario.tags.map(tag => `<span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-xs rounded mr-1" aria-label="Tag: ${tag}">${tag}</span>`).join('')
         : '';
-      dom.modalTitle.innerHTML = `${scenario.title} ${tagBadges}`;
+      dom.modalTitle.innerHTML = `${scenario.title} <div class="mt-1">${tagBadges}</div>`;
       dom.modalBody.innerHTML = `
-        <div class="flex flex-wrap gap-2 mb-2">
-          <button id="copyScript" class="bg-gray-200 dark:bg-gray-700 px-3 py-1 rounded text-xs text-gray-700 dark:text-gray-200">Copy Script</button>
-          <button id="markUsed" class="bg-green-100 dark:bg-green-800 px-3 py-1 rounded text-xs text-green-700 dark:text-green-200">Mark as Used</button>
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button id="copyScript" class="bg-indigo-100 dark:bg-indigo-900 px-3 py-1 rounded text-xs text-indigo-700 dark:text-indigo-200 hover:bg-indigo-200 dark:hover:bg-indigo-800">Copy Script</button>
+          <button id="markUsed" class="bg-green-100 dark:bg-green-800 px-3 py-1 rounded text-xs text-green-700 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-700">Mark as Used</button>
         </div>
-        <div>${marked.parse(scenario.content)}</div>
+        <div class="prose prose-sm dark:prose-invert max-w-none">${marked.parse(scenario.content)}</div>
       `;
       dom.scenarioModal.classList.remove('hidden');
       addToRecentlyViewed(scenario.id);
@@ -279,39 +465,43 @@
       const idx = state.recentlyViewed.indexOf(scenarioId);
       if (idx !== -1) state.recentlyViewed.splice(idx, 1);
       state.recentlyViewed.unshift(scenarioId);
-      if (state.recentlyViewed.length > 10) state.recentlyViewed.pop();
+      if (state.recentlyViewed.length > 20) state.recentlyViewed.pop();
     }
 
     // ---- TABS ----
     function switchView(viewId) {
       state.currentView = viewId;
       document.querySelectorAll('.sidebar-link').forEach(link => {
-        link.classList.toggle('bg-indigo-200', link.dataset.tab === viewId);
-        link.classList.toggle('dark:bg-indigo-900', link.dataset.tab === viewId);
-        link.classList.toggle('font-bold', link.dataset.tab === viewId);
+        const isSelected = link.dataset.tab === viewId;
+        link.classList.toggle('bg-indigo-100', isSelected);
+        link.classList.toggle('dark:bg-indigo-800', isSelected);
+        link.classList.toggle('text-indigo-700', isSelected);
+        link.classList.toggle('dark:text-indigo-200', isSelected);
+        link.classList.toggle('font-semibold', isSelected);
       });
       dom.contentArea.innerHTML = '';
       renderUsedThisSession();
       let items = [];
+      let message = 'No items found.';
       if (viewId === 'dashboard') {
-        items = Array.from(state.contentMap.values()).filter(item => item.category && item.category.some(cat => cat.includes('Zone')));
-        renderCardList(dom.contentArea, items, 'No scenarios found.');
+        items = Array.from(state.contentMap.values()).filter(item => item.category && item.category.includes('Zone'));
+        message = 'No scenarios found.';
       } else if (viewId === 'favorites') {
         items = state.favorites.map(id => state.contentMap.get(id)).filter(Boolean);
-        renderCardList(dom.contentArea, items, 'No favorites yet.');
+        message = 'No favorites yet. Click the star on a card to add one.';
       } else if (viewId === 'recents') {
         items = state.recentlyViewed.map(id => state.contentMap.get(id)).filter(Boolean);
-        renderCardList(dom.contentArea, items, 'No recently viewed scenarios.');
+        message = 'No recently viewed scenarios.';
       } else if (viewId === 'interventions') {
-        items = [];
-        Object.values(interventionsData).forEach(arr => items.push(...arr));
-        renderCardList(dom.contentArea, items, 'No interventions found.');
+        items = Array.from(state.contentMap.values()).filter(item => item.category === 'Intervention');
+        message = 'No interventions found.';
       }
+      renderCardList(dom.contentArea, items, message);
     }
 
     // ---- SEARCH ----
     dom.searchBox?.addEventListener('input', (e) => {
-      const q = e.target.value.toLowerCase();
+      const q = e.target.value.toLowerCase().trim();
       if (!q) {
         switchView(state.currentView);
         return;
@@ -324,15 +514,19 @@
       );
       dom.contentArea.innerHTML = '';
       renderUsedThisSession();
-      renderCardList(dom.contentArea, filtered, 'No matches found.');
+      renderCardList(dom.contentArea, filtered, 'No matches found for your search.');
     });
 
     // ---- TOAST ----
     function showToast(message, isSubtle = false) {
       dom.toast.textContent = message;
-      dom.toast.className = `fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg z-50 ${isSubtle ? 'bg-gray-600 dark:bg-gray-700' : 'bg-green-500'}`;
+      dom.toast.className = `fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg z-50 transition-opacity duration-300 ${isSubtle ? 'bg-gray-600 dark:bg-gray-700' : 'bg-green-500'}`;
       dom.toast.classList.remove('hidden');
-      setTimeout(() => { dom.toast.classList.add('hidden'); }, 3000);
+      setTimeout(() => { dom.toast.classList.add('opacity-0'); }, 2700);
+      setTimeout(() => { 
+        dom.toast.classList.add('hidden');
+        dom.toast.classList.remove('opacity-0');
+      }, 3000);
     }
 
     // ---- THEME ----
@@ -355,15 +549,23 @@
 
     // ---- CLIPBOARD AND MARK USED ----
     function copyToClipboard(text) {
-      navigator.clipboard.writeText(text)
+      // A little hack to copy markdown-formatted text as plain text
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = marked.parse(text);
+      const plainText = tempDiv.textContent || "";
+
+      navigator.clipboard.writeText(plainText)
         .then(() => showToast("Script copied to clipboard!", false))
         .catch(() => showToast("Failed to copy.", true));
     }
 
     function markScenarioUsed(id) {
-      if (!state.checkedScenarios.includes(id)) state.checkedScenarios.push(id);
+      if (!state.checkedScenarios.includes(id)) {
+        state.checkedScenarios.push(id);
+      }
       renderUsedThisSession();
       showToast("Marked as used.", true);
+      // Re-render the current view to show the "Used" badge
       switchView(state.currentView);
     }
   </script>
