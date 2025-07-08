@@ -1,208 +1,371 @@
-<!-- ...Your HTML structure above... -->
-<script>
-/**
- * ---- CARD RENDERING ----
- * Creates a scenario card element.
- */
-function createScenarioCard(scenario) {
-    const isFavorited = state.favorites.includes(scenario.id);
-    const isUsed = state.checkedScenarios.includes(scenario.id);
-    const colors = colorMap[scenario.color] || colorMap.indigo;
-    const firstParagraph = scenario.content.split('\n').find(p => p.trim());
-    const tagBadges = Array.isArray(scenario.tags) && scenario.tags.length
+<!DOCTYPE html>
+<html lang="en" class="bg-gray-50 dark:bg-gray-900">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Clinical Dashboard</title>
+  <!-- Tailwind CSS CDN (for demonstration) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide icons CDN -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <!-- Marked.js (Markdown parser) -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
+
+  <!-- Sidebar -->
+  <aside class="fixed left-0 top-0 h-full w-56 bg-white dark:bg-gray-800 shadow-lg flex flex-col z-40">
+    <div class="flex items-center h-16 px-4 border-b border-gray-200 dark:border-gray-700">
+      <span class="font-bold text-lg">Clinical Dashboard</span>
+      <button id="theme-toggle" class="ml-auto p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700" title="Toggle Theme">
+        <i data-lucide="moon" class="w-5 h-5"></i>
+      </button>
+    </div>
+    <nav class="flex-1 py-4 px-2 space-y-1">
+      <button class="sidebar-link w-full text-left px-4 py-2 rounded hover:bg-indigo-100 dark:hover:bg-indigo-900" data-tab="dashboard">Dashboard</button>
+      <button class="sidebar-link w-full text-left px-4 py-2 rounded hover:bg-indigo-100 dark:hover:bg-indigo-900" data-tab="favorites">Favorites</button>
+      <button class="sidebar-link w-full text-left px-4 py-2 rounded hover:bg-indigo-100 dark:hover:bg-indigo-900" data-tab="recents">Recently Viewed</button>
+      <button class="sidebar-link w-full text-left px-4 py-2 rounded hover:bg-indigo-100 dark:hover:bg-indigo-900" data-tab="interventions">Interventions</button>
+    </nav>
+    <div class="p-4">
+      <input id="search-box" type="text" placeholder="Search..." class="w-full px-3 py-2 rounded border border-gray-300 dark:bg-gray-700 dark:border-gray-600 focus:outline-none" />
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="ml-56 min-h-screen p-8 transition-colors duration-300">
+    <!-- Used this session -->
+    <div id="used-this-session" class="mb-4"></div>
+    <!-- Dynamic content area -->
+    <div id="content-area" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  </main>
+
+  <!-- Modal -->
+  <div id="scenario-modal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-lg w-full relative p-6">
+      <button id="close-modal" class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200">
+        <i data-lucide="x" class="w-6 h-6"></i>
+      </button>
+      <h2 id="modal-title" class="text-xl font-bold mb-2"></h2>
+      <div id="modal-body" class="text-gray-800 dark:text-gray-200"></div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="hidden"></div>
+
+  <script>
+    // ---- STATE AND DATA ----
+    const state = {
+      favorites: [],
+      checkedScenarios: [],
+      recentlyViewed: [],
+      contentMap: new Map(),
+      currentView: 'dashboard',
+      currentOpenScenario: null,
+    };
+
+    // Color mappings for scenarios
+    const colorMap = {
+      indigo: { border: "border-l-4 border-indigo-500" },
+      green: { border: "border-l-4 border-green-500" },
+      yellow: { border: "border-l-4 border-yellow-500" },
+      red: { border: "border-l-4 border-red-500" },
+      blue: { border: "border-l-4 border-blue-500" },
+      // Add more as needed
+    };
+
+    // Example scenarios (replace with your real data loading)
+    const exampleScenarios = [
+      {
+        id: "s1",
+        title: "Sepsis Alert",
+        content: "Patient presents with fever and hypotension.\n\n**Consider:**\n- Blood cultures\n- Broad spectrum antibiotics",
+        tags: ["critical", "ICU"],
+        color: "red",
+        category: ["Zone 1"],
+      },
+      {
+        id: "s2",
+        title: "Chest Pain",
+        content: "Patient reports chest pain radiating to left arm.\n\n**Actions:**\n- EKG\n- Cardiac enzymes",
+        tags: ["urgent", "ED"],
+        color: "yellow",
+        category: ["Zone 2"],
+      },
+      {
+        id: "s3",
+        title: "Routine Checkup",
+        content: "Annual checkup for middle-aged patient.",
+        tags: ["routine"],
+        color: "green",
+        category: ["Zone 3"],
+      }
+    ];
+
+    // Example interventions data (replace with your actual data)
+    const interventionsData = {
+      default: [
+        {
+          id: "i1",
+          title: "Oxygen Therapy",
+          content: "Administer oxygen at 2L/min via nasal cannula.",
+          tags: ["respiratory", "support"],
+          color: "blue",
+          category: ["Intervention"],
+        },
+      ],
+    };
+
+    // ---- DOM REFERENCES ----
+    const dom = {
+      contentArea: document.getElementById('content-area'),
+      searchBox: document.getElementById('search-box'),
+      toast: document.getElementById('toast'),
+      scenarioModal: document.getElementById('scenario-modal'),
+      modalTitle: document.getElementById('modal-title'),
+      modalBody: document.getElementById('modal-body'),
+      closeModal: document.getElementById('close-modal'),
+      usedThisSession: document.getElementById('used-this-session'),
+    };
+
+    // ---- INITIALIZATION ----
+    function initializeDataMap() {
+      // Load scenarios into the content map
+      exampleScenarios.forEach(s => state.contentMap.set(s.id, s));
+      // Load interventions
+      if (interventionsData.default) {
+        interventionsData.default.forEach(s => state.contentMap.set(s.id, s));
+      }
+    }
+
+    // ---- RENDERING ----
+    function createScenarioCard(scenario) {
+      const isFavorited = state.favorites.includes(scenario.id);
+      const isUsed = state.checkedScenarios.includes(scenario.id);
+      const colors = colorMap[scenario.color] || colorMap.indigo;
+      const firstParagraph = scenario.content.split('\n').find(p => p.trim());
+      const tagBadges = Array.isArray(scenario.tags) && scenario.tags.length
         ? scenario.tags.map(tag => `<span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-xs rounded mr-1" aria-label="Tag: ${tag}">${tag}</span>`).join('')
         : '';
-    const usedBadge = isUsed ? `<span class="used-badge" aria-label="Used">Used</span>` : '';
-    const favBadge = isFavorited ? `<i data-lucide="star" class="inline h-4 w-4 text-yellow-400 mr-1" aria-label="Favorite"></i>` : '';
+      const usedBadge = isUsed ? `<span class="ml-2 px-2 py-0.5 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded text-xs" aria-label="Used">Used</span>` : '';
+      const favBadge = isFavorited ? `<i data-lucide="star" class="inline h-4 w-4 text-yellow-400 mr-1" aria-label="Favorite"></i>` : '';
 
-    const card = document.createElement('div');
-    card.className = `scenario-card bg-white dark:bg-gray-800 p-4 rounded-lg cursor-pointer flex flex-col justify-between relative ${colors.border} mb-4`;
-    card.dataset.id = scenario.id;
-    card.setAttribute('tabindex', '0');
-    card.innerHTML = `
+      const card = document.createElement('div');
+      card.className = `scenario-card bg-white dark:bg-gray-800 p-4 rounded-lg cursor-pointer flex flex-col justify-between relative ${colors.border} shadow transition-colors duration-200`;
+      card.dataset.id = scenario.id;
+      card.setAttribute('tabindex', '0');
+      card.innerHTML = `
         <div>
-            <div class="flex items-center">
-                <h3 class="font-semibold pr-2 text-gray-800 dark:text-gray-200">${favBadge}${scenario.title}${usedBadge}</h3>
-            </div>
-            <div class="scenario-summary mt-2 text-gray-600 dark:text-gray-400">${marked.parseInline(firstParagraph)}</div>
-            <div class="mt-2">${tagBadges}</div>
-            <button class="show-more text-xs text-indigo-600 mt-2 underline" aria-expanded="false">Show more</button>
-            <div class="scenario-full-content hidden mt-3">${marked.parse(scenario.content)}</div>
+          <div class="flex items-center">
+            <h3 class="font-semibold pr-2 text-gray-800 dark:text-gray-200">${favBadge}${scenario.title}${usedBadge}</h3>
+          </div>
+          <div class="scenario-summary mt-2 text-gray-600 dark:text-gray-400">${marked.parseInline(firstParagraph)}</div>
+          <div class="mt-2">${tagBadges}</div>
+          <button class="show-more text-xs text-indigo-600 mt-2 underline" aria-expanded="false">Show more</button>
+          <div class="scenario-full-content hidden mt-3">${marked.parse(scenario.content)}</div>
         </div>
         <div class="flex mt-2 space-x-2">
-            <button class="favorite-star text-gray-400 dark:text-gray-600 ${isFavorited ? 'favorited' : ''}" title="Toggle Favorite" aria-pressed="${isFavorited}">
-                <i data-lucide="star" class="h-5 w-5"></i>
-            </button>
-            <button class="copy-btn text-gray-400 dark:text-gray-600" title="Copy Script"><i data-lucide="copy" class="h-5 w-5"></i></button>
-            <button class="mark-used-btn text-gray-400 dark:text-gray-600" title="Mark as Used"><i data-lucide="check" class="h-5 w-5"></i></button>
+          <button class="favorite-star text-gray-400 dark:text-gray-600 ${isFavorited ? 'favorited' : ''}" title="Toggle Favorite" aria-pressed="${isFavorited}">
+            <i data-lucide="star" class="h-5 w-5"></i>
+          </button>
+          <button class="copy-btn text-gray-400 dark:text-gray-600" title="Copy Script"><i data-lucide="copy" class="h-5 w-5"></i></button>
+          <button class="mark-used-btn text-gray-400 dark:text-gray-600" title="Mark as Used"><i data-lucide="check" class="h-5 w-5"></i></button>
         </div>
-    `;
+      `;
 
-    // Event delegation for better performance
-    card.addEventListener('click', (e) => {
+      // Event delegation for better performance
+      card.addEventListener('click', (e) => {
         if (e.target.closest('.show-more')) {
-            toggleShowMore(card);
-            e.stopPropagation();
+          toggleShowMore(card);
+          e.stopPropagation();
         } else if (e.target.closest('.favorite-star')) {
-            toggleFavorite(scenario.id);
-            e.stopPropagation();
+          toggleFavorite(scenario.id);
+          e.stopPropagation();
         } else if (e.target.closest('.copy-btn')) {
-            copyToClipboard(scenario.content);
-            e.stopPropagation();
+          copyToClipboard(scenario.content);
+          e.stopPropagation();
         } else if (e.target.closest('.mark-used-btn')) {
-            markScenarioUsed(scenario.id);
-            e.stopPropagation();
+          markScenarioUsed(scenario.id);
+          e.stopPropagation();
         } else {
-            openModal(scenario);
+          openModal(scenario);
         }
-    });
-    return card;
-}
-
-function toggleShowMore(card) {
-    const full = card.querySelector('.scenario-full-content');
-    const showMoreBtn = card.querySelector('.show-more');
-    const expanded = full.classList.toggle('hidden');
-    showMoreBtn.textContent = expanded ? "Show more" : "Show less";
-    showMoreBtn.setAttribute('aria-expanded', !expanded);
-}
-
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text)
-        .then(() => showToast("Script copied to clipboard!", false))
-        .catch(() => showToast("Failed to copy.", true));
-}
-
-function markScenarioUsed(id) {
-    if (!state.checkedScenarios.includes(id)) state.checkedScenarios.push(id);
-    renderUsedThisSession();
-    showToast("Marked as used.", true);
-    switchView(state.currentView);
-}
-
-// ---- MODAL LOGIC ----
-function openModal(scenario) {
-    if (!scenario) return;
-    state.currentOpenScenario = scenario;
-    const tagBadges = Array.isArray(scenario.tags) && scenario.tags.length
-        ? scenario.tags.map(tag => `<span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-xs rounded mr-1" aria-label="Tag: ${tag}">${tag}</span>`).join('')
-        : '';
-    dom.modalTitle.innerHTML = `${scenario.title} ${tagBadges}`;
-    dom.modalBody.innerHTML = `
-        <div class="flex flex-wrap gap-2 mb-2">
-            <button id="copyScript" class="bg-gray-200 dark:bg-gray-700 px-3 py-1 rounded text-xs text-gray-700 dark:text-gray-200">Copy Script</button>
-            <button id="markUsed" class="bg-green-100 dark:bg-green-800 px-3 py-1 rounded text-xs text-green-700 dark:text-green-200">Mark as Used</button>
-        </div>
-        <div>${marked.parse(scenario.content)}</div>
-    `;
-    dom.scenarioModal.classList.remove('hidden');
-    addToRecentlyViewed(scenario.id);
-    lucide.createIcons();
-    document.getElementById('copyScript')?.addEventListener('click', () => copyToClipboard(scenario.content));
-    document.getElementById('markUsed')?.addEventListener('click', () => {
-        markScenarioUsed(scenario.id);
-        dom.scenarioModal.classList.add('hidden');
-    });
-}
-dom.closeModal?.addEventListener('click', () => {
-    dom.scenarioModal.classList.add('hidden');
-});
-
-// ---- FAVORITES & RECENTS ----
-function toggleFavorite(scenarioId) {
-    const idx = state.favorites.indexOf(scenarioId);
-    if (idx === -1) {
-        state.favorites.unshift(scenarioId);
-    } else {
-        state.favorites.splice(idx, 1);
+      });
+      return card;
     }
-    switchView(state.currentView);
-}
-function addToRecentlyViewed(scenarioId) {
-    const idx = state.recentlyViewed.indexOf(scenarioId);
-    if (idx !== -1) state.recentlyViewed.splice(idx, 1);
-    state.recentlyViewed.unshift(scenarioId);
-    if (state.recentlyViewed.length > 10) state.recentlyViewed.pop();
-}
 
-// ---- CARD LIST ----
-function renderCardList(container, items, emptyMessage) {
-    if (!container) return;
-    container.innerHTML = '';
-    if (!items.length) {
+    function toggleShowMore(card) {
+      const full = card.querySelector('.scenario-full-content');
+      const showMoreBtn = card.querySelector('.show-more');
+      const expanded = !full.classList.contains('hidden');
+      full.classList.toggle('hidden');
+      showMoreBtn.textContent = expanded ? "Show more" : "Show less";
+      showMoreBtn.setAttribute('aria-expanded', !expanded);
+    }
+
+    function renderCardList(container, items, emptyMessage) {
+      if (!container) return;
+      container.innerHTML = '';
+      if (!items.length) {
         container.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400 p-8 col-span-full">${emptyMessage}</p>`;
         return;
-    }
-    items.forEach(item => {
+      }
+      items.forEach(item => {
         if (item) container.appendChild(createScenarioCard(item));
-    });
-    lucide.createIcons();
-}
+      });
+      lucide.createIcons();
+    }
 
-// ---- TABS ----
-function switchView(viewId) {
-    state.currentView = viewId;
-    document.querySelectorAll('.sidebar-link').forEach(link => {
-        link.classList.toggle('active', link.dataset.tab === viewId);
+    function renderUsedThisSession() {
+      if (!dom.usedThisSession) return;
+      if (!state.checkedScenarios.length) {
+        dom.usedThisSession.innerHTML = '';
+        return;
+      }
+      const items = state.checkedScenarios.map(id => state.contentMap.get(id)).filter(Boolean);
+      dom.usedThisSession.innerHTML = `
+        <div class="mb-2 text-sm font-semibold text-indigo-600">Used this session:</div>
+        <div class="flex flex-wrap gap-2">
+          ${items.map(item => `<span class="px-2 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs">${item.title}</span>`).join('')}
+        </div>
+      `;
+    }
+
+    // ---- MODAL LOGIC ----
+    function openModal(scenario) {
+      if (!scenario) return;
+      state.currentOpenScenario = scenario;
+      const tagBadges = Array.isArray(scenario.tags) && scenario.tags.length
+        ? scenario.tags.map(tag => `<span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-xs rounded mr-1" aria-label="Tag: ${tag}">${tag}</span>`).join('')
+        : '';
+      dom.modalTitle.innerHTML = `${scenario.title} ${tagBadges}`;
+      dom.modalBody.innerHTML = `
+        <div class="flex flex-wrap gap-2 mb-2">
+          <button id="copyScript" class="bg-gray-200 dark:bg-gray-700 px-3 py-1 rounded text-xs text-gray-700 dark:text-gray-200">Copy Script</button>
+          <button id="markUsed" class="bg-green-100 dark:bg-green-800 px-3 py-1 rounded text-xs text-green-700 dark:text-green-200">Mark as Used</button>
+        </div>
+        <div>${marked.parse(scenario.content)}</div>
+      `;
+      dom.scenarioModal.classList.remove('hidden');
+      addToRecentlyViewed(scenario.id);
+      lucide.createIcons();
+      document.getElementById('copyScript')?.addEventListener('click', () => copyToClipboard(scenario.content));
+      document.getElementById('markUsed')?.addEventListener('click', () => {
+        markScenarioUsed(scenario.id);
+        dom.scenarioModal.classList.add('hidden');
+      });
+    }
+    dom.closeModal?.addEventListener('click', () => {
+      dom.scenarioModal.classList.add('hidden');
     });
-    dom.contentArea.innerHTML = '';
-    renderUsedThisSession();
-    let items = [];
-    if (viewId === 'dashboard') {
-        items = Array.from(state.contentMap.values()).filter(item => item.category && item.category.includes('Zone'));
+    dom.scenarioModal?.addEventListener('click', (e) => {
+      if (e.target === dom.scenarioModal) {
+        dom.scenarioModal.classList.add('hidden');
+      }
+    });
+
+    // ---- FAVORITES & RECENTS ----
+    function toggleFavorite(scenarioId) {
+      const idx = state.favorites.indexOf(scenarioId);
+      if (idx === -1) {
+        state.favorites.unshift(scenarioId);
+      } else {
+        state.favorites.splice(idx, 1);
+      }
+      switchView(state.currentView);
+    }
+    function addToRecentlyViewed(scenarioId) {
+      const idx = state.recentlyViewed.indexOf(scenarioId);
+      if (idx !== -1) state.recentlyViewed.splice(idx, 1);
+      state.recentlyViewed.unshift(scenarioId);
+      if (state.recentlyViewed.length > 10) state.recentlyViewed.pop();
+    }
+
+    // ---- TABS ----
+    function switchView(viewId) {
+      state.currentView = viewId;
+      document.querySelectorAll('.sidebar-link').forEach(link => {
+        link.classList.toggle('bg-indigo-200', link.dataset.tab === viewId);
+        link.classList.toggle('dark:bg-indigo-900', link.dataset.tab === viewId);
+        link.classList.toggle('font-bold', link.dataset.tab === viewId);
+      });
+      dom.contentArea.innerHTML = '';
+      renderUsedThisSession();
+      let items = [];
+      if (viewId === 'dashboard') {
+        items = Array.from(state.contentMap.values()).filter(item => item.category && item.category.some(cat => cat.includes('Zone')));
         renderCardList(dom.contentArea, items, 'No scenarios found.');
-    } else if (viewId === 'favorites') {
+      } else if (viewId === 'favorites') {
         items = state.favorites.map(id => state.contentMap.get(id)).filter(Boolean);
         renderCardList(dom.contentArea, items, 'No favorites yet.');
-    } else if (viewId === 'recents') {
+      } else if (viewId === 'recents') {
         items = state.recentlyViewed.map(id => state.contentMap.get(id)).filter(Boolean);
         renderCardList(dom.contentArea, items, 'No recently viewed scenarios.');
-    } else if (viewId === 'interventions') {
+      } else if (viewId === 'interventions') {
         items = [];
         Object.values(interventionsData).forEach(arr => items.push(...arr));
         renderCardList(dom.contentArea, items, 'No interventions found.');
+      }
     }
-}
 
-// ---- SEARCH ----
-dom.searchBox?.addEventListener('input', (e) => {
-    const q = e.target.value.toLowerCase();
-    if (!q) {
+    // ---- SEARCH ----
+    dom.searchBox?.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase();
+      if (!q) {
         switchView(state.currentView);
         return;
-    }
-    const filtered = Array.from(state.contentMap.values()).filter(
+      }
+      const filtered = Array.from(state.contentMap.values()).filter(
         item =>
-            item.title.toLowerCase().includes(q) ||
-            (item.content && item.content.toLowerCase().includes(q)) ||
-            (item.tags && item.tags.some(tag => tag.toLowerCase().includes(q)))
-    );
-    dom.contentArea.innerHTML = '';
-    renderUsedThisSession();
-    renderCardList(dom.contentArea, filtered, 'No matches found.');
-});
+          item.title.toLowerCase().includes(q) ||
+          (item.content && item.content.toLowerCase().includes(q)) ||
+          (item.tags && item.tags.some(tag => tag.toLowerCase().includes(q)))
+      );
+      dom.contentArea.innerHTML = '';
+      renderUsedThisSession();
+      renderCardList(dom.contentArea, filtered, 'No matches found.');
+    });
 
-// ---- TOAST ----
-function showToast(message, isSubtle = false) {
-    dom.toast.textContent = message;
-    dom.toast.className = `fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg z-50 ${isSubtle ? 'bg-gray-600 dark:bg-gray-700' : 'bg-green-500'}`;
-    dom.toast.classList.remove('hidden');
-    setTimeout(() => { dom.toast.classList.add('hidden'); }, 3000);
-}
+    // ---- TOAST ----
+    function showToast(message, isSubtle = false) {
+      dom.toast.textContent = message;
+      dom.toast.className = `fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg z-50 ${isSubtle ? 'bg-gray-600 dark:bg-gray-700' : 'bg-green-500'}`;
+      dom.toast.classList.remove('hidden');
+      setTimeout(() => { dom.toast.classList.add('hidden'); }, 3000);
+    }
 
-// ---- THEME ----
-document.getElementById('theme-toggle')?.addEventListener('click', () => {
-    document.documentElement.classList.toggle('dark');
-});
+    // ---- THEME ----
+    document.getElementById('theme-toggle')?.addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+    });
 
-// ---- MAIN ----
-function main() {
-    populateDomObject();
-    renderSidebarTabs();
-    initializeDataMap();
-    switchView(state.currentView || 'dashboard');
-    renderUsedThisSession();
-}
-document.addEventListener('DOMContentLoaded', main);
-</script>
-<!-- ...Your HTML structure below... -->
+    // ---- MAIN ----
+    function main() {
+      initializeDataMap();
+      // Sidebar tab logic
+      document.querySelectorAll('.sidebar-link').forEach(link => {
+        link.addEventListener('click', () => switchView(link.dataset.tab));
+      });
+      switchView(state.currentView || 'dashboard');
+      renderUsedThisSession();
+      lucide.createIcons();
+    }
+    document.addEventListener('DOMContentLoaded', main);
+
+    // ---- CLIPBOARD AND MARK USED ----
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text)
+        .then(() => showToast("Script copied to clipboard!", false))
+        .catch(() => showToast("Failed to copy.", true));
+    }
+
+    function markScenarioUsed(id) {
+      if (!state.checkedScenarios.includes(id)) state.checkedScenarios.push(id);
+      renderUsedThisSession();
+      showToast("Marked as used.", true);
+      switchView(state.currentView);
+    }
+  </script>
+</body>
+</html>
