@@ -255,52 +255,7 @@
         const clinicalData = { "Red": { title: "🔴 Red Zone – Immediate Risk & Crisis", color: "red", scenarios: [ { id: "suicidal-ideation-assessment", title: "Suicidal Ideation – Safety Assessment", content: `<h3>Opening and Assessment Questions</h3> <p>“Before we go any deeper, our priority is always your safety. I’d like to ask a few direct questions to help us understand what’s happening and how to keep you safe. Is that okay?”</p> <p>“Thank you for telling me. I know that’s not easy. Have you wished you were dead or that you could go to sleep and not wake up?”</p> <h3>Safety Planning Questions</h3> <p>“Let's think about a safety plan together. What are some early signs you notice when things start to spiral for you?”</p>` }, { id: "self-harm-urges", title: "Self-Harm Urges (Non-Suicidal Self-Injury)", content: `<h3>Checking In</h3> <p>“Thank you for telling me. I need to ask directly: Are you having urges to hurt yourself right now?”</p> <h3>Validation</h3> <p>“That urge makes complete sense given everything you’re carrying. It sounds like a part of you is just trying to survive and find relief, even if it’s in a way that ends up hurting you. Let’s see if we can work with that part in a safer way.”</p>` } ] }, "Orange": { title: "🟠 Orange Zone – High Distress", color: "orange", scenarios: [ { id: "highly-agitated-escalating", title: "Highly Agitated or Escalating", content: `<h3>Centering and Slowing Down</h3> <p>“I can see how agitated you are. Let’s take a pause for a second. I’m right here with you. You don’t have to go through this moment alone.”</p>` }, { id: "acute-anxiety-panic-attack", title: "Acute Anxiety or Panic Attack", content: `<h3>Normalizing and Reassuring</h3> <p>“What you’re experiencing is a panic attack. It feels really scary, I know, but I promise it’s not life-threatening and it will pass. You are going to be okay. I’m right here with you.”</p>` } ] }, "Yellow": { title: "🟨 Yellow Zone – Moderate Challenges", color: "yellow", scenarios: [ { id: "manipulative-testing-behaviors", title: "“Manipulative” or Testing Behaviors", content: `<h3>Looking for the Unmet Need</h3> <p>“It seems like you really need something right now – maybe reassurance, or to feel in control? I want to understand what you need, because I don’t think you’re doing these things for no reason.”</p>` }, { id: "shut-down-withdrawn-minimizing", title: "Shut Down, Withdrawn, or Minimizing", content: `<h3>Gently Noticing</h3> <p>“I notice you’re getting really quiet, or you keep saying you’re fine. Sometimes when we do that, it’s because the feelings are too big or too hard to put into words. Does that feel true for you right now?”</p>` } ] }, "Green": { title: "💚 Green Zone – Growth & Skill-Building", color: "green", scenarios: [ { id: "political-global-events-anxiety", title: "Political/Global Events Anxiety", content: `<h3>Validating the Feeling</h3> <p>“It makes complete sense that you’re feeling anxious given what’s happening in the world. These are heavy times, and your feelings are a very understandable response.”</p>` }, { id: "chronic-pain-health-challenges", title: "Chronic Pain or Health Challenges", content: `<h3>Acknowledging the Struggle</h3> <p>“Dealing with chronic pain is really tough. Not only are you physically hurting, but it wears on you emotionally too. It’s completely valid to feel frustrated, exhausted, or down about it.”</p>` } ] } };
         const interventionsData = { "Distress Tolerance": [ { id: "tipp-skill", title: "TIPP Skill", content: `<h3>Let's try the TIPP skill</h3> <p>“When you feel completely overwhelmed and your emotions are at a 10, we can use a skill called TIPP to help your body's chemistry change and calm down quickly. Would you be willing to try it with me?”</p>` }, { id: "radical-acceptance", title: "Radical Acceptance", content: `<h3>Let's talk about Radical Acceptance</h3> <p>“Sometimes we turn pain into suffering by fighting against a reality we can't change. Radical acceptance is about acknowledging the facts of the situation, without judging or approving of them. It’s about letting go of the fight.”</p>` } ], "Interpersonal Skills": [ { id: "dear-man", title: "DEAR MAN", content: `<h3>Let's use DEAR MAN to structure your request.</h3> <p>“When you need to ask for something important or say no, it can be helpful to have a clear structure. Let's walk through the DEAR MAN steps for your situation.”</p>` } ], "Cognitive & ACT": [ { id: "act-defusion", title: "Defusion (from ACT)", content: `<h3>Let's try to get some distance from that thought.</h3> <p>“When a difficult thought gets sticky and feels like an absolute fact, we can use a skill called defusion to see it as just a thought, not a command. Would you be willing to try one?”</p>` } ], "Grounding & Somatic": [ { id: "grounding-54321", title: "5-4-3-2-1 Technique", content: `<h3>Let's ground ourselves in the present moment.</h3> <p>“When your mind is spinning or you feel disconnected, this technique can bring you back to the here and now by using your senses. Let's do it together.”</p>` } ], "Session Scripts": [ { id: "boundary-setting-script", title: "Boundary Setting Scripts", content: `<h3>Foundational Role Setting</h3> <p><strong>Standard:</strong> “Before we get started—my role isn’t for processing, but to make sure you’re safe and help you get grounded so you can rejoin group. We’ve got about 20 minutes, can you tell me what’s going on?”</p>` } ], "When It's Not Landing": [ { id: "not-landing-resistance", title: "For Resistance / Stonewalling", content: `<h3>Acknowledge and Validate the Resistance</h3> <p>"I notice you're hesitant to talk right now, or maybe what I'm suggesting isn't feeling right. That's completely okay. It sounds like a part of you is putting the brakes on, and I want to respect that. That part is probably trying to protect you in some way."</p>` } ], "MI": [ { id: "mi-ambivalence", title: "Exploring Ambivalence", content: `<h3>Let's explore both sides of this.</h3> <p>“It sounds like there's a part of you that wants to make a change, and another part that's hesitant or sees good reasons to stay the same. That's completely normal. My role isn't to convince you, but to help you explore your own thoughts.”</p>` } ], "Coping Skills": [ { id: "coping-problem-solving", title: "Structured Problem-Solving", content: `<h3>Let's break this problem down.</h3> <p>“When a problem feels too big, it can be overwhelming. Let's try to tackle it with a structured approach.”</p>` } ], "Psychoeducation": [ { id: "psychoed-stress-response", title: "The Stress Response: Fight, Flight, & Freeze", content: `<h3>Let's talk about what happens in your brain during stress.</h3> <p>“Think of your brain as having an ancient alarm system, the amygdala. When this alarm senses a threat—whether it’s a real danger or an intense emotion—it can instantly trigger a 'code red.' This floods your body with adrenaline and cortisol, getting you ready to either Fight, Flee (run away), or Freeze (shut down). This happens before your thinking brain has a chance to catch up, which is why it's so hard to 'think' your way out of panic or intense anger.”</p>` } ] };
         
-        const dom = {
-            body: document.body,
-            html: document.documentElement,
-            contentArea: document.getElementById('content-area'),
-            tabsContainer: document.getElementById('tabs-container'),
-            searchInput: document.getElementById('searchInput'),
-            modal: document.getElementById('scenarioModal'),
-            modalTitle: document.getElementById('modalTitle'),
-            modalBody: document.getElementById('modalBody'),
-            modalBackBtn: document.getElementById('modal-back-btn'),
-            closeModal: document.getElementById('closeModal'),
-            modalFavoriteBtn: document.getElementById('modal-favorite-btn'),
-            modalEditBtn: document.getElementById('modal-edit-btn'),
-            modalSummarizeBtn: document.getElementById('modal-summarize-btn'),
-            aiSummaryOutput: document.getElementById('ai-summary-output'),
-            timerDisplay: document.getElementById('timer-display'),
-            startPauseBtn: document.getElementById('start-pause-btn'),
-            resetBtn: document.getElementById('reset-btn'),
-            timerPresetBtns: document.querySelectorAll('.timer-preset-btn'),
-            themeToggle: document.getElementById('theme-toggle'),
-            themeIconLight: document.getElementById('theme-icon-light'),
-            themeIconDark: document.getElementById('theme-icon-dark'),
-            toast: document.getElementById('toast'),
-            authorModeToggle: document.getElementById('author-mode-toggle'),
-            editModal: document.getElementById('editModal'),
-            editModalTitle: document.getElementById('editModalTitle'),
-            closeEditModal: document.getElementById('closeEditModal'),
-            editScenarioTitle: document.getElementById('editScenarioTitle'),
-            editScenarioContent: document.getElementById('editScenarioContent'),
-            aiGenerateContentBtn: document.getElementById('ai-generate-content-btn'),
-            cancelEdit: document.getElementById('cancelEdit'),
-            saveEdit: document.getElementById('saveEdit'),
-            confirmModal: document.getElementById('confirmModal'),
-            confirmModalTitle: document.getElementById('confirmModalTitle'),
-            confirmModalText: document.getElementById('confirmModalText'),
-            confirmCancel: document.getElementById('confirmCancel'),
-            confirmAction: document.getElementById('confirmAction'),
-            notesWidgetContainer: document.getElementById('notes-widget-container'),
-            notesWidgetToggle: document.getElementById('notes-widget-toggle'),
-            notesWidgetContent: document.getElementById('notes-widget-content'),
-            notesWidgetTitle: document.getElementById('notes-widget-title'),
-            notesWidgetClose: document.getElementById('notes-widget-close'),
-            scratchpadEditor: document.getElementById('scratchpad-editor'),
-            scratchpadCopyBtn: document.getElementById('scratchpad-copy-btn'),
-            scratchpadTimestampBtn: document.getElementById('scratchpad-timestamp-btn'),
-        };
+        const dom = {}; // Intentionally empty, will be populated after DOM loads
 
         const state = {
             currentView: 'dashboard',
@@ -336,6 +291,27 @@
 
         let userDocRef;
         let debouncedSaveState;
+        
+        function populateDomObject() {
+            const ids = [
+                'body', 'html', 'content-area', 'tabs-container', 'searchInput', 'modal', 
+                'modalTitle', 'modalBody', 'modal-back-btn', 'closeModal', 'modal-favorite-btn', 
+                'modal-edit-btn', 'modal-summarize-btn', 'ai-summary-output', 'timer-display', 
+                'start-pause-btn', 'reset-btn', 'theme-toggle', 'theme-icon-light', 
+                'theme-icon-dark', 'toast', 'author-mode-toggle', 'editModal', 'editModalTitle', 
+                'closeEditModal', 'editScenarioTitle', 'editScenarioContent', 'ai-generate-content-btn', 
+                'cancelEdit', 'saveEdit', 'confirmModal', 'confirmModalTitle', 'confirmModalText', 
+                'confirmCancel', 'confirmAction', 'notes-widget-container', 'notes-widget-toggle', 
+                'notes-widget-content', 'notes-widget-title', 'notes-widget-close', 'scratchpad-editor', 
+                'scratchpad-copy-btn', 'scratchpad-timestamp-btn', 'user-id-display'
+            ];
+            ids.forEach(id => {
+                const camelCaseId = id.replace(/-./g, x => x[1].toUpperCase());
+                dom[camelCaseId] = document.getElementById(id);
+            });
+            dom.timerPresetBtns = document.querySelectorAll('.timer-preset-btn');
+            dom.richTextBtns = document.querySelectorAll('.rich-text-btn');
+        }
 
         function showToast(message, isSubtle = false) {
             dom.toast.textContent = message;
@@ -673,7 +649,7 @@
                 document.execCommand('insertHTML', false, `<strong>${timestamp}:</strong>&nbsp;`);
             });
 
-            document.querySelectorAll('.rich-text-btn').forEach(btn => {
+            dom.richTextBtns.forEach(btn => {
                 btn.addEventListener('click', () => {
                     document.execCommand(btn.dataset.command, false, null);
                     dom.scratchpadEditor.focus();
@@ -681,33 +657,40 @@
             });
             // ... other listeners
         }
+        
+        // This function is called after Firebase has authenticated a user
+        function loadUserSpecificData(db, user) {
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'clinicalx-dashboard-default';
+            const userDocRef = doc(db, 'artifacts', appId, 'users', user.uid, 'userData', 'appData');
 
-        function initApp(db, docRef) {
-            userDocRef = docRef;
-            debouncedSaveState = debounce(() => { /* save logic */ }, 1500);
-
-            onSnapshot(docRef, (doc) => {
-                const data = doc.data() || {};
-                // Load state from Firestore
-                state.favorites = data.favorites || [];
-                state.recentlyViewed = data.recentlyViewed || [];
-                state.generalNote = data.generalNote || "";
-                // ... load other state properties
-
-                initializeDataMap();
-                renderInitialUI();
-                setupEventListeners();
-                switchView('dashboard'); // Start at the dashboard
-                showToast("Data loaded", true);
+            onSnapshot(userDocRef, (doc) => {
+                if (doc.exists()) {
+                    const data = doc.data();
+                    // Load state from Firestore
+                    state.favorites = data.favorites || [];
+                    state.recentlyViewed = data.recentlyViewed || [];
+                    state.generalNote = data.generalNote || "";
+                    // ... load other state properties
+                    showToast("Personalized data loaded", true);
+                } else {
+                    showToast("Welcome! Creating a new profile.", true);
+                }
+                // Re-render the current view with the new data
+                switchView(state.currentView);
             }, (error) => {
                 console.error("Firestore snapshot error:", error);
-                // Handle error, maybe show a fallback view
-                initializeDataMap();
-                renderInitialUI();
-                setupEventListeners();
-                switchView('dashboard');
-                showToast("Couldn't load saved data.", true);
+                showToast("Could not load saved data.", true);
             });
+        }
+
+        // Main application entry point
+        function main() {
+            populateDomObject();
+            initializeDataMap();
+            renderInitialUI();
+            setupEventListeners();
+            switchView('dashboard'); // Start at the dashboard
+            initFirebase(); // Attempt to connect to Firebase after UI is ready
         }
         
         function initFirebase() {
@@ -715,7 +698,13 @@
                 // Use environment variables for Firebase config
                 const firebaseConfig = typeof __firebase_config !== 'undefined'
                     ? JSON.parse(__firebase_config)
-                    : { apiKey: "DEMO_KEY_FOR_LOCAL_TESTING", authDomain: "demo.firebaseapp.com", projectId: "demo-project" };
+                    : null;
+
+                if (!firebaseConfig || !firebaseConfig.apiKey) {
+                    dom.userIdDisplay.textContent = 'Offline Mode';
+                    showToast("Running in offline mode.", true);
+                    return; // Don't proceed with Firebase if config is missing
+                }
 
                 const app = initializeApp(firebaseConfig);
                 const auth = getAuth(app);
@@ -723,15 +712,8 @@
 
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
-                        const userId = user.uid;
-                        // Use environment variable for app ID
-                        const appId = typeof __app_id !== 'undefined' ? __app_id : 'clinicalx-dashboard-default';
-                        
-                        // Corrected Firestore document path with an even number of segments
-                        userDocRef = doc(db, 'artifacts', appId, 'users', userId, 'userData', 'appData');
-                        
-                        initApp(db, userDocRef);
-                        document.getElementById('user-id-display').textContent = `UserID: ${userId.substring(0,8)}...`;
+                        dom.userIdDisplay.textContent = `UserID: ${user.uid.substring(0,8)}...`;
+                        loadUserSpecificData(db, user);
                     } else {
                         // Use environment variable for custom token
                         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -743,11 +725,12 @@
                 });
             } catch (error) {
                 console.error("Firebase initialization failed:", error);
-                document.body.innerHTML = `<div class="text-center p-8 text-red-500">Critical Error: Could not initialize Firebase. Please check your configuration. Details: ${error.message}</div>`;
+                dom.userIdDisplay.textContent = 'Connection Failed';
+                showToast("Firebase connection failed.", false);
             }
         }
         
-        document.addEventListener('DOMContentLoaded', initFirebase);
+        document.addEventListener('DOMContentLoaded', main);
 
     </script>
 </body>
