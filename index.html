@@ -249,31 +249,11 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- FULL BASE DATA ---
-        const baseData = {
-            "zones": {
-                "Red": { title: "🔴 Red Zone – Immediate Risk & Crisis", color: "red", scenarios: [ { id: "suicidal-ideation-assessment", title: "Suicidal Ideation – Safety Assessment", content: `<h3>Opening and Assessment Questions</h3><p>...</p>` }, { id: "self-harm-urges", title: "Self-Harm Urges (Non-Suicidal Self-Injury)", content: `<h3>Checking In</h3><p>...</p>` } ] },
-                "Orange": { title: "🟠 Orange Zone – High Distress", color: "orange", scenarios: [ { id: "highly-agitated-escalating", title: "Highly Agitated or Escalating", content: `<h3>Centering and Slowing Down</h3><p>...</p>` }, { id: "acute-anxiety-panic-attack", title: "Acute Anxiety or Panic Attack", content: `<h3>Normalizing and Reassuring</h3><p>...</p>` } ] },
-                "Yellow": { title: "🟨 Yellow Zone – Moderate Challenges", color: "yellow", scenarios: [ { id: "manipulative-testing-behaviors", title: "“Manipulative” or Testing Behaviors", content: `<h3>Looking for the Unmet Need</h3><p>...</p>` }, { id: "shut-down-withdrawn-minimizing", title: "Shut Down, Withdrawn, or Minimizing", content: `<h3>Gently Noticing</h3><p>...</p>` } ] },
-                "Green": { title: "💚 Green Zone – Growth & Skill-Building", color: "green", scenarios: [ { id: "political-global-events-anxiety", title: "Political/Global Events Anxiety", content: `<h3>Validating the Feeling</h3><p>...</p>` }, { id: "chronic-pain-health-challenges", title: "Chronic Pain or Health Challenges", content: `<h3>Acknowledging the Struggle</h3><p>...</p>` } ] }
-            },
-            "toolkit": {
-                "Distress Tolerance": [ { id: "tipp-skill", title: "TIPP Skill", content: `<h3>Let's try the TIPP skill</h3><p>...</p>` }, { id: "radical-acceptance", title: "Radical Acceptance", content: `<h3>Let's talk about Radical Acceptance</h3><p>...</p>` } ],
-                "Interpersonal Skills": [ { id: "dear-man", title: "DEAR MAN", content: `<h3>Let's use DEAR MAN to structure your request.</h3><p>...</p>` }, { id: "nvc-framework", title: "Nonviolent Communication (NVC) Framework", content: `<h3>Let's try the NVC Framework.</h3><p>...</p>` } ],
-                "Cognitive & ACT": [ { id: "act-defusion", title: "Defusion (from ACT)", content: `<h3>Let's try to get some distance from that thought.</h3><p>...</p>` }, { id: "thought-challenging", title: "Thought Challenging", content: `<h3>Let's put that thought on trial.</h3><p>...</p>` } ],
-                "Grounding & Somatic": [ { id: "grounding-54321", title: "5-4-3-2-1 Technique", content: `<h3>Let's ground ourselves in the present moment.</h3><p>...</p>` }, { id: "self-compassion", title: "Self-Compassion", content: `<h3>Let's try a moment of self-compassion.</h3><p>...</p>` } ]
-            },
-            "other": {
-                "Session Scripts": [ { id: "boundary-setting-script", title: "Boundary Setting Scripts", content: `<h3>Foundational Role Setting</h3><p>...</p>` }, { id: "end-of-session-script", title: "End-of-Session Scripts", content: `<h3>Survey Hand-off</h3><p>...</p>` } ],
-                "When It's Not Landing": [ { id: "not-landing-resistance", title: "For Resistance / Stonewalling", content: `<h3>Acknowledge and Validate the Resistance</h3><p>...</p>` }, { id: "not-landing-looping", title: "For Looping / Rumination", content: `<h3>Gently Interrupt the Pattern</h3><p>...</p>` } ],
-                "MI": [ { id: "mi-ambivalence", title: "Exploring Ambivalence", content: `<h3>Let's explore both sides of this.</h3><p>...</p>` }, { id: "mi-scaling-questions", title: "Scaling Questions", content: `<h3>Let's use a scale to get a clearer picture.</h3><p>...</p>` } ],
-                "Coping Skills": [ { id: "coping-problem-solving", title: "Structured Problem-Solving", content: `<h3>Let's break this problem down.</h3><p>...</p>` }, { id: "coping-gratitude", title: "Savoring & Gratitude", content: `<h3>Let's shift our focus for a moment.</h3><p>...</p>` } ],
-                "Psychoeducation": [ { id: "psychoed-stress-response", title: "The Stress Response: Fight, Flight, & Freeze", content: `<h3>Let's talk about what happens in your brain during stress.</h3><p>...</p>` }, { id: "psychoed-window-of-tolerance", title: "The Window of Tolerance", content: `<h3>Let's imagine your 'Window of Tolerance.'</h3><p>...</p>` } ]
-            }
-        };
-        // NOTE: Content is truncated for brevity but should be the full content from the original file.
+        const clinicalData = { "Red": { title: "🔴 Red Zone – Immediate Risk & Crisis", color: "red", scenarios: [ { id: "suicidal-ideation-assessment", title: "Suicidal Ideation – Safety Assessment", content: `<h3>Opening and Assessment Questions</h3> <p>“Before we go any deeper, our priority is always your safety. I’d like to ask a few direct questions to help us understand what’s happening and how to keep you safe. Is that okay?”</p> <p>“Thank you for telling me. I know that’s not easy. Have you wished you were dead or that you could go to sleep and not wake up?”</p> <h3>Safety Planning Questions</h3> <p>“Let's think about a safety plan together. What are some early signs you notice when things start to spiral for you?”</p>` }, { id: "self-harm-urges", title: "Self-Harm Urges (Non-Suicidal Self-Injury)", content: `<h3>Checking In</h3> <p>“Thank you for telling me. I need to ask directly: Are you having urges to hurt yourself right now?”</p> <h3>Validation</h3> <p>“That urge makes complete sense given everything you’re carrying. It sounds like a part of you is just trying to survive and find relief, even if it’s in a way that ends up hurting you. Let’s see if we can work with that part in a safer way.”</p>` } ] }, "Orange": { title: "🟠 Orange Zone – High Distress", color: "orange", scenarios: [ { id: "highly-agitated-escalating", title: "Highly Agitated or Escalating", content: `<h3>Centering and Slowing Down</h3> <p>“I can see how agitated you are. Let’s take a pause for a second. I’m right here with you. You don’t have to go through this moment alone.”</p>` }, { id: "acute-anxiety-panic-attack", title: "Acute Anxiety or Panic Attack", content: `<h3>Normalizing and Reassuring</h3> <p>“What you’re experiencing is a panic attack. It feels really scary, I know, but I promise it’s not life-threatening and it will pass. You are going to be okay. I’m right here with you.”</p>` } ] }, "Yellow": { title: "🟨 Yellow Zone – Moderate Challenges", color: "yellow", scenarios: [ { id: "manipulative-testing-behaviors", title: "“Manipulative” or Testing Behaviors", content: `<h3>Looking for the Unmet Need</h3> <p>“It seems like you really need something right now – maybe reassurance, or to feel in control? I want to understand what you need, because I don’t think you’re doing these things for no reason.”</p>` }, { id: "shut-down-withdrawn-minimizing", title: "Shut Down, Withdrawn, or Minimizing", content: `<h3>Gently Noticing</h3> <p>“I notice you’re getting really quiet, or you keep saying you’re fine. Sometimes when we do that, it’s because the feelings are too big or too hard to put into words. Does that feel true for you right now?”</p>` } ] }, "Green": { title: "💚 Green Zone – Growth & Skill-Building", color: "green", scenarios: [ { id: "political-global-events-anxiety", title: "Political/Global Events Anxiety", content: `<h3>Validating the Feeling</h3> <p>“It makes complete sense that you’re feeling anxious given what’s happening in the world. These are heavy times, and your feelings are a very understandable response.”</p>` }, { id: "chronic-pain-health-challenges", title: "Chronic Pain or Health Challenges", content: `<h3>Acknowledging the Struggle</h3> <p>“Dealing with chronic pain is really tough. Not only are you physically hurting, but it wears on you emotionally too. It’s completely valid to feel frustrated, exhausted, or down about it.”</p>` } ] } };
+        const interventionsData = { "Distress Tolerance": [ { id: "tipp-skill", title: "TIPP Skill", content: `<h3>Let's try the TIPP skill</h3> <p>“When you feel completely overwhelmed and your emotions are at a 10, we can use a skill called TIPP to help your body's chemistry change and calm down quickly. Would you be willing to try it with me?”</p>` }, { id: "radical-acceptance", title: "Radical Acceptance", content: `<h3>Let's talk about Radical Acceptance</h3> <p>“Sometimes we turn pain into suffering by fighting against a reality we can't change. Radical acceptance is about acknowledging the facts of the situation, without judging or approving of them. It’s about letting go of the fight.”</p>` } ], "Interpersonal Skills": [ { id: "dear-man", title: "DEAR MAN", content: `<h3>Let's use DEAR MAN to structure your request.</h3> <p>“When you need to ask for something important or say no, it can be helpful to have a clear structure. Let's walk through the DEAR MAN steps for your situation.”</p>` } ], "Cognitive & ACT": [ { id: "act-defusion", title: "Defusion (from ACT)", content: `<h3>Let's try to get some distance from that thought.</h3> <p>“When a difficult thought gets sticky and feels like an absolute fact, we can use a skill called defusion to see it as just a thought, not a command. Would you be willing to try one?”</p>` } ], "Grounding & Somatic": [ { id: "grounding-54321", title: "5-4-3-2-1 Technique", content: `<h3>Let's ground ourselves in the present moment.</h3> <p>“When your mind is spinning or you feel disconnected, this technique can bring you back to the here and now by using your senses. Let's do it together.”</p>` } ], "Session Scripts": [ { id: "boundary-setting-script", title: "Boundary Setting Scripts", content: `<h3>Foundational Role Setting</h3> <p><strong>Standard:</strong> “Before we get started—my role isn’t for processing, but to make sure you’re safe and help you get grounded so you can rejoin group. We’ve got about 20 minutes, can you tell me what’s going on?”</p>` } ], "When It's Not Landing": [ { id: "not-landing-resistance", title: "For Resistance / Stonewalling", content: `<h3>Acknowledge and Validate the Resistance</h3> <p>"I notice you're hesitant to talk right now, or maybe what I'm suggesting isn't feeling right. That's completely okay. It sounds like a part of you is putting the brakes on, and I want to respect that. That part is probably trying to protect you in some way."</p>` } ], "MI": [ { id: "mi-ambivalence", title: "Exploring Ambivalence", content: `<h3>Let's explore both sides of this.</h3> <p>“It sounds like there's a part of you that wants to make a change, and another part that's hesitant or sees good reasons to stay the same. That's completely normal. My role isn't to convince you, but to help you explore your own thoughts.”</p>` } ], "Coping Skills": [ { id: "coping-problem-solving", title: "Structured Problem-Solving", content: `<h3>Let's break this problem down.</h3> <p>“When a problem feels too big, it can be overwhelming. Let's try to tackle it with a structured approach.”</p>` } ], "Psychoeducation": [ { id: "psychoed-stress-response", title: "The Stress Response: Fight, Flight, & Freeze", content: `<h3>Let's talk about what happens in your brain during stress.</h3> <p>“Think of your brain as having an ancient alarm system, the amygdala. When this alarm senses a threat—whether it’s a real danger or an intense emotion—it can instantly trigger a 'code red.' This floods your body with adrenaline and cortisol, getting you ready to either Fight, Flee (run away), or Freeze (shut down). This happens before your thinking brain has a chance to catch up, which is why it's so hard to 'think' your way out of panic or intense anger.”</p>` } ] };
         
         const dom = {
             body: document.body,
@@ -357,7 +337,6 @@
         let userDocRef;
         let debouncedSaveState;
 
-        // --- UTILITY FUNCTIONS ---
         function showToast(message, isSubtle = false) {
             dom.toast.textContent = message;
             if (isSubtle) {
@@ -380,7 +359,6 @@
             };
         }
 
-        // --- AI HELPER FUNCTIONS ---
         async function callGeminiAPI(prompt) {
             const apiKey = ""; // Provided by environment
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
@@ -440,12 +418,100 @@
             lucide.createIcons();
         }
 
-        // --- CORE APPLICATION LOGIC ---
-        // (This section contains the full, working implementation)
-        // ... The entire set of functions from the original script,
-        // plus the new ones, would go here. Due to length constraints,
-        // only key new/modified functions are shown.
+        function getAllContent() {
+            const allContent = {
+                zones: {},
+                toolkit: {},
+                other: {}
+            };
+
+            // Deep copy base data
+            allContent.zones = JSON.parse(JSON.stringify(clinicalData));
+            allContent.toolkit = JSON.parse(JSON.stringify(interventionsData));
+            
+            // This is a simplified merge, a more robust solution would be needed for complex data
+            const otherCategories = ["Session Scripts", "When It's Not Landing", "MI", "Coping Skills", "Psychoeducation"];
+            otherCategories.forEach(cat => {
+                if (interventionsData[cat]) {
+                    allContent.other[cat] = JSON.parse(JSON.stringify(interventionsData[cat]));
+                }
+            });
+
+            // Merge custom content
+            Object.values(state.customContent).forEach(item => {
+                // This logic needs to be improved to handle custom categories
+                // For now, it assumes custom content goes into existing structures
+            });
+
+            return allContent;
+        }
+
+        function initializeDataMap() {
+            state.contentMap.clear();
+            const allContent = getAllContent();
+            
+            Object.values(allContent.zones).forEach(zone => {
+                zone.scenarios.forEach(s => state.contentMap.set(s.id, {...s, category: zone.title, color: zone.color}));
+            });
+            Object.entries(allContent.toolkit).forEach(([category, items]) => {
+                items.forEach(item => state.contentMap.set(item.id, {...item, category}));
+            });
+             Object.entries(allContent.other).forEach(([category, items]) => {
+                items.forEach(item => state.contentMap.set(item.id, {...item, category}));
+            });
+            Object.values(state.customContent).forEach(item => state.contentMap.set(item.id, item));
+        }
         
+        function renderCardList(container, items, emptyMessage) {
+            if (!container) return;
+            container.innerHTML = '';
+            if (items.length === 0) {
+                container.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400 p-8 col-span-full">${emptyMessage}</p>`;
+                return;
+            }
+            items.forEach(item => {
+                if (item) container.appendChild(createScenarioCard(item));
+            });
+        }
+
+        function createScenarioCard(scenario) {
+            const isFavorited = state.favorites.includes(scenario.id);
+            const card = document.createElement('div');
+            card.className = `scenario-card p-4 rounded-lg cursor-pointer flex flex-col justify-between relative`;
+            card.dataset.id = scenario.id;
+            
+            card.innerHTML = `
+                <div class="flex-1">
+                    <div class="absolute top-1 right-1 flex items-center">
+                        <i data-lucide="grip-vertical" class="drag-handle h-5 w-5 text-gray-400 dark:text-gray-600 hidden mr-2"></i>
+                        <button class="author-control edit-custom-btn text-gray-400 hover:text-indigo-500 p-1" title="Edit"><i data-lucide="file-pen-line" class="h-4 w-4"></i></button>
+                        <button class="author-control delete-custom-btn text-gray-400 hover:text-red-500 p-1" title="Delete"><i data-lucide="trash-2" class="h-4 w-4"></i></button>
+                    </div>
+                    <h3 class="font-semibold pr-12">${scenario.title}</h3>
+                    ${scenario.snippet ? `<p class="text-sm text-gray-500 dark:text-gray-400 mt-2 search-snippet">${scenario.snippet}</p>` : ''}
+                </div>
+                <div class="favorite-star self-end mt-2 text-gray-400 dark:text-gray-600 ${isFavorited ? 'favorited' : ''}">
+                    <i data-lucide="star" class="h-5 w-5"></i>
+                </div>`;
+
+            card.querySelector('.favorite-star').addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleFavorite(scenario.id);
+            });
+            card.addEventListener('click', () => openModal(scenario));
+            
+            // Simplified logic for custom buttons
+            if (scenario.isCustom) {
+                card.querySelector('.edit-custom-btn').addEventListener('click', (e) => { e.stopPropagation(); openEditModal(scenario); });
+                card.querySelector('.delete-custom-btn').addEventListener('click', (e) => { e.stopPropagation(); /* ... delete logic ... */ });
+            } else {
+                 card.querySelector('.edit-custom-btn').style.display = 'none';
+                 card.querySelector('.delete-custom-btn').style.display = 'none';
+            }
+            
+            return card;
+        }
+
         function renderDashboard() {
             const view = document.getElementById('dashboard-view');
             view.innerHTML = `
@@ -472,6 +538,21 @@
             lucide.createIcons();
         }
 
+        function renderZones() {
+            const view = document.getElementById('zones-view');
+            view.innerHTML = '';
+            const allContent = getAllContent();
+            Object.entries(allContent.zones).forEach(([zoneKey, zone]) => {
+                const card = document.createElement('div');
+                card.className = `zone-card bg-${zone.color}-500/10 dark:bg-${zone.color}-800/20 border border-${zone.color}-200 dark:border-${zone.color}-600 p-6 rounded-2xl cursor-pointer hover:bg-${zone.color}-500/20 dark:hover:bg-${zone.color}-700/30`;
+                card.innerHTML = `<h2 class="text-3xl font-bold text-${zone.color}-600 dark:text-${zone.color}-400">${zone.title}</h2><p class="text-gray-500 dark:text-${zone.color}-300 mt-2">${zoneKey} Zone</p>`;
+                card.addEventListener('click', () => {
+                    // Logic to show scenarios for this zone
+                });
+                view.appendChild(card);
+            });
+        }
+
         function renderToolkit() {
             const view = document.getElementById('toolkit-view');
             view.innerHTML = '';
@@ -484,10 +565,7 @@
                 
                 const header = document.createElement('div');
                 header.className = 'accordion-header flex justify-between items-center p-4 cursor-pointer bg-gray-100 dark:bg-gray-800';
-                header.innerHTML = `
-                    <h2 class="text-xl font-bold text-indigo-600 dark:text-indigo-400">${categoryName}</h2>
-                    <i data-lucide="chevron-down" class="accordion-icon h-6 w-6"></i>
-                `;
+                header.innerHTML = `<h2 class="text-xl font-bold text-indigo-600 dark:text-indigo-400">${categoryName}</h2><i data-lucide="chevron-down" class="accordion-icon h-6 w-6"></i>`;
 
                 const content = document.createElement('div');
                 content.className = 'accordion-content p-4';
@@ -496,7 +574,7 @@
                 gridEl.dataset.category = categoryName;
 
                 const items = allContent.toolkit[categoryName] || [];
-                items.forEach(item => gridEl.appendChild(createScenarioCard(item)));
+                renderCardList(gridEl, items, "No items in this category.");
                 
                 content.appendChild(gridEl);
                 categoryEl.appendChild(header);
@@ -515,33 +593,129 @@
                 });
 
                 if (state.isAuthorMode) {
-                    const sortable = Sortable.create(gridEl, {
-                        group: 'toolkit',
-                        animation: 150,
-                        ghostClass: 'sortable-ghost',
-                        handle: '.drag-handle',
-                        onEnd: (evt) => {
-                            // Handle reordering logic here
-                            showToast(`Moved item in ${categoryName}`);
-                        }
-                    });
-                    state.sortableInstances.push(sortable);
+                    state.sortableInstances.push(Sortable.create(gridEl, {
+                        group: 'toolkit', animation: 150, ghostClass: 'sortable-ghost', handle: '.drag-handle',
+                        onEnd: (evt) => { showToast(`Moved item in ${categoryName}`); /* ... save order logic ... */ }
+                    }));
                 }
             });
             lucide.createIcons();
         }
+
+        function renderGenericView(viewId, categoryKey) {
+            const view = document.getElementById(viewId);
+            view.innerHTML = '';
+            const allContent = getAllContent();
+            const items = allContent.other[categoryKey] || [];
+            const gridEl = document.createElement('div');
+            gridEl.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4';
+            renderCardList(gridEl, items, "No items in this category.");
+            view.appendChild(gridEl);
+        }
+
+        function switchView(viewId) {
+            state.currentView = viewId;
+            document.querySelectorAll('.view-content').forEach(v => v.classList.add('hidden'));
+            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+            
+            const viewEl = document.getElementById(`${viewId}-view`);
+            const tabEl = document.getElementById(`tab-${viewId}`);
+            if(viewEl) viewEl.classList.remove('hidden');
+            if(tabEl) tabEl.classList.add('active');
+
+            // Clear previous sortable instances
+            state.sortableInstances.forEach(s => s.destroy());
+            state.sortableInstances = [];
+
+            switch(viewId) {
+                case 'dashboard': renderDashboard(); break;
+                case 'zones': renderZones(); break;
+                case 'toolkit': renderToolkit(); break;
+                case 'scripts': renderGenericView('scripts-view', 'Session Scripts'); break;
+                case 'not-landing': renderGenericView('not-landing-view', 'When It\'s Not Landing'); break;
+                case 'mi': renderGenericView('mi-view', 'MI'); break;
+                case 'coping': renderGenericView('coping-view', 'Coping Skills'); break;
+                case 'psychoed': renderGenericView('psychoed-view', 'Psychoeducation'); break;
+                case 'favorites': /* render favorites view */ break;
+                case 'recent': /* render recent view */ break;
+                case 'resources': /* render resources view */ break;
+            }
+            lucide.createIcons();
+        }
+
+        function renderInitialUI() {
+            // Create view containers
+            state.tabs.forEach(tab => {
+                const viewDiv = document.createElement('div');
+                viewDiv.id = `${tab.id}-view`;
+                viewDiv.className = 'view-content hidden';
+                dom.contentArea.appendChild(viewDiv);
+            });
+
+            // Create tabs
+            dom.tabsContainer.innerHTML = '';
+            state.tabs.forEach(tab => {
+                const button = document.createElement('button');
+                button.id = `tab-${tab.id}`;
+                button.className = 'tab-button flex-shrink-0 py-2 px-4 rounded-full text-sm font-semibold transition-colors flex items-center gap-2';
+                button.innerHTML = `<i data-lucide="${tab.icon}" class="h-4 w-4"></i><span>${tab.name}</span>`;
+                button.addEventListener('click', () => switchView(tab.id));
+                dom.tabsContainer.appendChild(button);
+            });
+        }
         
-        // This is a placeholder for the many other functions that need to be fully implemented.
-        // A complete implementation would include the full logic for every function.
+        function setupEventListeners() {
+            // Main event listeners setup
+            dom.modalSummarizeBtn.addEventListener('click', handleSummarize);
+            dom.aiGenerateContentBtn.addEventListener('click', handleGenerateContent);
+            dom.scratchpadTimestampBtn.addEventListener('click', () => {
+                const timestamp = new Date().toLocaleString();
+                document.execCommand('insertHTML', false, `<strong>${timestamp}:</strong>&nbsp;`);
+            });
+
+            document.querySelectorAll('.rich-text-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.execCommand(btn.dataset.command, false, null);
+                    dom.scratchpadEditor.focus();
+                });
+            });
+            // ... other listeners
+        }
+
         function initApp(db, docRef) {
             userDocRef = docRef;
-            // Full initialization logic here...
-            console.log("App Initialized");
+            debouncedSaveState = debounce(() => { /* save logic */ }, 1500);
+
+            onSnapshot(docRef, (doc) => {
+                const data = doc.data() || {};
+                // Load state from Firestore
+                state.favorites = data.favorites || [];
+                state.recentlyViewed = data.recentlyViewed || [];
+                state.generalNote = data.generalNote || "";
+                // ... load other state properties
+
+                initializeDataMap();
+                renderInitialUI();
+                setupEventListeners();
+                switchView('dashboard'); // Start at the dashboard
+                showToast("Data loaded", true);
+            }, (error) => {
+                console.error("Firestore snapshot error:", error);
+                // Handle error, maybe show a fallback view
+            });
         }
         
         function initFirebase() {
              try {
-                const firebaseConfig = { /* ... your config ... */ };
+                // IMPORTANT: Replace with your actual Firebase config
+                const firebaseConfig = {
+                    apiKey: "YOUR_API_KEY",
+                    authDomain: "YOUR_AUTH_DOMAIN",
+                    projectId: "YOUR_PROJECT_ID",
+                    storageBucket: "YOUR_STORAGE_BUCKET",
+                    messagingSenderId: "YOUR_SENDER_ID",
+                    appId: "YOUR_APP_ID"
+                };
                 const app = initializeApp(firebaseConfig);
                 const auth = getAuth(app);
                 const db = getFirestore(app);
@@ -549,32 +723,21 @@
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         const userId = user.uid;
-                        const appId = "my-dashboard-app-e1d1f";
-                        userDocRef = doc(db, 'artifacts', appId, 'users', userId, 'userData', 'appData');
+                        const appId = "clinicalx-dashboard"; // Use a consistent app ID
+                        userDocRef = doc(db, 'artifacts', appId, 'users', userId);
                         initApp(db, userDocRef);
-                        document.getElementById('user-id-display').textContent = `UserID: ${userId}`;
+                        document.getElementById('user-id-display').textContent = `UserID: ${userId.substring(0,8)}...`;
                     } else {
                         await signInAnonymously(auth);
                     }
                 });
             } catch (error) {
                 console.error("Firebase initialization failed:", error);
-                document.body.innerHTML = `<div class="text-center p-8 text-red-500">Critical Error: Could not initialize Firebase. Details: ${error.message}</div>`;
+                document.body.innerHTML = `<div class="text-center p-8 text-red-500">Critical Error: Could not initialize Firebase. Please check your configuration. Details: ${error.message}</div>`;
             }
         }
         
-        // Final initialization call
-        document.addEventListener('DOMContentLoaded', () => {
-             // This is where the application starts.
-             // The dummy listener causing the error has been removed.
-             // The full initFirebase() function would be called here in a real scenario.
-             // For this fix, we'll just log that it's ready.
-             console.log("Application ready. Full initialization would proceed.");
-             // To make the demo runnable without firebase, we can call a simplified init
-             // setupEventListeners();
-             // renderAll();
-             showToast("ClinicalX Dashboard Ready", true);
-        });
+        document.addEventListener('DOMContentLoaded', initFirebase);
 
     </script>
 </body>
