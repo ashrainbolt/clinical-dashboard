@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClinicalX: Interactive Dashboard v6.1</title>
+    <title>ClinicalX: Interactive Dashboard v6.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -704,15 +704,22 @@
         
         function initFirebase() {
              try {
-                // Use environment variables for Firebase config
-                const firebaseConfig = typeof __firebase_config !== 'undefined'
+                // Use environment variables for Firebase config, with a hardcoded fallback
+                let firebaseConfig = typeof __firebase_config !== 'undefined'
                     ? JSON.parse(__firebase_config)
                     : null;
 
                 if (!firebaseConfig || !firebaseConfig.apiKey) {
-                    dom.userIdDisplay.textContent = 'Offline Mode';
-                    showToast("Running in offline mode.", true);
-                    return; // Don't proceed with Firebase if config is missing
+                    // Fallback to the hardcoded config if environment variable is missing
+                    firebaseConfig = {
+                        apiKey: "AIzaSyBr3hTkM_2PlRreFvgK9kk4s4bQvx5y8xw",
+                        authDomain: "my-dashboard-app-e1d1f.firebaseapp.com",
+                        projectId: "my-dashboard-app-e1d1f",
+                        storageBucket: "my-dashboard-app-e1d1f.appspot.com",
+                        messagingSenderId: "969081281658",
+                        appId: "1:969081281658:web:d479a7b003805625f02fc3"
+                    };
+                    showToast("Using fallback configuration.", true);
                 }
 
                 const app = initializeApp(firebaseConfig);
