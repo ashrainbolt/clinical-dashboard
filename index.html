@@ -447,8 +447,8 @@
         function main() {
             populateDomObject();
             initializeDataMap();
-            renderSidebar();
 
+            // Create view containers first
             const navViews = [ 'dashboard', 'zones', 'toolkit', 'favorites', 'recent' ];
             navViews.forEach(id => {
                 const viewDiv = document.createElement('div');
@@ -457,6 +457,8 @@
                 dom.contentArea.appendChild(viewDiv);
             });
 
+            // Now render sidebar so links exist after views
+            renderSidebar();
             setupEventListeners();
             switchView('dashboard');
             initFirebase();
