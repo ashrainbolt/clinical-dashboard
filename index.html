@@ -95,22 +95,87 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// ---- Example Data (Replace with your own in production) ----
+// ---- CLINICAL DATA (structured from @CLINICALX.txt) ----
 const clinicalData = {
     "Red": {
         title: "🔴 Red Zone – Immediate Risk & Crisis",
         color: "red",
         scenarios: [
-            { id: "suicidal-ideation-assessment", title: "Suicidal Ideation – Safety Assessment", content: "## Assess for intent, plan, means, and support.\n- Ask directly about thoughts of suicide.\n- Remove means if possible." }
+            { id: "suicidal-ideation-assessment", title: "Suicidal Ideation – Safety Assessment", content: `# ASSESS\n"Before we go any deeper, our priority is always your safety..."\n(see full protocol in @CLINICALX.txt)` },
+            { id: "self-harm-urges", title: "Self-Harm Urges (Non-Suicidal Self-Injury)", content: `# Self-Harm Urges\n“Thank you for telling me. I need to ask: Are you having urges to hurt yourself right now?” ...` },
+            { id: "hallucinations", title: "Hallucinations or Disturbing Perceptual Experiences", content: `# Hallucinations\n“Thank you for telling me. I can imagine this feels really intense and scary...` },
+            { id: "medical-crisis", title: "Acute Medical Crisis", content: `# Acute Medical Crisis\n“Okay, I see/hear that something serious might be happening physically...` },
+            { id: "overdose", title: "Substance Overdose or Severe Intoxication", content: `# Substance Overdose\n“I can tell this is serious. I’m very concerned that you might be experiencing a medical emergency from substances...”` },
+            { id: "unsafe-home", title: "Unsafe Home Environment / Domestic Violence", content: `# Unsafe Home Environment\n“Thank you for sharing this with me. I can’t imagine how hard it was to say that out loud...”` },
+            { id: "child-abuse", title: "Child Abuse or Neglect Disclosure", content: `# Child Abuse or Neglect\n“Thank you for telling me that. I know it’s not easy to talk about. ...”` },
+            { id: "homicidal-ideation", title: "Threat of Harm to Others (Homicidal Ideation)", content: `# Threat of Harm to Others\n“I hear you saying you want to hurt someone. I take that very seriously, and I need to ask you a few questions...”` },
+            { id: "under-influence", title: "Under the Influence (Non-Crisis)", content: `# Under the Influence\n"Hi. I'm just checking in with you briefly. It was noticed in group that [specific observation, e.g., ...` }
+        ]
+    },
+    "Orange": {
+        title: "🟠 Orange Zone – High Distress",
+        color: "orange",
+        scenarios: [
+            { id: "highly-agitated", title: "Highly Agitated or Escalating", content: `# Highly Agitated\n“I can see (or hear) how agitated you are. Let’s take a pause for a second. ...`},
+            { id: "acute-anxiety", title: "Acute Anxiety or Panic Attack", content: `# Acute Anxiety or Panic Attack\n"Right now, your body is in fight-or-flight mode. Let's try something called TIPP...`},
+            { id: "emotionally-flooded", title: "Overwhelmed & Emotionally Flooded", content: `# Overwhelmed & Emotionally Flooded\n“It’s all feeling like too much, isn’t it? I hear you. ...`},
+            { id: "unusual-thoughts", title: "Unusual Thoughts (Mild Paranoia or Cognitive Distortions)", content: `# Unusual Thoughts\n“That sounds really troubling. It must feel scary (or confusing) thinking that might be true. ...`},
+            { id: "trauma-flashback", title: "Trauma Reaction / Flashback", content: `# Trauma Reaction / Flashback\n“Hey, you’re here with me. You’re safe right now. ...`},
+            { id: "sexual-assault", title: "Sexual Assault Disclosure (Trauma Processing in the Moment)", content: `# Sexual Assault Disclosure\n“I’m so sorry that happened to you. Thank you for trusting me enough to tell me. ...`},
+            { id: "relational-rupture", title: "Relational Rupture / Intense Interpersonal Conflict", content: `# Relational Rupture\n“It sounds like you’re really hurt and angry about what happened. That’s completely understandable ...`},
+            { id: "group-trigger", title: "Triggered by Group Content", content: `# Triggered by Group Content\n"Right now, it sounds like your nervous system got hijacked by whatever came up in group. ...`},
+            { id: "group-conflict", title: "Conflict in Group or with Staff", content: `# Conflict in Group or with Staff\n“That conflict back there really upset you, and I can see why...`},
+            { id: "anger-irritability", title: "Anger and Irritability (beyond mild agitation)", content: `# Anger and Irritability\n“You’ve been feeling a lot of anger lately – like a constant simmering. That’s exhausting, isn’t it? ...`}
+        ]
+    },
+    "Yellow": {
+        title: "🟨 Yellow Zone – Moderate Challenges",
+        color: "yellow",
+        scenarios: [
+            { id: "resistant-therapy", title: "Resistant / Ambivalent About Therapy", content: `# Resistant / Ambivalent About Therapy\n“It’s okay if you’re not sure about this or even if you don’t want help right now. ...`},
+            { id: "group-resistant", title: "Group Resistant", content: `# Group Resistant\nLet's reframe this: What if group isn't about 'fixing' everything, but about practicing new ways of relating ...`},
+            { id: "manipulative-behaviors", title: "“Manipulative” or Testing Behaviors", content: `# “Manipulative” or Testing Behaviors\n“It seems like you really need something right now – maybe reassurance, or to feel in control? ...`},
+            { id: "shut-down", title: "Shut Down, Withdrawn, or Minimizing", content: `# Shut Down, Withdrawn, or Minimizing\n“I notice you’re getting really quiet (or you keep saying you’re fine). ...`},
+            { id: "loneliness", title: "Loneliness and Isolation", content: `# Loneliness and Isolation\n“Feeling lonely can be incredibly painful. I hear you – it’s like you’re aching for connection ...`},
+            { id: "shame-guilt", title: "Shame, Self-Hatred, or Guilt", content: `# Shame, Self-Hatred, or Guilt\n“I hear you saying some really harsh things about yourself. I know those feelings are very real ...`},
+            { id: "body-image", title: "Body Image Issues", content: `# Body Image Issues\n“It’s really hard to feel uncomfortable in your own body. That’s a very real kind of pain. ...`},
+            { id: "hopelessness", title: "Hopelessness or Despair (without active suicidal intent)", content: `# Hopelessness or Despair\n“It sounds like you are in a really dark place right now, like you can’t see any light at the end ...`}
+        ]
+    },
+    "Green": {
+        title: "💚 Green Zone – Growth & Skill-Building",
+        color: "green",
+        scenarios: [
+            { id: "political-anxiety", title: "Political/Global Events Anxiety", content: "Content coming soon. Use DBT distress tolerance and radical acceptance skills." },
+            { id: "existential", title: "Existential Concerns", content: "Content coming soon. Use values exploration and meaning-making strategies." },
+            { id: "chronic-pain", title: "Chronic Pain or Health Challenges", content: "Content coming soon. Use ACT pain acceptance and pacing skills." },
+            { id: "struggle-needs", title: "Struggling to Identify or Express Needs", content: "Content coming soon. Use assertiveness and emotional awareness skills." },
+            { id: "enmeshment", title: "Enmeshed or Dependent Relationships", content: "Content coming soon. Use boundaries and self-differentiation skills." },
+            { id: "directionless", title: "Feeling Directionless or “Stuck” in Life", content: "Content coming soon. Use values clarification and small-goal setting." },
+            { id: "time-management", title: "Time Management and Organization", content: "Content coming soon. Use behavioral activation and scheduling." },
+            { id: "decision-making", title: "Decision-Making", content: "Content coming soon. Use pros/cons and wise mind skill." },
+            { id: "perfectionism", title: "Perfectionism", content: "Content coming soon. Use self-compassion and opposite action." },
+            { id: "life-transitions", title: "Life Transitions", content: "Content coming soon. Use radical acceptance and support-building." },
+            { id: "healthy-habits", title: "Building Healthy Habits & Routines", content: "Content coming soon. Use habit stacking and reinforcement." }
         ]
     }
 };
+// ---- INTERVENTIONS DATA ----
 const interventionsData = {
     "Distress Tolerance": [
-        { id: "tipp-skill", title: "TIPP Skill", content: "Try the **TIPP** skill: Temperature, Intense Exercise, Paced Breathing, Paired Muscle Relaxation." }
+        { id: "tipp", title: "TIPP (Rapid Distress Reduction)", content: `* Sometimes the body just needs a jolt to interrupt the overwhelm. Try a quick temperature shock: splash cold water on your face or hold a cold bottle to your neck. Try clenching all your muscles tight for a few seconds, then release. Repeat a few times.` },
+    ],
+    "Cognitive Skills": [
+        { id: "defusion", title: "Defusion (Unhooking from Unhelpful Thoughts)", content: `* Try saying to yourself: "I'm noticing that I'm having the thought that ____." Or thank your mind for the thought: "Thanks, mind, for trying to protect me." See if you can distance from the thought instead of fighting it.`},
+    ],
+    "Self-Compassion": [
+        { id: "self-compassion", title: "Self-Compassion", content: `* Think about what you would say to a close friend if they were feeling exactly what you’re feeling. You deserve that same kindness. Try talking to yourself in the same compassionate way, or simply say, "I'm doing my best, and that's enough right now."` }
+    ],
+    "Session End": [
+        { id: "end-of-session", title: "(End-of-Session) ✅ Survey→", content: `Survey link: [End-of-Session Survey](https://charliehealth.qualtrics.com/jfe/form/SV_aYkIr219RLNs0Sy?name=Ashley_R)\n\n“Before you go back to group, I do have a brief survey that I’m required to provide. It's very short, just a thumbs up or thumbs down. Do you see the link in the chat?”` }
     ]
 };
-// ---- End Example Data ----
+// ---- END CLINICAL DATA ----
 
 const MAIN_TABS = [
     { id: 'dashboard', icon: 'layout-dashboard', label: 'Dashboard' },
