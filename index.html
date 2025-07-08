@@ -1,257 +1,142 @@
-<!DOCTYPE html>
-<html lang="en" class="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClinicalX: Interactive Dashboard v7.9</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-    <style>
-        :root { --sidebar-width: 260px; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f9fafb;
-            color: #1f2937;
-            transition: background-color 0.3s, color 0.3s;
-        }
-        .dark body { background-color: #111827; color: #d1d5db; }
-        .sidebar { width: var(--sidebar-width); }
-        .main-content { margin-left: var(--sidebar-width); }
-        .sidebar-link { transition: background-color 0.2s, color 0.2s; }
-        .sidebar-link.active { background-color: #eef2ff; color: #4338ca; }
-        .dark .sidebar-link.active { background-color: #312e81; color: #e0e7ff; }
-        .scenario-card {
-            transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s;
-            border-left-width: 4px;
-        }
-        .scenario-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 7px 14px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
-        }
-        .dark .scenario-card:hover {
-            box-shadow: 0 7px 14px -3px rgba(0,0,0,0.25), 0 4px 6px -2px rgba(0,0,0,0.2);
-        }
-        .loader {
-            width: 20px; height: 20px; border: 2px solid #f3f3f3; border-top: 2px solid #4f46e5;
-            border-radius: 50%; animation: spin 1s linear infinite;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .modal-content, .toast-notification { animation: slide-up 0.3s ease-out; }
-        @keyframes slide-up { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    </style>
-</head>
-<body>
-<div class="flex">
-    <!-- Sidebar -->
-    <aside id="sidebar" class="sidebar fixed top-0 left-0 h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col p-4">
-        <div class="flex items-center gap-3 mb-8">
-            <div class="bg-indigo-600 p-2 rounded-lg">
-                <i data-lucide="activity" class="text-white"></i>
+// ---- CARD RENDERING ----
+function createScenarioCard(scenario) {
+    const isFavorited = state.favorites.includes(scenario.id);
+    const isUsed = state.checkedScenarios.includes(scenario.id);
+    const colors = colorMap[scenario.color] || colorMap.indigo;
+    // Only show first non-empty paragraph as the summary
+    const firstParagraph = scenario.content.split('\n').find(p => p.trim());
+    // Tag badges
+    const tagBadges = scenario.tags && scenario.tags.length
+        ? scenario.tags.map(tag => `<span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-xs rounded mr-1">${tag}</span>`).join('')
+        : '';
+    const usedBadge = isUsed ? `<span class="used-badge">Used</span>` : '';
+    const favBadge = isFavorited ? `<i data-lucide="star" class="inline h-4 w-4 text-yellow-400 mr-1"></i>` : '';
+    const card = document.createElement('div');
+    card.className = `scenario-card bg-white dark:bg-gray-800 p-4 rounded-lg cursor-pointer flex flex-col justify-between relative ${colors.border} mb-4`;
+    card.dataset.id = scenario.id;
+    card.innerHTML = `
+        <div>
+            <div class="flex items-center">
+                <h3 class="font-semibold pr-2 text-gray-800 dark:text-gray-200">${favBadge}${scenario.title}${usedBadge}</h3>
             </div>
-            <h1 class="text-2xl font-bold text-gray-800 dark:text-white">ClinicalX</h1>
+            <div class="scenario-summary mt-2 text-gray-600 dark:text-gray-400">${marked.parseInline(firstParagraph)}</div>
+            <div class="mt-2">${tagBadges}</div>
+            <button class="show-more text-xs text-indigo-600 mt-2 underline">Show more</button>
+            <div class="scenario-full-content hidden mt-3">${marked.parse(scenario.content)}</div>
         </div>
-        <nav id="sidebar-nav" class="flex-grow space-y-2"></nav>
-        <div class="mt-auto">
-            <div id="user-id-display" class="text-xs text-center text-gray-400 dark:text-gray-600 mt-1 font-mono">Connecting...</div>
-            <div class="flex items-center justify-center space-x-2 mt-4">
-                <button id="author-mode-toggle" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700" title="Toggle Author Mode">
-                    <i data-lucide="pencil" class="h-5 w-5"></i>
-                </button>
-                <button id="theme-toggle" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700" title="Toggle Theme">
-                    <i data-lucide="sun" id="theme-icon-light" class="h-5 w-5 hidden"></i>
-                    <i data-lucide="moon" id="theme-icon-dark" class="h-5 w-5"></i>
-                </button>
-            </div>
-        </div>
-    </aside>
-    <!-- Main Content -->
-    <main class="main-content w-full p-6 md:p-10">
-        <div id="content-area" class="mt-8"></div>
-    </main>
-</div>
-
-<!-- Modals -->
-<div id="scenarioModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-    <div class="modal-content bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
-        <div class="modal-header flex justify-between items-center p-5 border-b border-gray-200 dark:border-gray-700">
-            <h3 id="modalTitle" class="text-2xl font-bold flex-1 pr-4"></h3>
-            <button id="closeModal" class="text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors p-2 ml-2" title="Close">
-                <i data-lucide="x" class="h-6 w-6"></i>
+        <div class="flex mt-2 space-x-2">
+            <button class="favorite-star text-gray-400 dark:text-gray-600 ${isFavorited ? 'favorited' : ''}" title="Toggle Favorite">
+                <i data-lucide="star" class="h-5 w-5"></i>
             </button>
+            <button class="copy-btn text-gray-400 dark:text-gray-600" title="Copy Script"><i data-lucide="copy" class="h-5 w-5"></i></button>
+            <button class="mark-used-btn text-gray-400 dark:text-gray-600" title="Mark as Used"><i data-lucide="check" class="h-5 w-5"></i></button>
         </div>
-        <div id="modalBody" class="modal-body p-6 overflow-y-auto"></div>
-    </div>
-</div>
-<div id="toast" class="hidden fixed bottom-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg z-50"></div>
+    `;
+    card.querySelector('.show-more').addEventListener('click', (e) => {
+        e.stopPropagation();
+        const full = card.querySelector('.scenario-full-content');
+        if (full.classList.contains('hidden')) {
+            document.querySelectorAll('.scenario-full-content').forEach(el => el.classList.add('hidden'));
+            card.querySelector('.show-more').textContent = "Show less";
+            full.classList.remove('hidden');
+        } else {
+            full.classList.add('hidden');
+            card.querySelector('.show-more').textContent = "Show more";
+        }
+    });
+    card.querySelector('.favorite-star').addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleFavorite(scenario.id);
+    });
+    card.querySelector('.copy-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(scenario.content);
+        showToast("Script copied to clipboard!", false);
+    });
+    card.querySelector('.mark-used-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!state.checkedScenarios.includes(scenario.id)) state.checkedScenarios.push(scenario.id);
+        renderUsedThisSession();
+        showToast("Marked as used.", true);
+        switchView(state.currentView);
+    });
+    card.addEventListener('click', () => openModal(scenario));
+    return card;
+}
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+// ---- MODAL LOGIC ----
+function openModal(scenario) {
+    if (!scenario) return;
+    state.currentOpenScenario = scenario;
+    const tagBadges = scenario.tags && scenario.tags.length
+        ? scenario.tags.map(tag => `<span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-xs rounded mr-1">${tag}</span>`).join('')
+        : '';
+    dom.modalTitle.innerHTML = `${scenario.title} ${tagBadges}`;
+    dom.modalBody.innerHTML = `
+        <div class="flex flex-wrap gap-2 mb-2">
+            <button id="copyScript" class="bg-gray-200 dark:bg-gray-700 px-3 py-1 rounded text-xs text-gray-700 dark:text-gray-200">Copy Script</button>
+            <button id="markUsed" class="bg-green-100 dark:bg-green-800 px-3 py-1 rounded text-xs text-green-700 dark:text-green-200">Mark as Used</button>
+        </div>
+        <div>${marked.parse(scenario.content)}</div>
+    `;
+    dom.scenarioModal.classList.remove('hidden');
+    addToRecentlyViewed(scenario.id);
+    lucide.createIcons();
+    document.getElementById('copyScript')?.addEventListener('click', () => {
+        navigator.clipboard.writeText(scenario.content);
+        showToast("Script copied to clipboard!", false);
+    });
+    document.getElementById('markUsed')?.addEventListener('click', () => {
+        if (!state.checkedScenarios.includes(scenario.id)) state.checkedScenarios.push(scenario.id);
+        renderUsedThisSession();
+        showToast("Marked as used.", true);
+        dom.scenarioModal.classList.add('hidden');
+        switchView(state.currentView);
+    });
+}
+dom.closeModal?.addEventListener('click', () => {
+    dom.scenarioModal.classList.add('hidden');
+});
 
-// ---- CLINICAL DATA (structured from @CLINICALX.txt) ----
-const clinicalData = {
-    "Red": {
-        title: "🔴 Red Zone – Immediate Risk & Crisis",
-        color: "red",
-        scenarios: [
-            { id: "suicidal-ideation-assessment", title: "Suicidal Ideation – Safety Assessment", content: `# ASSESS\n"Before we go any deeper, our priority is always your safety..."\n(see full protocol in @CLINICALX.txt)` },
-            { id: "self-harm-urges", title: "Self-Harm Urges (Non-Suicidal Self-Injury)", content: `# Self-Harm Urges\n“Thank you for telling me. I need to ask: Are you having urges to hurt yourself right now?” ...` },
-            { id: "hallucinations", title: "Hallucinations or Disturbing Perceptual Experiences", content: `# Hallucinations\n“Thank you for telling me. I can imagine this feels really intense and scary...` },
-            { id: "medical-crisis", title: "Acute Medical Crisis", content: `# Acute Medical Crisis\n“Okay, I see/hear that something serious might be happening physically...` },
-            { id: "overdose", title: "Substance Overdose or Severe Intoxication", content: `# Substance Overdose\n“I can tell this is serious. I’m very concerned that you might be experiencing a medical emergency from substances...”` },
-            { id: "unsafe-home", title: "Unsafe Home Environment / Domestic Violence", content: `# Unsafe Home Environment\n“Thank you for sharing this with me. I can’t imagine how hard it was to say that out loud...”` },
-            { id: "child-abuse", title: "Child Abuse or Neglect Disclosure", content: `# Child Abuse or Neglect\n“Thank you for telling me that. I know it’s not easy to talk about. ...”` },
-            { id: "homicidal-ideation", title: "Threat of Harm to Others (Homicidal Ideation)", content: `# Threat of Harm to Others\n“I hear you saying you want to hurt someone. I take that very seriously, and I need to ask you a few questions...”` },
-            { id: "under-influence", title: "Under the Influence (Non-Crisis)", content: `# Under the Influence\n"Hi. I'm just checking in with you briefly. It was noticed in group that [specific observation, e.g., ...` }
-        ]
-    },
-    "Orange": {
-        title: "🟠 Orange Zone – High Distress",
-        color: "orange",
-        scenarios: [
-            { id: "highly-agitated", title: "Highly Agitated or Escalating", content: `# Highly Agitated\n“I can see (or hear) how agitated you are. Let’s take a pause for a second. ...`},
-            { id: "acute-anxiety", title: "Acute Anxiety or Panic Attack", content: `# Acute Anxiety or Panic Attack\n"Right now, your body is in fight-or-flight mode. Let's try something called TIPP...`},
-            { id: "emotionally-flooded", title: "Overwhelmed & Emotionally Flooded", content: `# Overwhelmed & Emotionally Flooded\n“It’s all feeling like too much, isn’t it? I hear you. ...`},
-            { id: "unusual-thoughts", title: "Unusual Thoughts (Mild Paranoia or Cognitive Distortions)", content: `# Unusual Thoughts\n“That sounds really troubling. It must feel scary (or confusing) thinking that might be true. ...`},
-            { id: "trauma-flashback", title: "Trauma Reaction / Flashback", content: `# Trauma Reaction / Flashback\n“Hey, you’re here with me. You’re safe right now. ...`},
-            { id: "sexual-assault", title: "Sexual Assault Disclosure (Trauma Processing in the Moment)", content: `# Sexual Assault Disclosure\n“I’m so sorry that happened to you. Thank you for trusting me enough to tell me. ...`},
-            { id: "relational-rupture", title: "Relational Rupture / Intense Interpersonal Conflict", content: `# Relational Rupture\n“It sounds like you’re really hurt and angry about what happened. That’s completely understandable ...`},
-            { id: "group-trigger", title: "Triggered by Group Content", content: `# Triggered by Group Content\n"Right now, it sounds like your nervous system got hijacked by whatever came up in group. ...`},
-            { id: "group-conflict", title: "Conflict in Group or with Staff", content: `# Conflict in Group or with Staff\n“That conflict back there really upset you, and I can see why...`},
-            { id: "anger-irritability", title: "Anger and Irritability (beyond mild agitation)", content: `# Anger and Irritability\n“You’ve been feeling a lot of anger lately – like a constant simmering. That’s exhausting, isn’t it? ...`}
-        ]
-    },
-    "Yellow": {
-        title: "🟨 Yellow Zone – Moderate Challenges",
-        color: "yellow",
-        scenarios: [
-            { id: "resistant-therapy", title: "Resistant / Ambivalent About Therapy", content: `# Resistant / Ambivalent About Therapy\n“It’s okay if you’re not sure about this or even if you don’t want help right now. ...`},
-            { id: "group-resistant", title: "Group Resistant", content: `# Group Resistant\nLet's reframe this: What if group isn't about 'fixing' everything, but about practicing new ways of relating ...`},
-            { id: "manipulative-behaviors", title: "“Manipulative” or Testing Behaviors", content: `# “Manipulative” or Testing Behaviors\n“It seems like you really need something right now – maybe reassurance, or to feel in control? ...`},
-            { id: "shut-down", title: "Shut Down, Withdrawn, or Minimizing", content: `# Shut Down, Withdrawn, or Minimizing\n“I notice you’re getting really quiet (or you keep saying you’re fine). ...`},
-            { id: "loneliness", title: "Loneliness and Isolation", content: `# Loneliness and Isolation\n“Feeling lonely can be incredibly painful. I hear you – it’s like you’re aching for connection ...`},
-            { id: "shame-guilt", title: "Shame, Self-Hatred, or Guilt", content: `# Shame, Self-Hatred, or Guilt\n“I hear you saying some really harsh things about yourself. I know those feelings are very real ...`},
-            { id: "body-image", title: "Body Image Issues", content: `# Body Image Issues\n“It’s really hard to feel uncomfortable in your own body. That’s a very real kind of pain. ...`},
-            { id: "hopelessness", title: "Hopelessness or Despair (without active suicidal intent)", content: `# Hopelessness or Despair\n“It sounds like you are in a really dark place right now, like you can’t see any light at the end ...`}
-        ]
-    },
-    "Green": {
-        title: "💚 Green Zone – Growth & Skill-Building",
-        color: "green",
-        scenarios: [
-            { id: "political-anxiety", title: "Political/Global Events Anxiety", content: "Content coming soon. Use DBT distress tolerance and radical acceptance skills." },
-            { id: "existential", title: "Existential Concerns", content: "Content coming soon. Use values exploration and meaning-making strategies." },
-            { id: "chronic-pain", title: "Chronic Pain or Health Challenges", content: "Content coming soon. Use ACT pain acceptance and pacing skills." },
-            { id: "struggle-needs", title: "Struggling to Identify or Express Needs", content: "Content coming soon. Use assertiveness and emotional awareness skills." },
-            { id: "enmeshment", title: "Enmeshed or Dependent Relationships", content: "Content coming soon. Use boundaries and self-differentiation skills." },
-            { id: "directionless", title: "Feeling Directionless or “Stuck” in Life", content: "Content coming soon. Use values clarification and small-goal setting." },
-            { id: "time-management", title: "Time Management and Organization", content: "Content coming soon. Use behavioral activation and scheduling." },
-            { id: "decision-making", title: "Decision-Making", content: "Content coming soon. Use pros/cons and wise mind skill." },
-            { id: "perfectionism", title: "Perfectionism", content: "Content coming soon. Use self-compassion and opposite action." },
-            { id: "life-transitions", title: "Life Transitions", content: "Content coming soon. Use radical acceptance and support-building." },
-            { id: "healthy-habits", title: "Building Healthy Habits & Routines", content: "Content coming soon. Use habit stacking and reinforcement." }
-        ]
+// ---- FAVORITES & RECENTS ----
+function toggleFavorite(scenarioId) {
+    const idx = state.favorites.indexOf(scenarioId);
+    if (idx === -1) {
+        state.favorites.unshift(scenarioId);
+    } else {
+        state.favorites.splice(idx, 1);
     }
-};
-// ---- INTERVENTIONS DATA ----
-const interventionsData = {
-    "Distress Tolerance": [
-        { id: "tipp", title: "TIPP (Rapid Distress Reduction)", content: `* Sometimes the body just needs a jolt to interrupt the overwhelm. Try a quick temperature shock: splash cold water on your face or hold a cold bottle to your neck. Try clenching all your muscles tight for a few seconds, then release. Repeat a few times.` },
-    ],
-    "Cognitive Skills": [
-        { id: "defusion", title: "Defusion (Unhooking from Unhelpful Thoughts)", content: `* Try saying to yourself: "I'm noticing that I'm having the thought that ____." Or thank your mind for the thought: "Thanks, mind, for trying to protect me." See if you can distance from the thought instead of fighting it.`},
-    ],
-    "Self-Compassion": [
-        { id: "self-compassion", title: "Self-Compassion", content: `* Think about what you would say to a close friend if they were feeling exactly what you’re feeling. You deserve that same kindness. Try talking to yourself in the same compassionate way, or simply say, "I'm doing my best, and that's enough right now."` }
-    ],
-    "Session End": [
-        { id: "end-of-session", title: "(End-of-Session) ✅ Survey→", content: `Survey link: [End-of-Session Survey](https://charliehealth.qualtrics.com/jfe/form/SV_aYkIr219RLNs0Sy?name=Ashley_R)\n\n“Before you go back to group, I do have a brief survey that I’m required to provide. It's very short, just a thumbs up or thumbs down. Do you see the link in the chat?”` }
-    ]
-};
-// ---- END CLINICAL DATA ----
-
-const MAIN_TABS = [
-    { id: 'dashboard', icon: 'layout-dashboard', label: 'Dashboard' },
-    { id: 'favorites', icon: 'star', label: 'Favorites' },
-    { id: 'recents', icon: 'clock', label: 'Recents' },
-    { id: 'interventions', icon: 'activity', label: 'Interventions' }
-];
-const colorMap = {
-    red: { border: 'border-red-500' },
-    orange: { border: 'border-orange-500' },
-    yellow: { border: 'border-yellow-500' },
-    green: { border: 'border-green-500' },
-    indigo: { border: 'border-indigo-500' }
-};
-
-const dom = {};
-const state = {
-    currentView: 'dashboard',
-    favorites: [],
-    recentlyViewed: [],
-    customContent: {},
-    contentMap: new Map()
-};
-let db, userId, appId = 'clinical-dashboard';
-let debouncedSaveState;
-
-function populateDomObject() {
-    [
-        'sidebar-nav', 'content-area', 'user-id-display',
-        'modalTitle', 'modalBody', 'scenarioModal', 'closeModal', 'toast'
-    ].forEach(id => {
-        const camel = id.replace(/-([a-z])/g, g => g[1].toUpperCase());
-        dom[camel] = document.getElementById(id);
-    });
+    switchView(state.currentView);
+}
+function addToRecentlyViewed(scenarioId) {
+    const idx = state.recentlyViewed.indexOf(scenarioId);
+    if (idx !== -1) state.recentlyViewed.splice(idx, 1);
+    state.recentlyViewed.unshift(scenarioId);
+    if (state.recentlyViewed.length > 10) state.recentlyViewed.pop();
 }
 
-function showToast(message, isSubtle = false) {
-    dom.toast.textContent = message;
-    dom.toast.className = `fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg z-50 ${isSubtle ? 'bg-gray-600 dark:bg-gray-700' : 'bg-green-500'}`;
-    dom.toast.classList.remove('hidden');
-    setTimeout(() => { dom.toast.classList.add('hidden'); }, 3000);
-}
-
-function initializeDataMap() {
-    state.contentMap.clear();
-    Object.values(clinicalData).forEach(zone => {
-        zone.scenarios.forEach(s => state.contentMap.set(s.id, {...s, category: zone.title, color: zone.color}));
-    });
-    Object.entries(interventionsData).forEach(([category, items]) => {
-        items.forEach(item => state.contentMap.set(item.id, {...item, category, color: 'indigo'}));
-    });
-    Object.values(state.customContent).forEach(item => state.contentMap.set(item.id, item));
-}
-
-// ---- Sidebar Tabs ----
-function renderSidebarTabs() {
-    const nav = dom.sidebarNav;
-    nav.innerHTML = '';
-    MAIN_TABS.forEach(tab => {
-        const btn = document.createElement('button');
-        btn.className = `sidebar-link w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left font-medium transition-colors${state.currentView === tab.id ? ' active' : ''}`;
-        btn.dataset.tab = tab.id;
-        btn.innerHTML = `<i data-lucide="${tab.icon}" class="h-5 w-5"></i> <span>${tab.label}</span>`;
-        btn.addEventListener('click', () => switchView(tab.id));
-        nav.appendChild(btn);
+// ---- CARD LIST ----
+function renderCardList(container, items, emptyMessage) {
+    if (!container) return;
+    container.innerHTML = '';
+    if (items.length === 0) {
+        container.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400 p-8 col-span-full">${emptyMessage}</p>`;
+        return;
+    }
+    items.forEach(item => {
+        if (item) container.appendChild(createScenarioCard(item));
     });
     lucide.createIcons();
 }
 
-// ---- Tab Switching ----
+// ---- TABS ----
 function switchView(viewId) {
     state.currentView = viewId;
     document.querySelectorAll('.sidebar-link').forEach(link => {
         link.classList.toggle('active', link.dataset.tab === viewId);
     });
     dom.contentArea.innerHTML = '';
+    renderUsedThisSession();
 
     if (viewId === 'dashboard') {
         const dashboardItems = Array.from(state.contentMap.values()).filter(item => item.category && item.category.includes('Zone'));
@@ -269,135 +154,45 @@ function switchView(viewId) {
     }
 }
 
-// ---- Cards ----
-function renderCardList(container, items, emptyMessage) {
-    if (!container) return;
-    container.innerHTML = '';
-    if (items.length === 0) {
-        container.innerHTML = `<p class="text-center text-gray-500 dark:text-gray-400 p-8 col-span-full">${emptyMessage}</p>`;
+// ---- SEARCH ----
+dom.searchBox?.addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase();
+    let filtered = [];
+    if (!q) {
+        switchView(state.currentView);
         return;
     }
-    items.forEach(item => {
-        if (item) container.appendChild(createScenarioCard(item));
-    });
-    lucide.createIcons();
-}
-function createScenarioCard(scenario) {
-    const isFavorited = state.favorites.includes(scenario.id);
-    const card = document.createElement('div');
-    const colors = colorMap[scenario.color] || colorMap.indigo;
-    card.className = `scenario-card bg-white dark:bg-gray-800 p-4 rounded-lg cursor-pointer flex flex-col justify-between relative ${colors.border}`;
-    card.dataset.id = scenario.id;
-    card.innerHTML = `
-        <div class="flex-1">
-            <h3 class="font-semibold pr-2 text-gray-800 dark:text-gray-200">${scenario.title}</h3>
-        </div>
-        <div class="favorite-star self-end mt-2 text-gray-400 dark:text-gray-600 ${isFavorited ? 'favorited' : ''}" style="z-index:2;">
-            <i data-lucide="star" class="h-5 w-5"></i>
-        </div>`;
-    card.querySelector('.favorite-star').addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleFavorite(scenario.id);
-    });
-    card.addEventListener('click', () => openModal(scenario));
-    return card;
-}
-
-// ---- Modal ----
-function openModal(scenario) {
-    if (!scenario) return;
-    state.currentOpenScenario = scenario;
-    dom.modalTitle.textContent = scenario.title;
-    dom.modalBody.innerHTML = marked.parse(scenario.content);
-    dom.scenarioModal.classList.remove('hidden');
-    addToRecentlyViewed(scenario.id);
-    lucide.createIcons();
-}
-dom.closeModal?.addEventListener('click', () => {
-    dom.scenarioModal.classList.add('hidden');
+    filtered = Array.from(state.contentMap.values()).filter(
+        item =>
+            item.title.toLowerCase().includes(q) ||
+            (item.content && item.content.toLowerCase().includes(q)) ||
+            (item.tags && item.tags.some(tag => tag.includes(q)))
+    );
+    dom.contentArea.innerHTML = '';
+    renderUsedThisSession();
+    renderCardList(dom.contentArea, filtered, 'No matches found.');
 });
 
-// ---- Favorites & Recents ----
-function toggleFavorite(scenarioId) {
-    const idx = state.favorites.indexOf(scenarioId);
-    if (idx === -1) {
-        state.favorites.unshift(scenarioId);
-    } else {
-        state.favorites.splice(idx, 1);
-    }
-    debouncedSaveState && debouncedSaveState();
-    switchView(state.currentView);
-}
-function addToRecentlyViewed(scenarioId) {
-    const idx = state.recentlyViewed.indexOf(scenarioId);
-    if (idx !== -1) state.recentlyViewed.splice(idx, 1);
-    state.recentlyViewed.unshift(scenarioId);
-    if (state.recentlyViewed.length > 10) state.recentlyViewed.pop();
-    debouncedSaveState && debouncedSaveState();
+// ---- TOAST ----
+function showToast(message, isSubtle = false) {
+    dom.toast.textContent = message;
+    dom.toast.className = `fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg z-50 ${isSubtle ? 'bg-gray-600 dark:bg-gray-700' : 'bg-green-500'}`;
+    dom.toast.classList.remove('hidden');
+    setTimeout(() => { dom.toast.classList.add('hidden'); }, 3000);
 }
 
-// ---- Firestore ----
-function debouncedSaveStateFn() {
-    clearTimeout(debouncedSaveStateFn.timer);
-    debouncedSaveStateFn.timer = setTimeout(() => {
-        if (!db || !userId) return;
-        setDoc(doc(db, `artifacts/${appId}/users/${userId}/userData/appData`), {
-            favorites: state.favorites,
-            recentlyViewed: state.recentlyViewed,
-            customContent: state.customContent
-        }, { merge: true });
-    }, 1000);
-}
-debouncedSaveState = debouncedSaveStateFn;
-function initFirebase() {
-    try {
-        const firebaseConfig = {
-            apiKey: "AIzaSyBr3hTkM_2PlRreFvgK9kk4s4bQvx5y8xw",
-            authDomain: "my-dashboard-app-e1d1f.firebaseapp.com",
-            projectId: "my-dashboard-app-e1d1f",
-            storageBucket: "my-dashboard-app-e1d1f.appspot.com",
-            messagingSenderId: "969081281658",
-            appId: "1:969081281658:web:d479a7b003805625f02fc3"
-        };
-        const app = initializeApp(firebaseConfig);
-        db = getFirestore(app);
-        const auth = getAuth(app);
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                userId = user.uid;
-                dom.userIdDisplay.textContent = `Online | User: ${user.uid.substring(0,8)}...`;
-                const userDoc = doc(db, `artifacts/${appId}/users/${userId}/userData/appData`);
-                onSnapshot(userDoc, (docSnap) => {
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        if (data.favorites) state.favorites = data.favorites;
-                        if (data.recentlyViewed) state.recentlyViewed = data.recentlyViewed;
-                        if (data.customContent) state.customContent = data.customContent;
-                        switchView(state.currentView);
-                    }
-                });
-            } else {
-                await signInAnonymously(auth);
-            }
-        });
-    } catch (error) {
-        console.error("Firebase initialization failed:", error);
-        dom.userIdDisplay.textContent = 'Connection Failed';
-        showToast("Firebase connection failed.", false);
-    }
-}
+// ---- THEME ----
+document.getElementById('theme-toggle')?.addEventListener('click', () => {
+    document.documentElement.classList.toggle('dark');
+});
 
-// ---- Main ----
+// ---- MAIN ----
 function main() {
     populateDomObject();
     renderSidebarTabs();
     initializeDataMap();
     switchView(state.currentView || 'dashboard');
-    initFirebase();
-    // Theme toggle
-    document.getElementById('theme-toggle').addEventListener('click', () => {
-        document.documentElement.classList.toggle('dark');
-    });
+    renderUsedThisSession();
 }
 document.addEventListener('DOMContentLoaded', main);
 </script>
