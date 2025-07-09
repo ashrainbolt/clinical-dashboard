@@ -153,6 +153,11 @@
             background-color: #facc15; /* yellow-400 */
             color: #1f2937; /* gray-800 */
         }
+        
+        /* Floating Scratchpad Styles */
+        #floating-scratchpad-modal .drag-handle {
+            cursor: move;
+        }
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen font-sans">
@@ -172,7 +177,7 @@
             <button class="sidebar-link w-full text-left px-4 py-2 rounded flex items-center hover:bg-indigo-100 dark:hover:bg-indigo-900" data-tab="scripts"><i data-lucide="file-text" class="w-4 h-4 mr-3"></i>Scripts</button>
             <button class="sidebar-link w-full text-left px-4 py-2 rounded flex items-center hover:bg-indigo-100 dark:hover:bg-indigo-900" data-tab="favorites"><i data-lucide="star" class="w-4 h-4 mr-3"></i>Favorites</button>
             <button class="sidebar-link w-full text-left px-4 py-2 rounded flex items-center hover:bg-indigo-100 dark:hover:bg-indigo-900" data-tab="recents"><i data-lucide="history" class="w-4 h-4 mr-3"></i>Recently Viewed</button>
-            <button class="sidebar-link w-full text-left px-4 py-2 rounded flex items-center hover:bg-teal-100 dark:hover:bg-teal-900" data-tab="scratchpad"><i data-lucide="edit-3" class="w-4 h-4 mr-3"></i>Scratchpad</button>
+            <button id="scratchpad-toggle-btn" class="sidebar-link w-full text-left px-4 py-2 rounded flex items-center hover:bg-teal-100 dark:hover:bg-teal-900" data-tab="scratchpad"><i data-lucide="edit-3" class="w-4 h-4 mr-3"></i>Scratchpad</button>
         </nav>
         <div class="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
             <input id="search-box" type="text" placeholder="Search scenarios..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
@@ -252,6 +257,20 @@
             <div class="flex justify-end gap-3">
                 <button id="confirmation-cancel" class="px-4 py-2 rounded-md text-sm font-medium bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600">Cancel</button>
                 <button id="confirmation-confirm" class="px-4 py-2 rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Scratchpad -->
+    <div id="floating-scratchpad-modal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl z-40 modal-hidden">
+        <div id="floating-scratchpad-content" class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl flex flex-col modal-content opacity-0 scale-95">
+            <div class="drag-handle flex items-center p-4 border-b border-gray-200 dark:border-gray-700 cursor-move">
+                <i data-lucide="edit-3" class="w-5 h-5 text-teal-500 mr-2"></i>
+                <h2 class="text-xl font-bold flex-1">Scratchpad</h2>
+                <button id="close-scratchpad-btn" class="p-2 rounded-full text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            <div id="floating-scratchpad-body" class="p-6">
+                <!-- Content will be injected here by renderFloatingScratchpad -->
             </div>
         </div>
     </div>
@@ -978,6 +997,10 @@
         annotationTextarea: document.getElementById('annotation-textarea'),
         annotationSave: document.getElementById('annotation-save'),
         annotationCancel: document.getElementById('annotation-cancel'),
+        floatingScratchpadModal: document.getElementById('floating-scratchpad-modal'),
+        floatingScratchpadBody: document.getElementById('floating-scratchpad-body'),
+        closeScratchpadBtn: document.getElementById('close-scratchpad-btn'),
+        scratchpadToggleBtn: document.getElementById('scratchpad-toggle-btn'),
     };
 
     // ---- STATE PERSISTENCE ----
@@ -1253,42 +1276,34 @@
         lucide.createIcons();
     }
     
-    function renderScratchpad() {
-        dom.contentArea.className = 'h-full flex flex-col';
-        dom.contentArea.innerHTML = `
-        <div class="max-w-7xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full flex-1 flex flex-col">
-            <div class="flex items-center mb-4 flex-shrink-0">
-                <i data-lucide="edit-3" class="w-5 h-5 text-teal-500 mr-2"></i>
-                <h2 class="text-xl font-bold flex-1">Scratchpad</h2>
-                <div class="flex items-center gap-2">
-                    <div id="template-dropdown-container" class="relative">
-                        <button id="template-btn" class="text-sm px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600">Templates</button>
-                        <div id="template-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-md shadow-lg z-10">
-                           <a href="#" class="template-item block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600" data-template="safetyPlan">Safety Plan</a>
-                           <a href="#" class="template-item block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600" data-template="sessionNotes">Session Notes</a>
-                        </div>
-                    </div>
-                    <button id="toggle-scratchpad-mode" class="text-sm px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 lg:hidden">
-                        ${state.scratchpadMode === 'write' ? 'Preview' : 'Edit'}
-                    </button>
-                    <button id="clear-scratchpad" class="text-sm text-red-500 hover:underline">Clear</button>
-                </div>
-            </div>
-            <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">
-                <div id="scratchpad-write-area" class="${state.scratchpadMode === 'write' ? 'flex' : 'hidden'} lg:flex flex-col">
-                    <textarea id="scratchpad-textarea"
-                        class="w-full p-4 border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-lg scratchpad-resize text-sm font-mono focus:ring-2 focus:ring-teal-500 focus:outline-none flex-1"
-                        placeholder="Type notes, scripts, or plans here... (Markdown supported)">${state.scratchpadContent || ''}</textarea>
-                    <div class="flex mt-3 gap-2 flex-shrink-0">
-                        <button id="copy-scratchpad" class="flex items-center text-xs px-3 py-1 bg-indigo-100 dark:bg-indigo-900 rounded-md text-indigo-700 dark:text-indigo-200 hover:bg-indigo-200 dark:hover:bg-indigo-800"><i data-lucide="copy" class="w-4 h-4 mr-1"></i>Copy</button>
-                        <button id="download-scratchpad" class="flex items-center text-xs px-3 py-1 bg-green-100 dark:bg-green-900 rounded-md text-green-700 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-800"><i data-lucide="download" class="w-4 h-4 mr-1"></i>Download</button>
+    function renderFloatingScratchpad() {
+        dom.floatingScratchpadBody.innerHTML = `
+            <div class="flex items-center gap-2 mb-4">
+                <button id="toggle-scratchpad-mode" class="text-sm px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600">
+                    ${state.scratchpadMode === 'write' ? 'Preview' : 'Edit'}
+                </button>
+                <div id="template-dropdown-container" class="relative">
+                    <button id="template-btn" class="text-sm px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600">Templates</button>
+                    <div id="template-dropdown" class="hidden absolute left-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-md shadow-lg z-10">
+                        <a href="#" class="template-item block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600" data-template="safetyPlan">Safety Plan</a>
+                        <a href="#" class="template-item block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600" data-template="sessionNotes">Session Notes</a>
                     </div>
                 </div>
-                <div id="scratchpad-preview-area" class="prose dark:prose-invert max-w-none ${state.scratchpadMode === 'preview' ? '' : 'hidden'} lg:block p-4 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg overflow-y-auto bg-gray-50 dark:bg-gray-900/50">
-                    ${marked.parse(state.scratchpadContent || '_Nothing here yet. Type in Edit mode!_')}
+                <button id="clear-scratchpad" class="ml-auto text-sm text-red-500 hover:underline">Clear</button>
+            </div>
+            <div id="scratchpad-write-area" class="${state.scratchpadMode === 'write' ? '' : 'hidden'}">
+                <textarea id="scratchpad-textarea"
+                    class="w-full p-4 border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-lg scratchpad-resize text-sm font-mono focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                    rows="12"
+                    placeholder="Type notes, scripts, or plans here... (Markdown supported)">${state.scratchpadContent || ''}</textarea>
+                <div class="flex mt-3 gap-2">
+                    <button id="copy-scratchpad" class="flex items-center text-xs px-3 py-1 bg-indigo-100 dark:bg-indigo-900 rounded-md text-indigo-700 dark:text-indigo-200 hover:bg-indigo-200 dark:hover:bg-indigo-800"><i data-lucide="copy" class="w-4 h-4 mr-1"></i>Copy</button>
+                    <button id="download-scratchpad" class="flex items-center text-xs px-3 py-1 bg-green-100 dark:bg-green-900 rounded-md text-green-700 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-800"><i data-lucide="download" class="w-4 h-4 mr-1"></i>Download</button>
                 </div>
             </div>
-        </div>
+            <div id="scratchpad-preview-area" class="prose dark:prose-invert max-w-none ${state.scratchpadMode === 'preview' ? '' : 'hidden'} p-4 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg min-h-[12rem] bg-gray-50 dark:bg-gray-900/50">
+                ${marked.parse(state.scratchpadContent || '_Nothing here yet. Type in Edit mode!_')}
+            </div>
         `;
         lucide.createIcons();
         attachScratchpadEvents();
@@ -1588,37 +1603,40 @@
     }
 
     function attachScratchpadEvents() {
-        document.getElementById('toggle-scratchpad-mode')?.addEventListener('click', () => {
+        const scratchpadBody = dom.floatingScratchpadModal.querySelector('#floating-scratchpad-body');
+        if (!scratchpadBody) return;
+
+        scratchpadBody.querySelector('#toggle-scratchpad-mode')?.addEventListener('click', () => {
             state.scratchpadMode = (state.scratchpadMode === 'write') ? 'preview' : 'write';
-            renderScratchpad();
+            renderFloatingScratchpad();
         });
-        document.getElementById('clear-scratchpad')?.addEventListener('click', () => {
+        scratchpadBody.querySelector('#clear-scratchpad')?.addEventListener('click', () => {
             showConfirmationModal('Clear all notes in your scratchpad?', 'This action cannot be undone.', () => {
                 state.scratchpadContent = '';
                 saveState();
-                renderScratchpad();
+                renderFloatingScratchpad();
                 showToast('Scratchpad cleared.', 'success');
             });
         });
-        const textarea = document.getElementById('scratchpad-textarea');
-        const previewArea = document.getElementById('scratchpad-preview-area');
+        const textarea = scratchpadBody.querySelector('#scratchpad-textarea');
+        const previewArea = scratchpadBody.querySelector('#scratchpad-preview-area');
         textarea?.addEventListener('input', (e) => {
             state.scratchpadContent = e.target.value;
             saveState();
-            if (window.innerWidth >= 1024) {
-                previewArea.innerHTML = marked.parse(state.scratchpadContent || '_Nothing here yet._');
+            if(previewArea) {
+               previewArea.innerHTML = marked.parse(state.scratchpadContent || '_Nothing here yet._');
             }
         });
-        document.getElementById('copy-scratchpad')?.addEventListener('click', () => copyToClipboard(state.scratchpadContent));
-        document.getElementById('download-scratchpad')?.addEventListener('click', downloadScratchpad);
+        scratchpadBody.querySelector('#copy-scratchpad')?.addEventListener('click', () => copyToClipboard(state.scratchpadContent));
+        scratchpadBody.querySelector('#download-scratchpad')?.addEventListener('click', downloadScratchpad);
         
-        const templateBtn = document.getElementById('template-btn');
-        const templateDropdown = document.getElementById('template-dropdown');
+        const templateBtn = scratchpadBody.querySelector('#template-btn');
+        const templateDropdown = scratchpadBody.querySelector('#template-dropdown');
         templateBtn?.addEventListener('click', (e) => {
             e.stopPropagation();
             templateDropdown.classList.toggle('hidden');
         });
-        document.querySelectorAll('.template-item').forEach(item => {
+        scratchpadBody.querySelectorAll('.template-item').forEach(item => {
             item.addEventListener('click', (e) => {
                 e.preventDefault();
                 const templateKey = e.target.dataset.template;
@@ -1637,7 +1655,11 @@
                 templateDropdown.classList.add('hidden');
             });
         });
-        document.addEventListener('click', () => templateDropdown?.classList.add('hidden'));
+        document.addEventListener('click', (e) => {
+            if (!templateBtn?.contains(e.target)) {
+                templateDropdown?.classList.add('hidden');
+            }
+        });
     }
     
     // ---- UTILITIES ----
@@ -1690,8 +1712,8 @@
         saveState();
         showToast("Session log copied to scratchpad!", 'success');
 
-        if (state.currentView === 'scratchpad') {
-            renderScratchpad();
+        if (!dom.floatingScratchpadModal.classList.contains('modal-hidden')) {
+            renderFloatingScratchpad();
         }
     }
 
@@ -1790,17 +1812,13 @@
         // Update sidebar link styles
         document.querySelectorAll('.sidebar-link').forEach(link => {
             const isSelected = link.dataset.tab === viewId;
-            const isScratchpad = viewId === 'scratchpad';
-            link.classList.toggle('bg-indigo-100', isSelected && !isScratchpad);
-            link.classList.toggle('dark:bg-indigo-800', isSelected && !isScratchpad);
-            link.classList.toggle('bg-teal-100', isSelected && isScratchpad);
-            link.classList.toggle('dark:bg-teal-900', isSelected && isScratchpad);
-            link.classList.toggle('text-indigo-700', isSelected && !isScratchpad);
-            link.classList.toggle('dark:text-indigo-200', isSelected && !isScratchpad);
-            link.classList.toggle('text-teal-700', isSelected && isScratchpad);
-            link.classList.toggle('dark:text-teal-200', isSelected && isScratchpad);
+            link.classList.toggle('bg-indigo-100', isSelected);
+            link.classList.toggle('dark:bg-indigo-800', isSelected);
+            link.classList.toggle('text-indigo-700', isSelected);
+            link.classList.toggle('dark:text-indigo-200', isSelected);
             link.classList.toggle('font-semibold', isSelected);
         });
+        dom.scratchpadToggleBtn.classList.remove('bg-indigo-100', 'dark:bg-indigo-800', 'text-indigo-700', 'dark:text-indigo-200', 'font-semibold');
 
         if (dom.searchBox.value) {
             dom.searchBox.value = '';
@@ -1808,8 +1826,6 @@
 
         if (viewId === 'dashboard') {
             renderDashboard();
-        } else if (viewId === 'scratchpad') {
-            renderScratchpad();
         } else if (viewId === 'interventions') {
             renderCategorizedList(dom.contentArea, interventionsData, 'Interventions', 'No interventions found.');
         } else {
@@ -1836,6 +1852,37 @@
         lucide.createIcons();
     }
 
+    // ---- DRAGGABLE MODAL ----
+    function makeDraggable(element, handle) {
+        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        handle.onmousedown = dragMouseDown;
+
+        function dragMouseDown(e) {
+            e = e || window.event;
+            e.preventDefault();
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            document.onmouseup = closeDragElement;
+            document.onmousemove = elementDrag;
+        }
+
+        function elementDrag(e) {
+            e = e || window.event;
+            e.preventDefault();
+            pos1 = pos3 - e.clientX;
+            pos2 = pos4 - e.clientY;
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            element.style.top = (element.offsetTop - pos2) + "px";
+            element.style.left = (element.offsetLeft - pos1) + "px";
+        }
+
+        function closeDragElement() {
+            document.onmouseup = null;
+            document.onmousemove = null;
+        }
+    }
+
     // ---- MAIN INITIALIZATION ----
     function main() {
         loadState();
@@ -1843,7 +1890,9 @@
 
         // Event listeners
         document.querySelectorAll('.sidebar-link').forEach(link => {
-            link.addEventListener('click', () => switchView(link.dataset.tab));
+            if (link.id !== 'scratchpad-toggle-btn') {
+                link.addEventListener('click', () => switchView(link.dataset.tab));
+            }
         });
         document.body.addEventListener('click', handleContentInteraction);
         
@@ -1902,11 +1951,33 @@
                 state.scratchpadContent += (state.scratchpadContent ? '\n\n---\n\n' : '') + contentToCopy;
                 saveState();
                 showToast('Copied to scratchpad!', 'success');
-                if (state.currentView === 'scratchpad') {
-                    renderScratchpad();
+                if (!dom.floatingScratchpadModal.classList.contains('modal-hidden')) {
+                    renderFloatingScratchpad();
                 }
             }
         });
+        
+        // Floating Scratchpad Logic
+        dom.scratchpadToggleBtn.addEventListener('click', () => {
+            const modal = dom.floatingScratchpadModal;
+            const isHidden = modal.classList.contains('modal-hidden');
+            if (isHidden) {
+                renderFloatingScratchpad();
+                modal.classList.remove('modal-hidden');
+                modal.classList.add('modal-visible');
+                setTimeout(() => {
+                    modal.querySelector('.modal-content').classList.remove('opacity-0', 'scale-95');
+                }, 10);
+            } else {
+                modal.querySelector('.modal-content').classList.add('opacity-0', 'scale-95');
+                setTimeout(() => {
+                    modal.classList.add('modal-hidden');
+                    modal.classList.remove('modal-visible');
+                }, 300);
+            }
+        });
+        dom.closeScratchpadBtn.addEventListener('click', () => dom.scratchpadToggleBtn.click());
+        makeDraggable(dom.floatingScratchpadModal.querySelector('.modal-content'), dom.floatingScratchpadModal.querySelector('.drag-handle'));
 
         // Initial theme setup
         const savedTheme = localStorage.getItem('theme');
