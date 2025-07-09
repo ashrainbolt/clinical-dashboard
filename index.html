@@ -794,7 +794,14 @@
     
     const scratchpadTemplates = {
         safetyPlan: `### Safety Plan\n\n**Warning Signs (Thoughts, feelings, behaviors that things are getting worse):**\n- \n\n**Internal Coping Strategies (Things I can do on my own):**\n- \n\n**Social Distractions (People or places that can distract me):**\n- \n\n**People I Can Ask for Help:**\n- \n\n**Professional Resources (Therapist, crisis lines):**\n- \n\n**Making My Environment Safe:**\n- `,
-        sessionNotes: `### Session Notes\n\n**Date:** ${new Date().toLocaleDateString()}\n\n**Client Presentation:**\n- \n\n**Key Issues Discussed:**\n- \n\n**Interventions Used:**\n- \n\n**Client Response:**\n- \n\n**Plan / Next Steps:**\n- `
+        sessionNotes: () => {
+            const now = new Date();
+            const timestamp = now.toLocaleString('en-US', {
+                dateStyle: 'short',
+                timeStyle: 'short'
+            });
+            return `**${timestamp}**\n\n[Concern] CC request for Ct ___.\n[Intervention] CSSRS: ___. Ct ___.\n[Concern] Ct returned to group.`;
+        }
     };
 
     // ---- STATE AND DATA ----
@@ -1311,11 +1318,16 @@
             item.addEventListener('click', (e) => {
                 e.preventDefault();
                 const templateKey = e.target.dataset.template;
-                const template = scratchpadTemplates[templateKey];
-                if (template) {
+                let templateContent = scratchpadTemplates[templateKey];
+                
+                if (typeof templateContent === 'function') {
+                    templateContent = templateContent();
+                }
+
+                if (templateContent) {
                     const currentText = textarea.value;
-                    textarea.value = (currentText ? currentText + '\n\n---\n\n' : '') + template;
-                    textarea.dispatchEvent(new Event('input')); // Trigger update
+                    textarea.value = (currentText ? currentText + '\n\n---\n\n' : '') + templateContent;
+                    textarea.dispatchEvent(new Event('input'));
                     textarea.scrollTop = textarea.scrollHeight;
                 }
                 templateDropdown.classList.add('hidden');
