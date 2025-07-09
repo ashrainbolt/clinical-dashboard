@@ -49,18 +49,25 @@
             max-height: 60vh;
             overflow-y: auto;
         }
-        /* Ensure sidebar content can scroll if it overflows */
         .sidebar-nav {
             flex: 1 1 auto;
             overflow-y: auto;
         }
-        /* Hide scrollbar for modal body but keep it scrollable */
-        #modal-body::-webkit-scrollbar {
+        
+        /* Modal Animation */
+        .modal-hidden {
             display: none;
         }
-        #modal-body {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
+        .modal-visible {
+            display: flex;
+        }
+        .modal-content {
+            transition: all 0.3s ease-out;
+        }
+
+        /* Card Animation */
+        .card-container {
+            transition: opacity 0.3s ease-in-out;
         }
     </style>
 </head>
@@ -90,15 +97,28 @@
 
     <!-- Main content -->
     <main class="ml-60 min-h-screen p-6 md:p-8 transition-colors duration-300">
-        <!-- Used this session -->
-        <div id="used-this-session" class="mb-4"></div>
+        <div class="flex justify-between items-center mb-4">
+            <!-- Used this session -->
+            <div id="used-this-session" class="flex-1"></div>
+            <!-- In-Session Timer -->
+            <div id="session-timer-container" class="flex items-center gap-2 p-2 rounded-lg bg-green-100 dark:bg-green-900 transition-colors duration-500">
+                <i data-lucide="timer" class="w-5 h-5"></i>
+                <span id="session-timer" class="font-mono font-semibold text-lg">00:00</span>
+                <button id="timer-toggle-btn" title="Start/Pause Timer" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                    <i data-lucide="play" class="w-4 h-4"></i>
+                </button>
+                <button id="timer-reset-btn" title="Reset Timer" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                    <i data-lucide="rotate-cw" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
         <!-- Dynamic content area -->
-        <div id="content-area"></div>
+        <div id="content-area" class="card-container"></div>
     </main>
 
     <!-- Content Modal -->
-    <div id="scenario-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 hidden p-4">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-4xl w-full relative p-6 max-h-[90vh] flex flex-col">
+    <div id="scenario-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm items-center justify-center z-50 p-4 modal-hidden">
+        <div id="modal-content-wrapper" class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-4xl w-full relative p-6 max-h-[90vh] flex flex-col modal-content opacity-0 scale-95">
             <div id="modal-context" class="flex flex-wrap gap-2 mb-3"></div>
             <div class="flex items-start mb-4">
                 <h2 id="modal-title" class="text-2xl font-bold flex-1"></h2>
@@ -116,8 +136,8 @@
     </div>
     
     <!-- Confirmation Modal -->
-    <div id="confirmation-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 hidden p-4">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-6 w-full max-w-sm">
+    <div id="confirmation-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm items-center justify-center z-[60] p-4 modal-hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-6 w-full max-w-sm modal-content opacity-0 scale-95">
             <h3 id="confirmation-title" class="text-lg font-semibold mb-4">Are you sure?</h3>
             <div id="confirmation-message" class="text-sm text-gray-600 dark:text-gray-300 mb-6"></div>
             <div class="flex justify-end gap-3">
@@ -133,9 +153,6 @@
 
     <script>
     // ---- DATA ----
-    // This section contains the comprehensive clinical scenarios, interventions, and scripts
-    // fully populated from the source document.
-
     const clinicalData = [
         // --- RED ZONE ---
         {
@@ -154,7 +171,7 @@
             emoji: '🚩',
             color: 'red',
             tags: ['nssi', 'self-harm', 'urges', 'coping', 'safety', 'red'],
-            content: `### Direct Check-In\n“Thank you for telling me. I need to ask: Are you having urges to hurt yourself right now?”\n* **If yes (urge is present):** “On a scale from 1 to 10, how strong is the urge right now, 10 being the strongest?”\n* **If yes (recent self-harm action):** “What did you do, and how severe was it? Do you need any medical attention for that?”\n\n### Clarify Intent\n“When you self-harmed, was it because you wanted to die, or was it more about coping with pain or numbness?”\n\n### Validate & Normalize\n“That urge makes sense given what you’re carrying. A part of you is trying to survive and find relief, even if it’s doing it in a way that ends up hurting you. Let’s see if we can work with that part in a safer way.”\n\n### Offer Alternatives & Coping Strategies\n* **Intense Physical Sensations (**TIPP Skill for Rapid Distress Reduction**):** “Sometimes our body needs a very strong sensation to release that tension. We could try holding something frozen (like ice), doing a wall-sit or some push-ups, or splashing really cold water on your face.”\n* **“Urge Surfing” Technique:** “Remember, urges are like waves — they build, peak, and eventually fall. Let’s try to ride this wave out together.”\n* **Safe Physical Release:** “Would it help to rip up some paper, squeeze a stress ball, stomp your feet, or even scream into a pillow?”\n\n### Commitment to Safety\n“I know the urge is strong, but do you feel like you can stay safe tonight? Even if the urge comes back, can you promise me you’ll try these coping steps or reach out for help before doing anything to hurt yourself?”`
+            content: `### Direct Check-In\n“Thank you for telling me. I need to ask: Are you having urges to hurt yourself right now?”\n* **If yes (urge is present):** “On a scale from 1 to 10, how strong is the urge right now, 10 being the strongest?”\n* **If yes (recent self-harm action):** “What did you do, and how severe was it? Do you need any medical attention for that?”\n\n### Clarify Intent\n“When you self-harmed, was it because you wanted to die, or was it more about coping with pain or numbness?”\n\n### Validate & Normalize\n“That urge makes sense given what you’re carrying. A part of you is trying to survive and find relief, even if it’s doing it in a way that ends up hurting you. Let’s see if we can work with that part in a safer way.”\n\n### Offer Alternatives & Coping Strategies\n* **Intense Physical Sensations (**TIPP Skill for Rapid Distress Reduction**):** “Sometimes our body needs a very strong sensation to release that tension. We could try holding something frozen (like ice), doing a wall-sit or some push-ups, or splashing really cold water on your face.”\n* **“Urge Surfing” Technique (**Name the Urge, Challenge the Urge**):** “Remember, urges are like waves — they build, peak, and eventually fall. Let’s try to ride this wave out together.”\n* **Safe Physical Release:** “Would it help to rip up some paper, squeeze a stress ball, stomp your feet, or even scream into a pillow?”\n\n### Commitment to Safety\n“I know the urge is strong, but do you feel like you can stay safe tonight? Even if the urge comes back, can you promise me you’ll try these coping steps or reach out for help before doing anything to hurt yourself?”`
         },
         {
             id: 'red-hallucinations',
@@ -239,6 +256,15 @@
             content: `### Normalize & Reassure\n“What you’re experiencing is a panic attack. It feels really scary, but **I promise it’s not life-threatening. You are going to be okay. I’m right here.**”\n\n### Immediate Physiological Regulation\n* **Temperature (**TIPP Skill for Rapid Distress Reduction**):** "Can you splash some cold water on your face, or hold a cold water bottle or ice cube if you have one? This triggers something called the 'dive response' that naturally slows your heart rate."\n* **Paced Breathing:** "Let's breathe together. Breathe in through your nose for 4 counts... hold for 4... now out through your mouth for 6 counts. That longer exhale is key."\n\n### Orient to Safety (**Grounding Through Senses (5-4-3-2-1 Technique)**)\n“Let’s name five things you see in the room. Good. Now four things you can feel... three things you can hear... two things you can smell... and one thing you can taste.”\n\n### Permission to Pause\n“We don’t need to unpack everything right now. In fact, we shouldn’t dive deeper into anything heavy at this moment, because I want to make sure you don’t leave here feeling even worse.”`
         },
         {
+            id: 'orange-overwhelmed',
+            title: 'Overwhelmed & Emotionally Flooded',
+            category: 'Orange Zone',
+            emoji: '🟠',
+            color: 'orange',
+            tags: ['overwhelmed', 'flooded', 'crying', 'shut down', 'orange'],
+            content: `### Contain and Validate\n“It’s all feeling like too much, isn’t it? I hear you. What you’re experiencing right now makes so much sense given everything you’re carrying. Anyone would feel overwhelmed in your shoes.”\n\n### Permission to Pause\n“We don’t need to unpack everything right now. In fact, we shouldn’t dive deeper into anything heavy at this moment, because I want to make sure you don’t leave here feeling even worse. Let’s focus on just helping you feel a little steadier.”\n\n### Grounding in Present\n“Can you feel the chair under you, or your feet on the ground? Let’s start there. Just notice those physical points of contact – it might help bring you back just a little from the flood of feelings.”\n\n### Supportive Reassurance\n“I’m right here, and I’m not overwhelmed by your overwhelm. You don’t have to hold it together for my sake. It’s okay to let it out – cry, sit silently, whatever you need. I’ve got you.”`
+        },
+        {
             id: 'orange-unusual-thoughts',
             title: 'Unusual Thoughts (Mild Paranoia or Cognitive Distortions)',
             category: 'Orange Zone',
@@ -303,6 +329,24 @@
         },
         // --- YELLOW ZONE ---
         {
+            id: 'yellow-resistant',
+            title: 'Resistant / Ambivalent About Therapy',
+            category: 'Yellow Zone',
+            emoji: '🟨',
+            color: 'yellow',
+            tags: ['resistance', 'ambivalence', 'motivation', 'therapy', 'yellow'],
+            content: `### Acknowledge Autonomy\n“It’s okay if you’re not sure about this or even if you don’t want help right now. You’re in control here – I’m not going to force anything on you.”\n\n### Gently Explore Resistance\n“Can I ask, what’s your biggest concern about accepting help? If you’d rather not say, that’s fine, but if we talk about it, maybe we can address it together.”\n\n### Affirm Their Pace\n“We can go as slow as you want. Maybe we don’t dive into anything deep today. We could just chat about surface stuff or even sit in silence if that feels safer.”\n\n### Subtle Encouragement\n“You’ve been fighting your battles alone for a while, I gather. You’ve survived up to now on your own strength. That’s impressive. Needing or accepting help doesn’t make you weak – if anything, it can lighten the load so you can keep going strong in other areas.”`
+        },
+        {
+            id: 'yellow-group-resistant',
+            title: 'Group Resistant',
+            category: 'Yellow Zone',
+            emoji: '🟨',
+            color: 'yellow',
+            tags: ['group', 'resistance', 'ambivalence', 'therapy', 'yellow'],
+            content: `### Validate Concerns\n"It sounds like you're not really feeling the group setting right now. That's fair. Group therapy isn't for everyone, and it can definitely feel awkward or unproductive at times."\n\n### Explore Specifics\n"Can you tell me a bit more about what's not working for you in group? Is it the topics, the other people, the format? Understanding the specific issue can help us see if it's something we can adjust."\n\n### Reframe Group's Purpose\n"Let's reframe this: What if group isn't about 'fixing' everything, but about practicing new ways of relating to yourself and others, even when it's imperfect?”\n\n### Empower Agency\n"This program asks a lot. And the reason it asks a lot is because the things you're working towards are significant. How can the group support you in meeting those demands today?”`
+        },
+        {
             id: 'yellow-manipulative-behaviors',
             title: '“Manipulative” or Testing Behaviors',
             category: 'Yellow Zone',
@@ -318,7 +362,16 @@
             emoji: '🟨',
             color: 'yellow',
             tags: ['withdrawn', 'shut down', 'minimizing', 'dissociation', 'yellow'],
-            content: `### Gently Call It Out\n“I notice you’re getting really quiet (or you keep saying you’re fine). Sometimes when people get really quiet, it’s because the feelings are too much or too hard to put into words. Does that feel true for you right now?”\n\n### Permission to Be Silent\n“We can sit here together without talking for a bit if that’s what you need. I’m not uncomfortable with the silence if you aren’t. Sometimes just having someone nearby is enough.”\n\n### Affirmation\n“It took courage to admit how lonely you feel. That’s a step toward change. You deserve to feel connected and valued – because you are.”`
+            content: `### Gently Call It Out\n“I notice you’re getting really quiet (or you keep saying you’re fine). Sometimes when people get really quiet, it’s because the feelings are too much or too hard to put into words. Does that feel true for you right now?”\n\n### Permission to Be Silent\n“We can sit here together without talking for a bit if that’s what you need. I’m not uncomfortable with the silence if you aren’t. Sometimes just having someone nearby is enough.”\n\n### Explore Connection\n“Let’s think of one small way to feel a bit more connected. Is there anyone – even an acquaintance or a family member – you could send a text to later today, just to say hi?”\n\n### Affirmation\n“It took courage to admit how lonely you feel. That’s a step toward change. You deserve to feel connected and valued – because you are.”`
+        },
+        {
+            id: 'yellow-loneliness',
+            title: 'Loneliness and Isolation',
+            category: 'Yellow Zone',
+            emoji: '🟨',
+            color: 'yellow',
+            tags: ['loneliness', 'isolation', 'connection', 'depression', 'yellow'],
+            content: `### Validate the Pain of Loneliness\n“Feeling lonely can be incredibly painful. I hear you – it’s like you’re aching for connection and it’s nowhere to be found. That’s a really heavy thing to carry.”\n\n### Assure Them They’re Not Alone Right Now\n“Well, you’re not alone at this exact moment. I’m here with you, and I care about what you’re feeling. I know I’m just one person and not a long-term fix, but I want you to know, right now in this space, you are seen and heard.”\n\n### Explore Opportunities for Connection (Gently)\n“Let’s think of one small way to feel a bit more connected. Is there anyone – even an acquaintance or a family member – you could send a text to later today, just to say hi? You don’t have to spill your guts to them, just a simple connection.”\n\n### Address Possible Self-Blame\n“Loneliness often makes people feel like ‘there’s something wrong with me.’ If you’re thinking that – there isn’t. Many people feel lonely for all kinds of reasons. It’s not because you’re unworthy of friendship or love.”`
         },
         {
             id: 'yellow-shame-guilt',
@@ -330,6 +383,15 @@
             content: `### Validate\n“It sounds like you’re holding yourself to an impossible standard. Whatever you did (or think you did), it doesn’t make you worthless or evil. It makes you human.”\n\n### Get Specific\n“Can we talk about what’s making you feel so ashamed? What do you believe you did that’s so unforgivable?”\n\n### Self-Compassion\n“Think about what you would say to a close friend if they were feeling exactly what you’re feeling. You deserve that same kindness. What if you tried talking to yourself in that gentle way, maybe saying something like ‘It’s okay to feel this. I’m here for you.’?”\n\n### Intervention Insight\n* Use **ACT Defusion: Distancing from Thoughts** ("I'm having the thought that...") to create distance from thoughts.\n* Apply **Cognitive Reframing: Behavior vs. Identity** to separate actions from self-worth.`
         },
         {
+            id: 'yellow-body-image',
+            title: 'Body Image Issues',
+            category: 'Yellow Zone',
+            emoji: '🟨',
+            color: 'yellow',
+            tags: ['body image', 'self-esteem', 'eating disorders', 'yellow'],
+            content: `### Validate Feelings (Don’t Dismiss)\n“It’s really hard to feel uncomfortable in your own body. That’s a very real kind of pain. In a world that bombards us with certain images, it’s no wonder you feel this way.”\n\n### Gently Challenge Harsh Statements\n“When you say, ‘I hate my body’ – that’s a strong, blanket statement. I wonder, are there any parts of your body or things it does that you don’t hate? Even something small, like ‘I like my eyes’ or ‘my body gets me from place to place each day’?”\n\n### Promote Body Neutrality over Negativity\n“You don’t have to love your body right now – that can feel impossible. Maybe we aim for neutrality first. For example, instead of ‘I hate my legs,’ maybe ‘My legs allow me to walk, even if I don’t like how they look.’ It’s acknowledging their function without focusing on appearance.”\n\n### Address Distorted Thoughts\n“When you look in the mirror, what’s the self-talk that kicks in? If it's a bully voice, we need to stand up to it. What would you say to a friend who said the exact same things about their body that you say about yours?”`
+        },
+        {
             id: 'yellow-hopelessness',
             title: 'Hopelessness or Despair (without active suicidal intent)',
             category: 'Yellow Zone',
@@ -337,6 +399,15 @@
             color: 'yellow',
             tags: ['hopelessness', 'despair', 'depression', 'motivation', 'yellow'],
             content: `### Borrow Hope\n“Sometimes we have to borrow hope from others. Is it okay if I believe that things can change, even if you don’t believe it today? I’ve seen people come out of pits like this, and I truly believe you can too.”\n\n### Focus on Immediate Next Step\n“When the future looks blank or bleak, don’t even worry about the future right now. Let’s just focus on getting through today, or even just the next hour.”\n\n### Compassion\n“Even if you can’t feel hope right now, I have enough for both of us. I know you’re tired. But you’ve made it to this day, even carrying all that despair – that’s not small thing.”`
+        },
+        {
+            id: 'yellow-terminal-illness',
+            title: 'Terminal Illness',
+            category: 'Yellow Zone',
+            emoji: '🟨',
+            color: 'yellow',
+            tags: ['illness', 'grief', 'mortality', 'existential', 'yellow'],
+            content: `### Initial Response & Presence\n"Thank you for reaching out today. I can only imagine how overwhelming this must be for you right now. Having a terminal diagnosis brings up so many intense feelings and fears. I'm here with you in this moment, and I want you to know that whatever you're feeling right now is completely valid and understandable."\n\n### Validating the Enormity of Their Experience\n"What you're going through - facing your own mortality - this is one of the most profound and difficult human experiences. There's no right way to feel about this. Whether you're feeling scared, angry, sad, numb, or all of these at once, it all makes sense."\n\n### Self-Compassion in the Face of Mortality\n"Facing terminal illness can bring up so much self-judgment. You deserve infinite compassion right now, especially from yourself. Let's try a **Self-Compassion Break (Kristin Neff)**."\n\n### Meaning-Making and Values Clarification\n"When we're facing limited time, it can help to get clear about what matters most. If you think about the time you have, what do you most want that time to include? How do you want to spend your energy? What relationships matter most?"`
         },
         {
             id: 'yellow-ocd-thoughts',
@@ -383,6 +454,15 @@
             tags: ['focus', 'distraction', 'adhd', 'avoidance', 'yellow'],
             content: `### Kindly Refocus\n“I notice we jumped to a different topic just now. That’s okay – sometimes our brains steer us away when we hit something uncomfortable or just because something else pops up. Let’s gently steer back to what we were talking about earlier, because I think that was important.”\n\n### Positive Reinforcement\n“You’re doing great. We covered the tough bit about your mom’s comment after all, and I really appreciate you sticking with that. I know it’s tempting to veer away, but you stayed with it. That’s progress!”`
         },
+        {
+            id: 'yellow-infidelity',
+            title: 'Infidelity',
+            category: 'Yellow Zone',
+            emoji: '🟨',
+            color: 'yellow',
+            tags: ['infidelity', 'betrayal', 'relationships', 'trust', 'yellow'],
+            content: `### Immediate Stabilization & Grounding\n"What you've discovered is a major shock to your system. Your body and mind are probably feeling like they're in crisis mode right now. That's completely normal when our world gets turned upside down like this."\n\n### Validating the Crisis Response\n"What you're feeling right now - the shock, the anger, the hurt - all of that makes complete sense. Discovering infidelity is a form of trauma. Your reaction is normal and valid."\n\n### Self-Compassion in Crisis\n"Right now, there might be a voice in your head blaming you. That self-blame is common, but it's not helpful and it's not accurate. Let's try a **Self-Compassion Break (Kristin Neff)**."\n\n### Immediate vs. Long-term Decisions\n"You might be feeling pressure to make big decisions right now. But you're in crisis mode, and that isn't the best time for life-changing decisions. Your only job right now is to take care of yourself through this crisis."`
+        },
         // --- GREEN ZONE ---
         {
             id: 'green-global-anxiety',
@@ -391,7 +471,16 @@
             emoji: '💚',
             color: 'green',
             tags: ['anxiety', 'global events', 'politics', 'eco-anxiety', 'control', 'green'],
-            content: `### Validate\n“It makes complete sense that you’re feeling [anxious/angry/overwhelmed] given what’s happening in the world. These are heavy and uncertain times, and your feelings are a very understandable response.”\n\n### Address Fears of Death/Cosmic Insignificance\n“A lot of existential dread comes from realizing our own mortality or how small we are in the vast universe. That can be scary, but it can also be seen another way: If nothing ultimately matters on a cosmic scale, then maybe we’re free to create our own meaning here and now.”\n\n### Intervention Insight\nUse **Circles of Control, Influence, and Concern** to focus energy effectively.`
+            content: `### Validate\n“It makes complete sense that you’re feeling [anxious/angry/overwhelmed] given what’s happening in the world. These are heavy and uncertain times, and your feelings are a very understandable response.”\n\n### Focus on Control vs. Concern\n“One thing that can help is to separate what you can control from what you can’t. We can’t single-handedly solve [the big issue] overnight, but we can control some actions in our own lives or communities.”\n\n### Intervention Insight\nUse **Circles of Control, Influence, and Concern** to focus energy effectively.`
+        },
+        {
+            id: 'green-existential',
+            title: 'Existential Concerns',
+            category: 'Green Zone',
+            emoji: '💚',
+            color: 'green',
+            tags: ['existential', 'meaning', 'purpose', 'mortality', 'green'],
+            content: `### Admire Depth and Acknowledge Pain\n“These are some of the biggest, most profound questions we face as human beings – meaning, purpose, our place in the world. It makes sense that they feel heavy and even overwhelming. Not everyone has the courage to even voice these thoughts.”\n\n### Explore Values and Sources of Meaning\n“When you think about ‘meaning’ or ‘purpose,’ are there any moments or activities in your life that even briefly give you a sense of meaning? It could be as simple as moments in nature, helping a friend, creating something, learning something new.”\n\n### Address Fears of Death or Cosmic Insignificance\n“A lot of existential dread comes from realizing our own mortality or how small we are in the vast universe. That can be scary, but it can also be seen another way: If nothing ultimately matters on a cosmic scale, then maybe we’re free to create our own meaning here and now.”`
         },
         {
             id: 'green-chronic-pain',
@@ -418,7 +507,7 @@
             emoji: '💚',
             color: 'green',
             tags: ['enmeshment', 'dependency', 'boundaries', 'identity', 'relationships', 'green'],
-            content: `### Validate Difficulty\n“It sounds like you feel really tangled up in this relationship – like your feelings and decisions are almost merged with theirs. That can be comforting at times, but also suffocating or confusing.”\n\n### Intervention Insight\nExplore **Boundary Setting Exploration & Practice**.`
+            content: `### Validate Difficulty\n“It sounds like you feel really tangled up in this relationship – like your feelings and decisions are almost merged with theirs. That can be comforting at times, but also suffocating or confusing.”\n\n### Identify Personal Values and Interests\n“Let’s talk about you – just you. What are some things you enjoy or value that are independent of this other person? It could be hobbies, goals, even opinions on things like favorite movies or foods.”\n\n### Intervention Insight\nExplore **Boundary Setting Exploration & Practice**.`
         },
         {
             id: 'green-feeling-stuck',
@@ -445,7 +534,7 @@
             emoji: '💚',
             color: 'green',
             tags: ['decisions', 'indecisive', 'anxiety', 'choices', 'green'],
-            content: `### Frame the Issue\n“Decision-making can be really stressful, especially if you’re afraid of making the wrong choice or if you’ve got a lot of options. It’s actually great that you want to work on this; being more confident in your decisions can reduce a lot of anxiety.”\n\n### Listen to Gut and Head\n“It’s good to analyze, but also consider your gut feeling. Our instincts are basically our subconscious pulling from past experiences and values.”\n\n### Intervention Insight\nUse **Structured Problem-Solving** or the **"Cost-Benefit Analysis of a Thought"** to examine consequences.`
+            content: `### Frame the Issue\n“Decision-making can be really stressful, especially if you’re afraid of making the wrong choice or if you’ve got a lot of options. It’s actually great that you want to work on this; being more confident in your decisions can reduce a lot of anxiety.”\n\n### Listen to Gut and Head\n“It’s good to analyze, but also consider your gut feeling. Our instincts are basically our subconscious pulling from past experiences and values.”\n\n### Intervention Insight\nUse **Structured Problem-Solving** or the **Cost-Benefit Analysis of a Thought** to examine consequences.`
         },
         {
             id: 'green-perfectionism',
@@ -503,6 +592,15 @@
             color: 'blue',
             tags: ['dbt', 'acceptance', 'suffering', 'reality'],
             content: `### Core Rationale\nAccepting reality as it is, without judgment, approval, or bitterness. It is about letting go of the fight against what you cannot change to reduce suffering.\n\n### How to Practice\n1.  **Acknowledge Reality:** Notice when you are fighting reality ("This shouldn't be happening!").\n2.  **State the Facts:** Remind yourself, "This is what happened. I cannot change it."\n3.  **Accept with Body & Mind:** Allow yourself to feel the disappointment or sadness, without letting it turn into bitterness or anger at reality itself.\n4.  **Focus on What's Next:** Ask, "Given that this is the reality, what is the wise thing for me to do now?"`
+        },
+        {
+            id: 'intervention-name-urge-challenge-urge',
+            title: 'Name the Urge, Challenge the Urge',
+            category: 'Intervention',
+            subCategory: 'Core DBT Skills',
+            color: 'blue',
+            tags: ['dbt', 'urges', 'coping', 'self-control'],
+            content: `### Core Rationale\nA skill to create distance from an intense urge by first identifying it and then exploring alternative actions.\n\n### How to Practice\n1. **Name the Urge:** "When you feel a really strong urge, like an intense desire to [client's specific urge], the first step can be just to name it. Silently to yourself, or out loud with me, can you say, 'There's the urge to [specific urge]'?"\n2. **Get Curious:** "Okay, now that we've named it... let's get curious about it for a second, without judgment and without immediately acting on it."\n3. **Challenge the Urge:** "Ask yourself... If I don't follow this urge right now, what's one small thing I could do instead? What would be a more helpful choice?"`
         },
         {
             id: 'intervention-opposite-action',
@@ -649,15 +747,6 @@
             content: `### Core Rationale\nA framework (Specific, Measurable, Achievable, Relevant, Time-bound) to turn vague ideas into actionable goals.\n\n### The SMART Framework\n* **S**pecific: "Let's get really clear on what you want to accomplish. Instead of 'get healthier,' what specifically does that mean to you?"\n* **M**easurable: "How will you know when you've achieved this goal, or how will you track your progress?"\n* **A**chievable: "Given your current circumstances, does this goal feel realistic and attainable? What might make it more achievable?"\n* **R**elevant: "Why is this goal important to you right now? How does it align with your bigger values?"\n* **T**ime-bound: "What's a realistic timeframe for achieving this goal? When do you want to start?"`
         },
         {
-            id: 'intervention-name-challenge-urge',
-            title: 'Name the Urge, Challenge the Urge',
-            category: 'Intervention',
-            subCategory: 'Core DBT Skills',
-            color: 'blue',
-            tags: ['dbt', 'urges', 'coping', 'self-control'],
-            content: `### Core Rationale\nA skill to create distance from an intense urge by first identifying it and then exploring alternative actions.\n\n### How to Practice\n1. **Name the Urge:** "When you feel a really strong urge, like an intense desire to [client's specific urge], the first step can be just to name it. Silently to yourself, or out loud with me, can you say, 'There's the urge to [specific urge]'?"\n2. **Get Curious:** "Okay, now that we've named it... let's get curious about it for a second, without judgment and without immediately acting on it."\n3. **Challenge the Urge:** "Ask yourself... If I don't follow this urge right now, what's one small thing I could do instead? What would be a more helpful choice?"`
-        },
-        {
             id: 'intervention-cognitive-reframe-behavior-identity',
             title: 'Cognitive Reframing: Behavior vs. Identity',
             category: 'Intervention',
@@ -708,18 +797,22 @@
         sessionNotes: `### Session Notes\n\n**Date:** ${new Date().toLocaleDateString()}\n\n**Client Presentation:**\n- \n\n**Key Issues Discussed:**\n- \n\n**Interventions Used:**\n- \n\n**Client Response:**\n- \n\n**Plan / Next Steps:**\n- `
     };
 
-
     // ---- STATE AND DATA ----
     const state = {
         favorites: [],
         recentlyViewed: [],
-        usedThisSession: [], // New state for session tracker
+        usedThisSession: [],
         contentMap: new Map(),
-        interventionMap: new Map(), // New map for clickable insights
+        interventionMap: new Map(),
         currentView: 'dashboard',
         currentOpenScenario: null,
         scratchpadContent: '',
         scratchpadMode: 'write', 
+        timer: {
+            intervalId: null,
+            elapsedSeconds: 0,
+            isPaused: true,
+        }
     };
 
     const colorMap = {
@@ -737,6 +830,7 @@
         searchBox: document.getElementById('search-box'),
         toast: document.getElementById('toast'),
         scenarioModal: document.getElementById('scenario-modal'),
+        modalContentWrapper: document.getElementById('modal-content-wrapper'),
         modalTitle: document.getElementById('modal-title'),
         modalBody: document.getElementById('modal-body'),
         modalContext: document.getElementById('modal-context'),
@@ -751,6 +845,10 @@
         confirmationMessage: document.getElementById('confirmation-message'),
         confirmationConfirm: document.getElementById('confirmation-confirm'),
         confirmationCancel: document.getElementById('confirmation-cancel'),
+        sessionTimer: document.getElementById('session-timer'),
+        sessionTimerContainer: document.getElementById('session-timer-container'),
+        timerToggleBtn: document.getElementById('timer-toggle-btn'),
+        timerResetBtn: document.getElementById('timer-reset-btn'),
     };
 
     // ---- STATE PERSISTENCE ----
@@ -770,8 +868,25 @@
     function initializeDataMap() {
         const allContent = [...clinicalData, ...interventionsData, ...scriptsData];
         allContent.forEach(item => state.contentMap.set(item.id, item));
-        // Use a map to link intervention titles within content to their IDs
-        interventionsData.forEach(item => state.interventionMap.set(item.title, item.id));
+        interventionsData.forEach(item => {
+            state.interventionMap.set(item.title, item.id);
+            item.referencedIn = []; // Initialize for bi-directional linking
+        });
+        buildInterventionLinks();
+    }
+
+    function buildInterventionLinks() {
+        clinicalData.forEach(scenario => {
+            state.interventionMap.forEach((interventionId, interventionTitle) => {
+                const regex = new RegExp(`\\*\\*(${interventionTitle})\\*\\*`, 'g');
+                if (scenario.content.match(regex)) {
+                    const intervention = interventionsData.find(i => i.id === interventionId);
+                    if (intervention && !intervention.referencedIn.includes(scenario.id)) {
+                        intervention.referencedIn.push(scenario.id);
+                    }
+                }
+            });
+        });
     }
 
     // ---- RENDERING ----
@@ -779,7 +894,7 @@
         const isFavorite = state.favorites.includes(scenario.id);
         const colors = colorMap[scenario.color] || colorMap.indigo;
         const tagsHtml = (scenario.tags || []).slice(0, 3).map(tag => 
-            `<span class="text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">${tag}</span>`
+            `<button class="tag-btn text-xs font-medium mr-1.5 mb-1.5 px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" data-tag="${tag}">${tag}</button>`
         ).join('');
 
         return `
@@ -789,7 +904,7 @@
                     <span class="mr-2">${scenario.emoji || ''}</span>
                     <span class="flex-1">${scenario.title}</span>
                 </h3>
-                <div class="mt-3 text-xs text-gray-500 dark:text-gray-400 flex-1">
+                <div class="mt-3 text-xs text-gray-500 dark:text-gray-400 flex-1 flex flex-wrap items-start">
                     ${tagsHtml}
                 </div>
                 <div class="mt-4 flex justify-between items-center">
@@ -804,103 +919,107 @@
     }
 
     function renderCardList(container, items, message, search_query = '') {
-        container.className = ''; // Reset class
-        let headerHtml = '';
-        if(search_query){
-            headerHtml = `<div class="col-span-full mb-4 flex items-center gap-4">
-                <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-300">Showing ${items.length} results for "${search_query}"</h2>
-                <button id="clear-search-btn" class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Clear</button>
-            </div>`;
-        }
-        
-        container.innerHTML = headerHtml + '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>';
-        const grid = container.querySelector('.grid');
+        container.style.opacity = '0';
+        setTimeout(() => {
+            let headerHtml = '';
+            if(search_query){
+                headerHtml = `<div class="col-span-full mb-4 flex items-center gap-4">
+                    <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-300">Showing ${items.length} results for "${search_query}"</h2>
+                    <button id="clear-search-btn" class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Clear</button>
+                </div>`;
+            }
+            
+            container.innerHTML = headerHtml + '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>';
+            const grid = container.querySelector('.grid');
 
-        if (items.length === 0) {
-            grid.innerHTML = `<div class="col-span-full text-center text-gray-500 py-12">${message}</div>`;
-        } else {
-            grid.innerHTML = items.map(createScenarioCard).join('');
-        }
-
-        document.getElementById('clear-search-btn')?.addEventListener('click', () => {
-            dom.searchBox.value = '';
-            switchView(state.currentView);
-        });
-        lucide.createIcons();
+            if (items.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center text-gray-500 py-12">${message}</div>`;
+            } else {
+                grid.innerHTML = items.map(createScenarioCard).join('');
+            }
+            lucide.createIcons();
+            container.style.opacity = '1';
+        }, 300);
     }
 
     function renderDashboard() {
-        dom.contentArea.className = '';
-        const zones = ['Red Zone', 'Orange Zone', 'Yellow Zone', 'Green Zone'];
-        const zoneEmojis = {'Red Zone': '🔴', 'Orange Zone': '🟠', 'Yellow Zone': '🟨', 'Green Zone': '💚'};
-        const quickAccessIds = ['script-boundary-setting', 'intervention-tipp', 'intervention-self-compassion-break', 'script-end-of-session'];
-        const quickAccessItems = quickAccessIds.map(id => state.contentMap.get(id)).filter(Boolean);
+        dom.contentArea.style.opacity = '0';
+        setTimeout(() => {
+            const zones = ['Red Zone', 'Orange Zone', 'Yellow Zone', 'Green Zone'];
+            const zoneEmojis = {'Red Zone': '🔴', 'Orange Zone': '🟠', 'Yellow Zone': '🟨', 'Green Zone': '💚'};
+            const quickAccessIds = ['script-boundary-setting', 'intervention-tipp', 'intervention-self-compassion-break', 'script-end-of-session'];
+            const quickAccessItems = quickAccessIds.map(id => state.contentMap.get(id)).filter(Boolean);
 
-        let dashboardHtml = `
-            <div class="mb-10">
-                <h2 class="text-2xl font-bold mb-4 pb-2 border-b-2 border-gray-300 dark:border-gray-600 flex items-center gap-2">
-                    <i data-lucide="zap" class="w-6 h-6 text-gray-500"></i> Quick Access
-                </h2>
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    ${quickAccessItems.map(item => `
-                        <button class="view-btn p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-all text-left flex flex-col justify-between h-full border-l-4 ${colorMap[item.color]?.border || ''}" data-id="${item.id}">
-                            <span class="font-semibold text-gray-800 dark:text-gray-200">${item.title}</span>
-                            <span class="text-xs mt-2 ${colorMap[item.color]?.text || ''}">${item.category}</span>
-                        </button>
-                    `).join('')}
+            let dashboardHtml = `
+                <div class="mb-10">
+                    <h2 class="text-2xl font-bold mb-4 pb-2 border-b-2 border-gray-300 dark:border-gray-600 flex items-center gap-2">
+                        <i data-lucide="zap" class="w-6 h-6 text-gray-500"></i> Quick Access
+                    </h2>
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        ${quickAccessItems.map(item => `
+                            <button class="view-btn p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-all text-left flex flex-col justify-between h-full border-l-4 ${colorMap[item.color]?.border || ''}" data-id="${item.id}">
+                                <span class="font-semibold text-gray-800 dark:text-gray-200">${item.title}</span>
+                                <span class="text-xs mt-2 ${colorMap[item.color]?.text || ''}">${item.category}</span>
+                            </button>
+                        `).join('')}
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
 
-        zones.forEach(zone => {
-            const itemsInZone = clinicalData.filter(item => item.category === zone);
-            if (itemsInZone.length > 0) {
-                const zoneColor = itemsInZone[0].color;
-                dashboardHtml += `
-                    <div class="mb-10">
-                        <h2 class="text-2xl font-bold mb-4 pb-2 border-b-2 border-${zoneColor}-500 text-${zoneColor}-600 dark:text-${zoneColor}-400">${zoneEmojis[zone]} ${zone}</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            ${itemsInZone.map(createScenarioCard).join('')}
+            zones.forEach(zone => {
+                const itemsInZone = clinicalData.filter(item => item.category === zone);
+                if (itemsInZone.length > 0) {
+                    const zoneColor = itemsInZone[0].color;
+                    dashboardHtml += `
+                        <div class="mb-10">
+                            <h2 class="text-2xl font-bold mb-4 pb-2 border-b-2 border-${zoneColor}-500 text-${zoneColor}-600 dark:text-${zoneColor}-400">${zoneEmojis[zone]} ${zone}</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                ${itemsInZone.map(createScenarioCard).join('')}
+                            </div>
                         </div>
-                    </div>
-                `;
-            }
-        });
+                    `;
+                }
+            });
 
-        dom.contentArea.innerHTML = dashboardHtml;
-        lucide.createIcons();
+            dom.contentArea.innerHTML = dashboardHtml;
+            lucide.createIcons();
+            dom.contentArea.style.opacity = '1';
+        }, 300);
     }
-    
-    function renderCategorizedList(container, items, categoryTitle, message) {
-        container.className = ''; // Reset class
-        const grouped = items.reduce((acc, item) => {
-            const group = item.subCategory || 'General';
-            if (!acc[group]) {
-                acc[group] = [];
-            }
-            acc[group].push(item);
-            return acc;
-        }, {});
 
-        let html = `<h1 class="text-3xl font-bold mb-8">${categoryTitle}</h1>`;
-        
-        if (Object.keys(grouped).length === 0) {
-            html += `<div class="text-center text-gray-500 py-12">${message}</div>`;
-        } else {
-            const sortedGroupNames = Object.keys(grouped).sort();
-            for (const groupName of sortedGroupNames) {
-                html += `
-                    <div class="mb-10">
-                        <h2 class="text-xl font-bold mb-4 pb-2 border-b-2 border-gray-300 dark:border-gray-600">${groupName}</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            ${grouped[groupName].map(createScenarioCard).join('')}
+    function renderCategorizedList(container, items, categoryTitle, message) {
+        container.style.opacity = '0';
+        setTimeout(() => {
+            const grouped = items.reduce((acc, item) => {
+                const group = item.subCategory || 'General';
+                if (!acc[group]) {
+                    acc[group] = [];
+                }
+                acc[group].push(item);
+                return acc;
+            }, {});
+
+            let html = `<h1 class="text-3xl font-bold mb-8">${categoryTitle}</h1>`;
+            
+            if (Object.keys(grouped).length === 0) {
+                html += `<div class="text-center text-gray-500 py-12">${message}</div>`;
+            } else {
+                const sortedGroupNames = Object.keys(grouped).sort();
+                for (const groupName of sortedGroupNames) {
+                    html += `
+                        <div class="mb-10">
+                            <h2 class="text-xl font-bold mb-4 pb-2 border-b-2 border-gray-300 dark:border-gray-600">${groupName}</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                ${grouped[groupName].map(createScenarioCard).join('')}
+                            </div>
                         </div>
-                    </div>
-                `;
+                    `;
+                }
             }
-        }
-        container.innerHTML = html;
-        lucide.createIcons();
+            container.innerHTML = html;
+            lucide.createIcons();
+            container.style.opacity = '1';
+        }, 300);
     }
 
     function renderUsedThisSession() {
@@ -929,60 +1048,7 @@
         `;
         lucide.createIcons();
     }
-
-    function openModal(scenarioId) {
-        const scenario = state.contentMap.get(scenarioId);
-        if (!scenario) return;
-
-        state.currentOpenScenario = scenario;
-        
-        // Render context
-        const categoryColor = colorMap[scenario.color] || colorMap.indigo;
-        const contextTags = (scenario.tags || []).map(tag => `<span class="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200">${tag}</span>`).join('');
-        dom.modalContext.innerHTML = `<span class="text-xs font-semibold px-2 py-0.5 rounded-full ${categoryColor.bg} ${categoryColor.text}">${scenario.category}</span>` + contextTags;
-
-        dom.modalTitle.innerHTML = `<span class="mr-3">${scenario.emoji || ''}</span> ${scenario.title}`;
-        
-        // Process content for clickable insights
-        let processedContent = scenario.content;
-        state.interventionMap.forEach((id, title) => {
-            // Match the title when it's bolded in the markdown
-            const regex = new RegExp(`\\*\\*(${title})\\*\\*`, 'g');
-            processedContent = processedContent.replace(regex, `<button class="insight-link" data-id="${id}">$1</button>`);
-        });
-        dom.modalBody.innerHTML = marked.parse(processedContent);
-        dom.scenarioModal.classList.remove('hidden');
-        
-        // Add to trackers
-        if (!state.usedThisSession.includes(scenarioId)) {
-            state.usedThisSession.push(scenarioId);
-            renderUsedThisSession();
-        }
-        if (!state.recentlyViewed.includes(scenarioId)) {
-            state.recentlyViewed = [scenarioId, ...state.recentlyViewed.filter(id => id !== scenarioId)].slice(0, 20);
-            saveState();
-        }
-        
-        // Handle nav buttons
-        updateModalNav();
-        lucide.createIcons();
-    }
-
-    function updateModalNav() {
-        const currentList = getCurrentList();
-        const currentIndex = currentList.findIndex(item => item.id === state.currentOpenScenario.id);
-        
-        dom.modalPrev.disabled = currentIndex <= 0;
-        dom.modalNext.disabled = currentIndex >= currentList.length - 1;
-
-        dom.modalPrev.onclick = () => {
-            if (currentIndex > 0) openModal(currentList[currentIndex - 1].id);
-        };
-        dom.modalNext.onclick = () => {
-            if (currentIndex < currentList.length - 1) openModal(currentList[currentIndex + 1].id);
-        };
-    }
-
+    
     function renderScratchpad() {
         dom.contentArea.className = 'h-full flex flex-col';
         dom.contentArea.innerHTML = `
@@ -1023,67 +1089,123 @@
         lucide.createIcons();
         attachScratchpadEvents();
     }
-    
-    // ---- TABS & VIEWS ----
-    function getCurrentList() {
-        const q = dom.searchBox.value.toLowerCase().trim();
-        if (q) {
-            return Array.from(state.contentMap.values()).filter(item =>
-                item.title.toLowerCase().includes(q) ||
-                (item.content && item.content.toLowerCase().includes(q)) ||
-                (item.tags && item.tags.some(tag => tag.toLowerCase().includes(q)))
-            );
-        }
 
-        switch (state.currentView) {
-            case 'favorites': return state.favorites.map(id => state.contentMap.get(id)).filter(Boolean);
-            case 'recents': return state.recentlyViewed.map(id => state.contentMap.get(id)).filter(Boolean);
-            case 'interventions': return interventionsData;
-            case 'scripts': return scriptsData;
-            case 'dashboard': return clinicalData;
-            default: return Array.from(state.contentMap.values());
-        }
-    }
+    function openModal(scenarioId) {
+        const scenario = state.contentMap.get(scenarioId);
+        if (!scenario) return;
 
-    function switchView(viewId) {
-        state.currentView = viewId;
-        // Update sidebar link styles
-        document.querySelectorAll('.sidebar-link').forEach(link => {
-            const isSelected = link.dataset.tab === viewId;
-            const isScratchpad = viewId === 'scratchpad';
-            link.classList.toggle('bg-indigo-100', isSelected && !isScratchpad);
-            link.classList.toggle('dark:bg-indigo-800', isSelected && !isScratchpad);
-            link.classList.toggle('bg-teal-100', isSelected && isScratchpad);
-            link.classList.toggle('dark:bg-teal-900', isSelected && isScratchpad);
-            link.classList.toggle('text-indigo-700', isSelected && !isScratchpad);
-            link.classList.toggle('dark:text-indigo-200', isSelected && !isScratchpad);
-            link.classList.toggle('text-teal-700', isSelected && isScratchpad);
-            link.classList.toggle('dark:text-teal-200', isSelected && isScratchpad);
-            link.classList.toggle('font-semibold', isSelected);
+        state.currentOpenScenario = scenario;
+        
+        const categoryColor = colorMap[scenario.color] || colorMap.indigo;
+        const contextTags = (scenario.tags || []).map(tag => `<button class="tag-btn text-xs font-medium px-2 py-0.5 rounded-full bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors" data-tag="${tag}">${tag}</button>`).join('');
+        dom.modalContext.innerHTML = `<span class="text-xs font-semibold px-2 py-0.5 rounded-full ${categoryColor.bg} ${categoryColor.text}">${scenario.category}</span>` + contextTags;
+
+        dom.modalTitle.innerHTML = `<span class="mr-3">${scenario.emoji || ''}</span> ${scenario.title}`;
+        
+        let processedContent = scenario.content;
+        state.interventionMap.forEach((id, title) => {
+            const regex = new RegExp(`\\*\\*(${title})\\*\\*`, 'g');
+            processedContent = processedContent.replace(regex, `<button class="insight-link" data-id="${id}">$1</button>`);
         });
 
-        dom.searchBox.value = ''; // Clear search on tab switch
+        // Bi-directional linking
+        if (scenario.category === 'Intervention' && scenario.referencedIn?.length > 0) {
+            const referencesHtml = scenario.referencedIn.map(id => {
+                const refScenario = state.contentMap.get(id);
+                return `<li><button class="insight-link" data-id="${id}">${refScenario.title}</button></li>`;
+            }).join('');
+            processedContent += `\n\n### Commonly Used For:\n<ul>${referencesHtml}</ul>`;
+        }
 
-        if (viewId === 'dashboard') {
-            renderDashboard();
-        } else if (viewId === 'scratchpad') {
-            renderScratchpad();
-        } else if (viewId === 'interventions') {
-            renderCategorizedList(dom.contentArea, interventionsData, 'Interventions', 'No interventions found.');
+        dom.modalBody.innerHTML = marked.parse(processedContent);
+        
+        dom.scenarioModal.classList.remove('modal-hidden');
+        dom.scenarioModal.classList.add('modal-visible');
+        setTimeout(() => {
+            dom.modalContentWrapper.classList.remove('opacity-0', 'scale-95');
+        }, 10);
+
+        if (!state.usedThisSession.includes(scenarioId)) {
+            state.usedThisSession.push(scenarioId);
+            renderUsedThisSession();
+        }
+        if (!state.recentlyViewed.includes(scenarioId)) {
+            state.recentlyViewed = [scenarioId, ...state.recentlyViewed.filter(id => id !== scenarioId)].slice(0, 20);
+            saveState();
+        }
+        
+        updateModalNav();
+        lucide.createIcons();
+    }
+    
+    function closeModal() {
+        dom.modalContentWrapper.classList.add('opacity-0', 'scale-95');
+        setTimeout(() => {
+            dom.scenarioModal.classList.add('modal-hidden');
+            dom.scenarioModal.classList.remove('modal-visible');
+        }, 300);
+    }
+    
+    function updateModalNav() {
+        const currentList = getCurrentList();
+        const currentIndex = currentList.findIndex(item => item.id === state.currentOpenScenario.id);
+        
+        dom.modalPrev.disabled = currentIndex <= 0;
+        dom.modalNext.disabled = currentIndex >= currentList.length - 1;
+
+        dom.modalPrev.onclick = () => {
+            if (currentIndex > 0) openModal(currentList[currentIndex - 1].id);
+        };
+        dom.modalNext.onclick = () => {
+            if (currentIndex < currentList.length - 1) openModal(currentList[currentIndex + 1].id);
+        };
+    }
+
+    // ---- TIMER LOGIC ----
+    function toggleTimer() {
+        state.timer.isPaused = !state.timer.isPaused;
+        if (state.timer.isPaused) {
+            clearInterval(state.timer.intervalId);
+            state.timer.intervalId = null;
+            dom.timerToggleBtn.innerHTML = `<i data-lucide="play" class="w-4 h-4"></i>`;
         } else {
-            let items = [];
-            let message = 'No items found.';
-            if (viewId === 'favorites') {
-                items = state.favorites.map(id => state.contentMap.get(id)).filter(Boolean);
-                message = 'No favorites yet. Click the star on a card to add one.';
-            } else if (viewId === 'recents') {
-                items = state.recentlyViewed.map(id => state.contentMap.get(id)).filter(Boolean);
-                message = 'No recently viewed items.';
-            } else if (viewId === 'scripts') {
-                items = scriptsData;
-                message = 'No scripts found.';
+            if (!state.timer.intervalId) {
+                state.timer.intervalId = setInterval(updateTimer, 1000);
             }
-            renderCardList(dom.contentArea, items, message);
+            dom.timerToggleBtn.innerHTML = `<i data-lucide="pause" class="w-4 h-4"></i>`;
+        }
+        lucide.createIcons();
+    }
+
+    function resetTimer() {
+        clearInterval(state.timer.intervalId);
+        state.timer.intervalId = null;
+        state.timer.elapsedSeconds = 0;
+        state.timer.isPaused = true;
+        dom.sessionTimer.textContent = '00:00';
+        dom.timerToggleBtn.innerHTML = `<i data-lucide="play" class="w-4 h-4"></i>`;
+        lucide.createIcons();
+        
+        // Reset color
+        dom.sessionTimerContainer.classList.remove('bg-yellow-100', 'dark:bg-yellow-900', 'bg-red-100', 'dark:bg-red-900');
+        dom.sessionTimerContainer.classList.add('bg-green-100', 'dark:bg-green-900');
+    }
+
+    function updateTimer() {
+        if (state.timer.isPaused) return;
+        state.timer.elapsedSeconds++;
+        const minutes = Math.floor(state.timer.elapsedSeconds / 60);
+        const seconds = state.timer.elapsedSeconds % 60;
+        dom.sessionTimer.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        
+        // Update color based on time
+        dom.sessionTimerContainer.classList.remove('bg-green-100', 'dark:bg-green-900', 'bg-yellow-100', 'dark:bg-yellow-900', 'bg-red-100', 'dark:bg-red-900');
+        if (minutes < 10) {
+            dom.sessionTimerContainer.classList.add('bg-green-100', 'dark:bg-green-900');
+        } else if (minutes < 15) {
+            dom.sessionTimerContainer.classList.add('bg-yellow-100', 'dark:bg-yellow-900');
+        } else {
+            dom.sessionTimerContainer.classList.add('bg-red-100', 'dark:bg-red-900');
         }
     }
 
@@ -1107,11 +1229,9 @@
                 showToast('Added to favorites!', 'success');
             }
             saveState();
-            // Re-render current view to reflect favorite change
             if (state.currentView === 'favorites' || dom.searchBox.value) {
                 switchView(state.currentView);
             } else {
-                // Just update the icon without full re-render for performance
                 const icon = favoriteBtn.querySelector('i');
                 icon.classList.toggle('text-yellow-500', !isFavorite);
                 icon.classList.toggle('fill-current', !isFavorite);
@@ -1128,18 +1248,32 @@
             return;
         }
 
+        const tagBtn = e.target.closest('.tag-btn');
+        if (tagBtn) {
+            const tag = tagBtn.dataset.tag;
+            closeModal();
+            dom.searchBox.value = tag;
+            dom.searchBox.dispatchEvent(new Event('input'));
+            return;
+        }
+
         const insightLink = e.target.closest('.insight-link');
         if(insightLink) {
             const id = insightLink.dataset.id;
-            // We want the new modal to feel like it's replacing the old one
-            dom.scenarioModal.classList.add('opacity-0', 'transition-opacity');
+            dom.modalContentWrapper.classList.add('opacity-0', 'scale-95');
             setTimeout(() => {
                 openModal(id);
-                dom.scenarioModal.classList.remove('opacity-0');
             }, 150);
+            return;
+        }
+        
+        if (e.target.closest('#clear-search-btn')) {
+            dom.searchBox.value = '';
+            switchView(state.currentView);
+            return;
         }
     }
-    
+
     function attachScratchpadEvents() {
         document.getElementById('toggle-scratchpad-mode')?.addEventListener('click', () => {
             state.scratchpadMode = (state.scratchpadMode === 'write') ? 'preview' : 'write';
@@ -1189,24 +1323,7 @@
         });
         document.addEventListener('click', () => templateDropdown?.classList.add('hidden'));
     }
-
-    dom.searchBox?.addEventListener('input', (e) => {
-        const q = e.target.value.toLowerCase().trim();
-        if (state.currentView === 'scratchpad') return;
-
-        if (!q) {
-            switchView(state.currentView);
-            return;
-        }
-        
-        const filtered = Array.from(state.contentMap.values()).filter(item =>
-            item.title.toLowerCase().includes(q) ||
-            (item.content && item.content.toLowerCase().includes(q)) ||
-            (item.tags && item.tags.some(tag => tag.toLowerCase().includes(q)))
-        );
-        renderCardList(dom.contentArea, filtered, 'No matches found for your search.', q);
-    });
-
+    
     // ---- UTILITIES ----
     function showToast(message, type = 'info') { // types: success, info, error
         const colors = {
@@ -1257,7 +1374,11 @@
     function showConfirmationModal(title, message, onConfirm) {
         dom.confirmationTitle.textContent = title;
         dom.confirmationMessage.textContent = message;
-        dom.confirmationModal.classList.remove('hidden');
+        dom.confirmationModal.classList.remove('modal-hidden');
+        dom.confirmationModal.classList.add('modal-visible');
+         setTimeout(() => {
+            dom.confirmationModal.querySelector('.modal-content').classList.remove('opacity-0', 'scale-95');
+        }, 10);
         
         const confirmHandler = () => {
             onConfirm();
@@ -1266,13 +1387,108 @@
         const cancelHandler = () => hideConfirmationModal();
 
         const hideConfirmationModal = () => {
-            dom.confirmationModal.classList.add('hidden');
-            dom.confirmationConfirm.removeEventListener('click', confirmHandler);
-            dom.confirmationCancel.removeEventListener('click', cancelHandler);
+            dom.confirmationModal.querySelector('.modal-content').classList.add('opacity-0', 'scale-95');
+            setTimeout(() => {
+                dom.confirmationModal.classList.add('modal-hidden');
+                dom.confirmationModal.classList.remove('modal-visible');
+                dom.confirmationConfirm.removeEventListener('click', confirmHandler);
+                dom.confirmationCancel.removeEventListener('click', cancelHandler);
+            }, 300);
         };
         
         dom.confirmationConfirm.addEventListener('click', confirmHandler);
         dom.confirmationCancel.addEventListener('click', cancelHandler);
+    }
+
+    function debounce(func, delay) {
+        let timeout;
+        return function(...args) {
+            const context = this;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(context, args), delay);
+        };
+    }
+
+    const debouncedSearch = debounce((e) => {
+        const q = e.target.value.toLowerCase().trim();
+        if (state.currentView === 'scratchpad') return;
+
+        if (!q) {
+            switchView(state.currentView);
+            return;
+        }
+        
+        const filtered = Array.from(state.contentMap.values()).filter(item =>
+            item.title.toLowerCase().includes(q) ||
+            (item.content && item.content.toLowerCase().includes(q)) ||
+            (item.tags && item.tags.some(tag => tag.toLowerCase().includes(q)))
+        );
+        renderCardList(dom.contentArea, filtered, 'No matches found for your search.', q);
+    }, 300);
+    
+    // ---- TABS & VIEWS ----
+    function getCurrentList() {
+        const q = dom.searchBox.value.toLowerCase().trim();
+        if (q) {
+            return Array.from(state.contentMap.values()).filter(item =>
+                item.title.toLowerCase().includes(q) ||
+                (item.content && item.content.toLowerCase().includes(q)) ||
+                (item.tags && item.tags.some(tag => tag.toLowerCase().includes(q)))
+            );
+        }
+
+        switch (state.currentView) {
+            case 'favorites': return state.favorites.map(id => state.contentMap.get(id)).filter(Boolean);
+            case 'recents': return state.recentlyViewed.map(id => state.contentMap.get(id)).filter(Boolean);
+            case 'interventions': return interventionsData;
+            case 'scripts': return scriptsData;
+            case 'dashboard': return clinicalData;
+            default: return Array.from(state.contentMap.values());
+        }
+    }
+
+    function switchView(viewId) {
+        state.currentView = viewId;
+        // Update sidebar link styles
+        document.querySelectorAll('.sidebar-link').forEach(link => {
+            const isSelected = link.dataset.tab === viewId;
+            const isScratchpad = viewId === 'scratchpad';
+            link.classList.toggle('bg-indigo-100', isSelected && !isScratchpad);
+            link.classList.toggle('dark:bg-indigo-800', isSelected && !isScratchpad);
+            link.classList.toggle('bg-teal-100', isSelected && isScratchpad);
+            link.classList.toggle('dark:bg-teal-900', isSelected && isScratchpad);
+            link.classList.toggle('text-indigo-700', isSelected && !isScratchpad);
+            link.classList.toggle('dark:text-indigo-200', isSelected && !isScratchpad);
+            link.classList.toggle('text-teal-700', isSelected && isScratchpad);
+            link.classList.toggle('dark:text-teal-200', isSelected && isScratchpad);
+            link.classList.toggle('font-semibold', isSelected);
+        });
+
+        if (dom.searchBox.value) {
+            dom.searchBox.value = '';
+        }
+
+        if (viewId === 'dashboard') {
+            renderDashboard();
+        } else if (viewId === 'scratchpad') {
+            renderScratchpad();
+        } else if (viewId === 'interventions') {
+            renderCategorizedList(dom.contentArea, interventionsData, 'Interventions', 'No interventions found.');
+        } else {
+            let items = [];
+            let message = 'No items found.';
+            if (viewId === 'favorites') {
+                items = state.favorites.map(id => state.contentMap.get(id)).filter(Boolean);
+                message = 'No favorites yet. Click the star on a card to add one.';
+            } else if (viewId === 'recents') {
+                items = state.recentlyViewed.map(id => state.contentMap.get(id)).filter(Boolean);
+                message = 'No recently viewed items.';
+            } else if (viewId === 'scripts') {
+                items = scriptsData;
+                message = 'No scripts found.';
+            }
+            renderCardList(dom.contentArea, items, message);
+        }
     }
 
     // ---- THEME ----
@@ -1291,10 +1507,13 @@
         document.querySelectorAll('.sidebar-link').forEach(link => {
             link.addEventListener('click', () => switchView(link.dataset.tab));
         });
-        // Use event delegation for dynamic content
         document.body.addEventListener('click', handleContentInteraction);
         
-        dom.closeModal.addEventListener('click', () => dom.scenarioModal.classList.add('hidden'));
+        dom.searchBox?.addEventListener('input', debouncedSearch);
+        dom.timerToggleBtn?.addEventListener('click', toggleTimer);
+        dom.timerResetBtn?.addEventListener('click', resetTimer);
+        
+        dom.closeModal.addEventListener('click', closeModal);
         dom.themeToggle?.addEventListener('click', () => {
             const isDarkMode = document.documentElement.classList.toggle('dark');
             localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
