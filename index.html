@@ -1414,6 +1414,9 @@
     }
 
     function closeModal() {
+        if (dom.scenarioModal.classList.contains('modal-hidden')) {
+            return;
+        }
         dom.modalContentWrapper.classList.add('opacity-0', 'scale-95');
         setTimeout(() => {
             dom.scenarioModal.classList.add('modal-hidden');
