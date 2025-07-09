@@ -133,8 +133,8 @@
 
     <script>
     // ---- DATA ----
-    // This section contains all the clinical scenarios and interventions
-    // converted from the user's document into a structured format with added emojis.
+    // This section contains the comprehensive clinical scenarios, interventions, and scripts
+    // fully populated from the source document.
 
     const clinicalData = [
         // --- RED ZONE ---
@@ -149,14 +149,86 @@
         },
         {
             id: 'red-self-harm',
-            title: 'Self-Harm Urges (NSSI)',
+            title: 'Self-Harm Urges (Non-Suicidal Self-Injury)',
             category: 'Red Zone',
             emoji: '🚩',
             color: 'red',
             tags: ['nssi', 'self-harm', 'urges', 'coping', 'safety', 'red'],
             content: `### Direct Check-In\n“Thank you for telling me. I need to ask: Are you having urges to hurt yourself right now?”\n* **If yes (urge is present):** “On a scale from 1 to 10, how strong is the urge right now, 10 being the strongest?”\n* **If yes (recent self-harm action):** “What did you do, and how severe was it? Do you need any medical attention for that?”\n\n### Clarify Intent\n“When you self-harmed, was it because you wanted to die, or was it more about coping with pain or numbness?”\n\n### Validate & Normalize\n“That urge makes sense given what you’re carrying. A part of you is trying to survive and find relief, even if it’s doing it in a way that ends up hurting you. Let’s see if we can work with that part in a safer way.”\n\n### Offer Alternatives & Coping Strategies\n* **Intense Physical Sensations (**TIPP Skill for Rapid Distress Reduction**):** “Sometimes our body needs a very strong sensation to release that tension. We could try holding something frozen (like ice), doing a wall-sit or some push-ups, or splashing really cold water on your face.”\n* **“Urge Surfing” Technique:** “Remember, urges are like waves — they build, peak, and eventually fall. Let’s try to ride this wave out together.”\n* **Safe Physical Release:** “Would it help to rip up some paper, squeeze a stress ball, stomp your feet, or even scream into a pillow?”\n\n### Commitment to Safety\n“I know the urge is strong, but do you feel like you can stay safe tonight? Even if the urge comes back, can you promise me you’ll try these coping steps or reach out for help before doing anything to hurt yourself?”`
         },
-        // ... (The rest of the clinicalData would be updated with emojis similarly)
+        {
+            id: 'red-hallucinations',
+            title: 'Hallucinations or Disturbing Perceptual Experiences',
+            category: 'Red Zone',
+            emoji: '🚩',
+            color: 'red',
+            tags: ['psychosis', 'hallucinations', 'voices', 'paranoia', 'safety', 'red'],
+            content: `### Acknowledge Experience (Don’t Dismiss)\n“Thank you for telling me. I can imagine this feels really intense and scary. I want you to know I’m here with you, and I believe that you’re experiencing this.”\n\n### Safety Check (Calm & Direct)\n“Are the things you’re hearing or seeing telling you to hurt yourself or anyone else?”\n\n### Orient to Present (Ground in Shared Reality)\n“Let’s try something together to bring you into the here and now with me, okay? Put your feet flat on the floor for me. Press them down a little and notice that sensation. You’re right here, in this moment, with me. We’re safe right now.”\n\n### Calm Reassurance\n“You’re doing really well. I’m going to stay right here with you. The things you’re perceiving can feel real, but I want you to keep noticing the ground under your feet, the sound of my voice. We’re in the present moment.”`
+        },
+        {
+            id: 'red-medical-crisis',
+            title: 'Acute Medical Crisis',
+            category: 'Red Zone',
+            emoji: '🚩',
+            color: 'red',
+            tags: ['medical', 'emergency', '911', 'crisis', 'safety', 'red'],
+            content: `### Immediate Action – Take Charge\n“Okay, I see/hear that something serious might be happening physically. The most important thing right now is getting you medical help immediately.”\n\n### Instruct to Call Emergency\n“Are you able to call 911 (or your local emergency number) right now? Is there someone with you who can call for you?”\n\n### Offer to Call\n“It sounds like you can’t call on your own. I’m going to get you help. Do I have your permission to call 911 for you right now to get an ambulance?”\n\n### Keep Them Engaged While Help Comes\n“Help is on the way. I’m right here with you. Try to stay as calm as you can – focus on taking slow breaths with me if possible. In… and out… nice and easy.”`
+        },
+        {
+            id: 'red-overdose',
+            title: 'Substance Overdose or Severe Intoxication',
+            category: 'Red Zone',
+            emoji: '🚩',
+            color: 'red',
+            tags: ['overdose', 'substance', 'intoxication', 'emergency', '911', 'red'],
+            content: `### Recognize Seriousness\n“I can tell this is serious. I’m very concerned that you might be experiencing a medical emergency from substances.”\n\n### Instruct to Call Emergency\n“This is urgent. Are you able to call 911 right now for medical attention? Or is there someone with you who can call?”\n\n### Naloxone (If Opioid Overdose suspected)\n“If this might be an opioid overdose and if you or anyone there has Naloxone (Narcan) and knows how to use it, please use it now while we wait for the ambulance.”\n\n### Keep Them Awake & Oriented\n“Stay with me, okay? Help is coming. Try to stay awake and keep talking to me. I know you’re very drowsy, but focus on my voice.”`
+        },
+        {
+            id: 'red-unsafe-home',
+            title: 'Unsafe Home Environment / Domestic Violence',
+            category: 'Red Zone',
+            emoji: '🚩',
+            color: 'red',
+            tags: ['dv', 'domestic violence', 'abuse', 'safety', 'home', 'red'],
+            content: `### Express Empathy and Belief\n“Thank you for sharing this with me. I can’t imagine how hard it was to say that out loud. I want you to know I believe you, and you didn’t deserve any of this.”\n\n### Assess Immediate Safety\n“Are you safe right now? Is the person who hurt you nearby or likely to return soon?”\n\n### Provide Control & Options\n“You know your situation best, and I’m here to support whatever you choose to do. For example, have you heard of the National Domestic Violence Hotline? They have advocates 24/7 at 1-800-799-7233 who can help you make a safety plan or find resources.”\n\n### Empower & Validate\n“You are not alone and there are people who want to help. You deserve to be safe. None of this is your fault.”`
+        },
+        {
+            id: 'red-child-abuse',
+            title: 'Child Abuse or Neglect Disclosure',
+            category: 'Red Zone',
+            emoji: '🚩',
+            color: 'red',
+            tags: ['child abuse', 'neglect', 'mandated reporter', 'cps', 'safety', 'red'],
+            content: `### Respond with Care\n“Thank you for telling me that. I know it’s not easy to talk about. I am so sorry this happened to you (or to that child). No one, especially no child, should have to go through that.”\n\n### Explain Mandated Reporting (Transparent and Reassuring)\n“I need you to know: because you shared this, I’m required by law to take steps to report it to the proper authorities... This isn’t to get anyone in trouble; it’s to protect you/them and make sure it doesn’t continue.”\n\n### Support the Client’s Emotions\n“How are you feeling now that you’ve shared that? It’s a lot, I know. Whatever you’re feeling – scared, relieved, angry – it’s completely understandable.”\n\n### Closing Reassurance\n“I know this was a big step to tell me. You were very brave to speak up. Remember: you didn’t do anything wrong by telling the truth.”`
+        },
+        {
+            id: 'red-harm-to-others',
+            title: 'Threat of Harm to Others (Homicidal Ideation)',
+            category: 'Red Zone',
+            emoji: '🚩',
+            color: 'red',
+            tags: ['homicidal', 'harm to others', 'duty to protect', 'safety', 'crisis', 'red'],
+            content: `### Immediate Clarification\n“I hear you saying you want to hurt someone. I take that very seriously, and I need to ask you a few questions to understand better, because my job is to keep everyone safe.”\n\n### Duty to Protect Explanation\n“Okay, I need you to know: because you’re talking about harming someone else, I have a responsibility to make sure that person (and everyone) stays safe. That may mean involving other professionals or authorities right away.”\n\n### De-escalate Anger\n“I get that you’re extremely angry. That anger is telling us something important — you feel deeply hurt or wronged. I’m here to listen to that. Let’s slow this down and sit with what’s coming up, instead of letting it boil over.”`
+        },
+        {
+            id: 'red-under-influence',
+            title: 'Under the Influence (Non-Crisis)',
+            category: 'Red Zone',
+            emoji: '🚩',
+            color: 'red',
+            tags: ['substance', 'intoxication', 'policy', 'safety', 'red'],
+            content: `### Immediate Safety Check\n"Hi. I'm just checking in with you briefly. It was noticed in group that [specific observation, e.g., 'you seemed a bit sleepy']. How are you doing right now?"\n\n### Stating the Need to Log Off (Clear, Kind, Firm)\n"Because it appears you're under the influence right now, and in line with the group policy for everyone's safety and benefit, I am going to need you to log off from the group session for the rest of today."\n"This isn't a punishment, but it's a necessary step to ensure your well-being and to maintain the group's therapeutic environment."\n\n### Brief Safety Assessment (Essential before log-off)\n"Before you log off for the day, my top priority is to make sure you're going to be safe. Are you in a safe place physically right now? Is there anyone with you, or someone responsible you can contact if you start to feel unwell or need help?"\n\n### Explain Next Steps\n“Because you were under the influence and had to step out of group, I will let your primary therapist know what happened, just so they’re in the loop and can support you.”`
+        },
+        // --- ORANGE ZONE ---
+        {
+            id: 'orange-agitated',
+            title: 'Highly Agitated or Escalating',
+            category: 'Orange Zone',
+            emoji: '🟠',
+            color: 'orange',
+            tags: ['agitation', 'escalation', 'anger', 'distress', 'orange'],
+            content: `### Center and Slow the Moment\n“I can see (or hear) how agitated you are. Let’s take a pause for a second. I’m right here with you. You don’t have to go through this moment alone.”\n\n### Acknowledge the Anger/Frustration\n“That energy and anger you’re feeling right now — it makes sense. Something important is going on inside you and it’s demanding to be heard.”\n\n### Keep Voice Calm & Assuring\n“I’m not going anywhere. I know you’re really upset, and it’s okay. Let’s stay right here. You’re safe with me to let it out, as long as we keep each other safe.”\n\n### After Calming Slightly – Reflection\n“That was a lot. You did really well slowing down just now. This is hard stuff, and you’re handling it. When you’re ready, maybe we can figure out what you need next or how I can help further.”`
+        },
         {
             id: 'orange-panic-attack',
             title: 'Acute Anxiety or Panic Attack',
@@ -167,6 +239,70 @@
             content: `### Normalize & Reassure\n“What you’re experiencing is a panic attack. It feels really scary, but **I promise it’s not life-threatening. You are going to be okay. I’m right here.**”\n\n### Immediate Physiological Regulation\n* **Temperature (**TIPP Skill for Rapid Distress Reduction**):** "Can you splash some cold water on your face, or hold a cold water bottle or ice cube if you have one? This triggers something called the 'dive response' that naturally slows your heart rate."\n* **Paced Breathing:** "Let's breathe together. Breathe in through your nose for 4 counts... hold for 4... now out through your mouth for 6 counts. That longer exhale is key."\n\n### Orient to Safety (**Grounding Through Senses (5-4-3-2-1 Technique)**)\n“Let’s name five things you see in the room. Good. Now four things you can feel... three things you can hear... two things you can smell... and one thing you can taste.”\n\n### Permission to Pause\n“We don’t need to unpack everything right now. In fact, we shouldn’t dive deeper into anything heavy at this moment, because I want to make sure you don’t leave here feeling even worse.”`
         },
         {
+            id: 'orange-unusual-thoughts',
+            title: 'Unusual Thoughts (Mild Paranoia or Cognitive Distortions)',
+            category: 'Orange Zone',
+            emoji: '🟠',
+            color: 'orange',
+            tags: ['paranoia', 'distortions', 'thoughts', 'reality testing', 'orange'],
+            content: `### Do Not Dismiss\n“That sounds really troubling. It must feel scary (or confusing) thinking that might be true. Thank you for telling me what’s going through your mind.”\n\n### Gently Reality-Check\n“Let’s look at that together. You feel like everyone in group hates you. I know it can really feel that way. May I share what I’ve observed? I’ve seen group members show you care... I’m not seeing evidence of hate.”\n\n### Affirm\n“You’re not ‘crazy’ or bad for having these thoughts. Our minds do all kinds of weird things under stress. The fact that you can question it and talk about it means you have insight and courage.”`
+        },
+        {
+            id: 'orange-trauma-reaction',
+            title: 'Trauma Reaction / Flashback',
+            category: 'Orange Zone',
+            emoji: '🟠',
+            color: 'orange',
+            tags: ['trauma', 'flashback', 'ptsd', 'grounding', 'safety', 'orange'],
+            content: `### Ground in Present Safety\n“Hey, you’re here with me. You’re safe right now. That thing isn’t happening to you right this second, even though it feels like it is.”\n\n### Breathe and Orient\n“Take a deep breath if you can. You’re breathing in the current year. You’re [client’s name], and you’re here with me, not back in that situation. That was then, and this is now. Can you say out loud, ‘I’m here now’?”\n\n### Validate and Contain\n“That memory was really intense. It makes sense that it felt like it was happening all over again. Flashbacks can be that powerful. But it’s not happening now, and you survived it then. You’re safe now.”`
+        },
+        {
+            id: 'orange-sexual-assault',
+            title: 'Sexual Assault Disclosure',
+            category: 'Orange Zone',
+            emoji: '🟠',
+            color: 'orange',
+            tags: ['sexual assault', 'trauma', 'disclosure', 'safety', 'support', 'orange'],
+            content: `### Listen and Honor Courage\n“I’m so sorry that happened to you. Thank you for trusting me enough to tell me. I can’t imagine how terrible that was for you, and how heavy it must be to carry that.”\n\n### Validate the Response\n“What happened is not your fault. You did not deserve that. The blame is 100% on the person who hurt you.”\n\n### Empower Choices\n“I want you to have control over what happens next. If you want help reporting it or getting medical care, I can help facilitate that. If you just wanted to tell someone and not take further action right now, that’s okay too.”`
+        },
+        {
+            id: 'orange-relational-rupture',
+            title: 'Relational Rupture / Intense Interpersonal Conflict',
+            category: 'Orange Zone',
+            emoji: '🟠',
+            color: 'orange',
+            tags: ['conflict', 'relationship', 'anger', 'betrayal', 'communication', 'orange'],
+            content: `### Validate the Hurt/Anger\n“It sounds like you’re really hurt and angry about what happened. That’s completely understandable – when someone we care about [does X], it can feel awful and infuriating.”\n\n### Prevent Overwhelm or Shutdown\n“Let’s try to slow it just a bit so I can understand everything. I want to make sure I’m catching what’s most important to you in all of this.”\n\n### Brainstorm or Contain\n“Given how raw this is, it might be best not to confront them while you’re feeling this angry. We can work out what you want to say when you’re calmer. For now, maybe focus on what you need to feel a bit better.”`
+        },
+        {
+            id: 'orange-triggered-by-group',
+            title: 'Triggered by Group Content',
+            category: 'Orange Zone',
+            emoji: '🟠',
+            color: 'orange',
+            tags: ['trigger', 'group', 'trauma', 'overwhelmed', 'orange'],
+            content: `### Normalize Triggers\n“It makes a lot of sense that you felt triggered by what came up in group. Sometimes other people’s stories can stir up feelings or memories we didn’t expect. That doesn’t mean anything is wrong with you – it means you’re human.”\n\n### Re-ground and Stabilize\n“Let’s come back to the here and now first. You’re with me, you’re safe. The group conversation is over (or on pause) and we’re just sitting here talking.”\n\n### Affirmation\n“I’m glad you took a break and talked to me about it. That’s a healthy response to feeling overwhelmed. You honored your limits, and that’s good.”`
+        },
+        {
+            id: 'orange-conflict-in-group',
+            title: 'Conflict in Group or with Staff',
+            category: 'Orange Zone',
+            emoji: '🟠',
+            color: 'orange',
+            tags: ['conflict', 'group', 'staff', 'anger', 'communication', 'orange'],
+            content: `### Initial Response\n"It makes sense that you’d feel activated after what happened in group. I want to hold space for that with you."\n\n### Plan a Constructive Follow-Up\n“If you feel up to it, we can talk about how to address this. Would you want to speak with [the person] one-on-one with a mediator, maybe me or your therapist, present? Or would you prefer writing down what you feel and sharing it?”\n\n### Affirm Self-Advocacy\n“I’m really glad you told me how you feel. You have every right to speak up when something isn’t okay for you.”`
+        },
+        {
+            id: 'orange-anger-irritability',
+            title: 'Anger and Irritability',
+            category: 'Orange Zone',
+            emoji: '🟠',
+            color: 'orange',
+            tags: ['anger', 'irritability', 'frustration', 'coping', 'orange'],
+            content: `### Acknowledge the Emotion\n“You’ve been feeling a lot of anger lately – like a constant simmering. That’s exhausting, isn’t it? It’s okay to feel angry. Anger is a normal emotion. It often comes when we feel hurt, or trapped, or disrespected.”\n\n### Invite Insight\n“Do you have a sense of what’s underneath the anger? Often there’s pain or fear hiding under anger’s umbrella.”\n\n### Intervention Insight\nUse **Circles of Control, Influence, and Concern** to help focus energy effectively. Apply **Assertiveness Skills Training & Practice** for assertive expression.`
+        },
+        // --- YELLOW ZONE ---
+        {
             id: 'yellow-manipulative-behaviors',
             title: '“Manipulative” or Testing Behaviors',
             category: 'Yellow Zone',
@@ -176,6 +312,79 @@
             content: `### Look Under the Behavior\n“It seems like you really need something right now – maybe reassurance, or to feel in control? I want to understand what you need, because I don’t think you’re doing these things for no reason.”\n\n### Call Out Needs, Not Character\n“I don’t see you as ‘manipulative.’ I see someone who’s trying hard to get their needs met. How about we skip the part where you have to escalate things to get me to care – because I already care.”\n\n### Encourage Direct Communication\n“You shouldn’t have to test me to see if I’ll support you. I want you to know: if you need something, you can ask me as plainly as possible.”\n\n### Intervention Insight\nUse the **DEAR MAN: For Interpersonal Effectiveness** framework for clear, assertive communication.`
         },
         {
+            id: 'yellow-shut-down',
+            title: 'Shut Down, Withdrawn, or Minimizing',
+            category: 'Yellow Zone',
+            emoji: '🟨',
+            color: 'yellow',
+            tags: ['withdrawn', 'shut down', 'minimizing', 'dissociation', 'yellow'],
+            content: `### Gently Call It Out\n“I notice you’re getting really quiet (or you keep saying you’re fine). Sometimes when people get really quiet, it’s because the feelings are too much or too hard to put into words. Does that feel true for you right now?”\n\n### Permission to Be Silent\n“We can sit here together without talking for a bit if that’s what you need. I’m not uncomfortable with the silence if you aren’t. Sometimes just having someone nearby is enough.”\n\n### Affirmation\n“It took courage to admit how lonely you feel. That’s a step toward change. You deserve to feel connected and valued – because you are.”`
+        },
+        {
+            id: 'yellow-shame-guilt',
+            title: 'Shame, Self-Hatred, or Guilt',
+            category: 'Yellow Zone',
+            emoji: '🟨',
+            color: 'yellow',
+            tags: ['shame', 'guilt', 'self-compassion', 'worthlessness', 'yellow'],
+            content: `### Validate\n“It sounds like you’re holding yourself to an impossible standard. Whatever you did (or think you did), it doesn’t make you worthless or evil. It makes you human.”\n\n### Get Specific\n“Can we talk about what’s making you feel so ashamed? What do you believe you did that’s so unforgivable?”\n\n### Self-Compassion\n“Think about what you would say to a close friend if they were feeling exactly what you’re feeling. You deserve that same kindness. What if you tried talking to yourself in that gentle way, maybe saying something like ‘It’s okay to feel this. I’m here for you.’?”\n\n### Intervention Insight\n* Use **ACT Defusion: Distancing from Thoughts** ("I'm having the thought that...") to create distance from thoughts.\n* Apply **Cognitive Reframing: Behavior vs. Identity** to separate actions from self-worth.`
+        },
+        {
+            id: 'yellow-hopelessness',
+            title: 'Hopelessness or Despair (without active suicidal intent)',
+            category: 'Yellow Zone',
+            emoji: '🟨',
+            color: 'yellow',
+            tags: ['hopelessness', 'despair', 'depression', 'motivation', 'yellow'],
+            content: `### Borrow Hope\n“Sometimes we have to borrow hope from others. Is it okay if I believe that things can change, even if you don’t believe it today? I’ve seen people come out of pits like this, and I truly believe you can too.”\n\n### Focus on Immediate Next Step\n“When the future looks blank or bleak, don’t even worry about the future right now. Let’s just focus on getting through today, or even just the next hour.”\n\n### Compassion\n“Even if you can’t feel hope right now, I have enough for both of us. I know you’re tired. But you’ve made it to this day, even carrying all that despair – that’s not small thing.”`
+        },
+        {
+            id: 'yellow-ocd-thoughts',
+            title: 'Obsessive-Compulsive Thoughts',
+            category: 'Yellow Zone',
+            emoji: '🟨',
+            color: 'yellow',
+            tags: ['ocd', 'obsessions', 'compulsions', 'intrusive thoughts', 'yellow'],
+            content: `### Normalize\n“It sounds like your brain is stuck on a loop right now. Those kinds of intrusive thoughts can be really exhausting and frightening. You’re not crazy – OCD-type thoughts happen to a lot of people, and they don’t reflect your character or true intentions.”\n\n### Plan for Therapy Work\n“It might help to tell your therapist or psychiatrist about this if you haven’t – OCD is something that can really improve with the right techniques (like Exposure and Response Prevention therapy or sometimes medication).”\n\n### Intervention Insight\nPractice **ACT Defusion: Distancing from Thoughts** or **Name the Urge, Challenge the Urge** to create distance.`
+        },
+        {
+            id: 'yellow-negative-loops',
+            title: 'Negative Thought Loops / Rumination',
+            category: 'Yellow Zone',
+            emoji: '🟨',
+            color: 'yellow',
+            tags: ['rumination', 'negative thinking', 'worry', 'anxiety', 'yellow'],
+            content: `### Gently Interrupt\n“I notice your mind keeps circling around this. It’s like you’re stuck in a thought loop, huh? That can be really draining. Let’s hit the pause button on those thoughts for just a moment, if we can.”\n\n### Intervention Insight\nUse **ACT Defusion: Distancing from Thoughts** techniques to help distance from thoughts.`
+        },
+        {
+            id: 'yellow-eating-disorder',
+            title: 'Eating Disorder (Moderate)',
+            category: 'Yellow Zone',
+            emoji: '🟨',
+            color: 'yellow',
+            tags: ['eating disorder', 'body image', 'food', 'anorexia', 'bulimia', 'yellow'],
+            content: `### Address Gently\n“You mentioned some concerns around eating and body image. I know that can be really sensitive to talk about. I just want to say: I’m here to support you, not judge you. A lot of people struggle with food and eating; you’re definitely not alone in that.”\n\n### Assurance\n“I know this is scary. But you’re not alone in it. We care about you – I care about you – and we want you healthy and happy. You deserve to nourish yourself and to live without this burden.”`
+        },
+        {
+            id: 'yellow-neurodivergent',
+            title: 'Neurodivergent Challenges (ADHD/Autism Spectrum)',
+            category: 'Yellow Zone',
+            emoji: '🟨',
+            color: 'yellow',
+            tags: ['adhd', 'autism', 'neurodivergent', 'focus', 'sensory', 'yellow'],
+            content: `### Immediate Coping for Sensory Overload\n“Are the lights or sounds bothering you right now? We can dim the lights, or if you want, you can wear headphones or a hoodie to feel more comfortable. No judgment – do what you need to regulate.”\n\n### Encourage Self-Acceptance\n“I know you sometimes feel like you’re ‘too weird’ or ‘broken’ because of how your brain works. You’re not. You’re different, yes, and different can be hard, but it can also be powerful.”`
+        },
+        {
+            id: 'yellow-off-topic',
+            title: 'Off-Topic / Distractible',
+            category: 'Yellow Zone',
+            emoji: '🟨',
+            color: 'yellow',
+            tags: ['focus', 'distraction', 'adhd', 'avoidance', 'yellow'],
+            content: `### Kindly Refocus\n“I notice we jumped to a different topic just now. That’s okay – sometimes our brains steer us away when we hit something uncomfortable or just because something else pops up. Let’s gently steer back to what we were talking about earlier, because I think that was important.”\n\n### Positive Reinforcement\n“You’re doing great. We covered the tough bit about your mom’s comment after all, and I really appreciate you sticking with that. I know it’s tempting to veer away, but you stayed with it. That’s progress!”`
+        },
+        // --- GREEN ZONE ---
+        {
             id: 'green-global-anxiety',
             title: 'Political/Global Events Anxiety',
             category: 'Green Zone',
@@ -184,7 +393,88 @@
             tags: ['anxiety', 'global events', 'politics', 'eco-anxiety', 'control', 'green'],
             content: `### Validate\n“It makes complete sense that you’re feeling [anxious/angry/overwhelmed] given what’s happening in the world. These are heavy and uncertain times, and your feelings are a very understandable response.”\n\n### Address Fears of Death/Cosmic Insignificance\n“A lot of existential dread comes from realizing our own mortality or how small we are in the vast universe. That can be scary, but it can also be seen another way: If nothing ultimately matters on a cosmic scale, then maybe we’re free to create our own meaning here and now.”\n\n### Intervention Insight\nUse **Circles of Control, Influence, and Concern** to focus energy effectively.`
         },
-    ]; // NOTE: For brevity, only a few items are shown with the new emoji property. The full list would be updated.
+        {
+            id: 'green-chronic-pain',
+            title: 'Chronic Pain or Health Challenges',
+            category: 'Green Zone',
+            emoji: '💚',
+            color: 'green',
+            tags: ['chronic pain', 'illness', 'health', 'coping', 'green'],
+            content: `### Acknowledge Difficulty\n“Dealing with chronic pain (or a chronic illness) is really tough. Not only are you physically hurting, but it wears on you emotionally too. It’s completely valid to feel frustrated, exhausted, or down about it.”\n\n### Discuss Coping Strategies\n“What helps on the days when the pain or symptoms are a bit more manageable? Is there anything – maybe a heating pad, a short walk, a certain stretch, a distraction like a good TV show – that gives you even a small relief or comfort?”\n\n### Intervention Insight\nPractice **Radical Acceptance** of the current reality.`
+        },
+        {
+            id: 'green-expressing-needs',
+            title: 'Struggling to Identify or Express Needs',
+            category: 'Green Zone',
+            emoji: '💚',
+            color: 'green',
+            tags: ['needs', 'communication', 'assertiveness', 'boundaries', 'green'],
+            content: `### Highlight the Pattern\n“It sounds like you often find yourself feeling unsatisfied or hurt because your needs aren’t met – but at the same time, you have a hard time even knowing or saying what those needs are. That’s more common than you might think... your needs matter.”\n\n### Practice in the Moment\n“Let’s practice right now in a small way: How are you feeling in this moment with me? Do you need anything? This is a low-stakes environment to practice identifying a need and voicing it.”\n\n### Intervention Insight\nUse the **Nonviolent Communication (NVC) Framework** (Observations, Feelings, Needs, Requests).`
+        },
+        {
+            id: 'green-enmeshed-relationships',
+            title: 'Enmeshed or Dependent Relationships',
+            category: 'Green Zone',
+            emoji: '💚',
+            color: 'green',
+            tags: ['enmeshment', 'dependency', 'boundaries', 'identity', 'relationships', 'green'],
+            content: `### Validate Difficulty\n“It sounds like you feel really tangled up in this relationship – like your feelings and decisions are almost merged with theirs. That can be comforting at times, but also suffocating or confusing.”\n\n### Intervention Insight\nExplore **Boundary Setting Exploration & Practice**.`
+        },
+        {
+            id: 'green-feeling-stuck',
+            title: 'Feeling Directionless or “Stuck” in Life',
+            category: 'Green Zone',
+            emoji: '💚',
+            color: 'green',
+            tags: ['stuck', 'directionless', 'purpose', 'motivation', 'values', 'green'],
+            content: `### Normalize\n“A lot of people go through periods of life where they feel lost or directionless. It can be really unsettling, like you’re drifting without a map. First off, it’s okay to not have everything figured out.”\n\n### Explore Values\n“Sometimes direction becomes clearer when we focus on what we truly value in life.”\n\n### Intervention Insight\nUse **Solution-Focused Brief Therapy (SFBT) Techniques** like the "Miracle Question" to identify desired future states.`
+        },
+        {
+            id: 'green-time-management',
+            title: 'Time Management and Organization',
+            category: 'Green Zone',
+            emoji: '💚',
+            color: 'green',
+            tags: ['time management', 'organization', 'procrastination', 'productivity', 'green'],
+            content: `### Positive Frame\n“You’re looking to get more organized and manage your time better – that’s a great goal. These skills can make life so much less stressful once they click, and I’m excited to help you with it.”\n\n### Task Chunking\n“Another approach is breaking the task into teeny tiny chunks. Instead of ‘Write essay,’ chunk it to: ‘1) Open a Word doc, 2) write a rough title, 3) jot three bullet points of ideas.’ Then do one chunk at a time.”\n\n### Time Management Techniques (Pomodoro)\n“Have you heard of the Pomodoro Technique? It’s where you work for 25 minutes, then take a 5-minute break, then repeat.”\n\n### Intervention Insight\nEncourage **Structured Goal-Setting (e.g., SMART Goals)**.`
+        },
+        {
+            id: 'green-decision-making',
+            title: 'Decision-Making',
+            category: 'Green Zone',
+            emoji: '💚',
+            color: 'green',
+            tags: ['decisions', 'indecisive', 'anxiety', 'choices', 'green'],
+            content: `### Frame the Issue\n“Decision-making can be really stressful, especially if you’re afraid of making the wrong choice or if you’ve got a lot of options. It’s actually great that you want to work on this; being more confident in your decisions can reduce a lot of anxiety.”\n\n### Listen to Gut and Head\n“It’s good to analyze, but also consider your gut feeling. Our instincts are basically our subconscious pulling from past experiences and values.”\n\n### Intervention Insight\nUse **Structured Problem-Solving** or the **"Cost-Benefit Analysis of a Thought"** to examine consequences.`
+        },
+        {
+            id: 'green-perfectionism',
+            title: 'Perfectionism',
+            category: 'Green Zone',
+            emoji: '💚',
+            color: 'green',
+            tags: ['perfectionism', 'procrastination', 'self-criticism', 'anxiety', 'green'],
+            content: `### Acknowledge Upside/Downside\n“It sounds like you have some perfectionistic tendencies... On one hand, that drive can push you to achieve great things. On the other hand, it’s really exhausting and can make you avoid things.”\n\n### Address Procrastination\n“Try the motto, ‘Done is better than perfect.’ Starting something, even if you know it’s rough, gives you material to refine.”\n\n### Self-Compassion Practice\n“You likely speak to yourself very harshly when you’re not perfect. Try to cultivate a more compassionate inner voice. A good trick is to talk to yourself as if you were your best friend.”\n\n### Intervention Insight\nUse **Thought Challenging - cognitive restructuring** to examine "shoulds".`
+        },
+        {
+            id: 'green-life-transitions',
+            title: 'Life Transitions',
+            category: 'Green Zone',
+            emoji: '💚',
+            color: 'green',
+            tags: ['transition', 'change', 'graduation', 'new job', 'anxiety', 'green'],
+            content: `### Normalize Anxiety\n“Big changes – even positive ones – can be really unsettling. It’s totally normal to feel anxious or unsure when you’re entering a new phase of life. You’re basically stepping into the unknown.”\n\n### Use Old Skills in New Ways\n“Remember that even though the context is changing, you’re bringing all your accumulated skills and wisdom with you. Think about other transitions you’ve navigated in the past... What helped you then?”\n\n### Build a Support System\n“In times of change, leaning on support is key. Stay connected with your old friends/colleagues even as you make new ones. Talk to people who’ve been through similar transitions.”`
+        },
+        {
+            id: 'green-healthy-habits',
+            title: 'Building Healthy Habits & Routines',
+            category: 'Green Zone',
+            emoji: '💚',
+            color: 'green',
+            tags: ['habits', 'routines', 'goals', 'motivation', 'green'],
+            content: `### Praise Initiative\n“It’s fantastic that you want to build healthy habits. That’s a big step toward improving your day-to-day life. Habits and routines can really give you a sense of stability and make those positive actions almost automatic.”\n\n### Start Small\n“Instead of aiming for 30 minutes of meditation, what if you started with just one deep breath after you sit down at your desk? The goal is to make it so easy you can’t say no.”\n\n### Accountability\n“It can really help to track your habits – like a habit journal or an app where you tick off each day you did the behavior. Seeing a streak can be motivating (you won’t want to break the chain!).”`
+        },
+    ];
 
     const interventionsData = [
         {
@@ -194,7 +484,7 @@
             subCategory: 'Distress Tolerance & Emotional Regulation',
             color: 'blue',
             tags: ['dbt', 'distress tolerance', 'regulation', 'panic', 'overwhelm'],
-            content: `...` // Content is unchanged
+            content: `### Core Rationale\nTIPP skills directly target the body's acute stress response, changing your body chemistry and creating a window to re-engage your thinking brain.\n\n### T - Temperature\n"First, let's try to change your body temperature. The idea is to create a sudden shift. If you can, go splash some cold water on your face - really let it cover your cheeks and the area under your eyes. This can help slow your heart rate down very quickly when you're agitated."\n\n### I - Intense Exercise\n"If you're feeling a lot of restless, built-up energy, a very short burst of exercise can help. Could you do some jumping jacks, run in place as fast as you can, or even just tense and release all your big muscle groups very hard and fast?"\n\n### P - Paced Breathing\n"Now, let's focus on slowing your breath. We're going to make your exhale longer than your inhale. Try breathing in deeply through your nose for 4 seconds, and then breathe out very slowly and gently through your mouth for 6 seconds."\n\n### P - Paired Muscle Relaxation\n"As you continue breathing slowly, when you breathe in, tense a group of muscles. Let's try that with your hands and arms; inhale through your nose, make tight fists. Hold that tension. Now as you exhale, slowly release the squeeze. Notice the difference."`
         },
         {
             id: 'intervention-accepts',
@@ -203,7 +493,7 @@
             subCategory: 'Distress Tolerance & Emotional Regulation',
             color: 'blue',
             tags: ['dbt', 'distress tolerance', 'distraction', 'coping'],
-            content: `...`
+            content: `### Core Rationale\nAn acronym for skills used to tolerate and survive moments of high distress without making things worse, especially when you can't solve the problem right now.\n\n* **A**ctivities: Do something that is healthy and absorbing.\n* **C**ontributing: Do something helpful or kind for someone else.\n* **C**omparisons: Compare yourself to a time you felt worse, or to others struggling.\n* **E**motions: Generate different emotions by watching a comedy, etc.\n* **P**ushing Away: Temporarily push away painful thoughts.\n* **T**houghts: Occupy your mind with other thoughts (counting, etc.).\n* **S**ensations: Use intense, non-harmful sensations to shift focus (cold shower, etc.).`
         },
         {
             id: 'intervention-radical-acceptance',
@@ -212,7 +502,16 @@
             subCategory: 'Core DBT Skills',
             color: 'blue',
             tags: ['dbt', 'acceptance', 'suffering', 'reality'],
-            content: `...`
+            content: `### Core Rationale\nAccepting reality as it is, without judgment, approval, or bitterness. It is about letting go of the fight against what you cannot change to reduce suffering.\n\n### How to Practice\n1.  **Acknowledge Reality:** Notice when you are fighting reality ("This shouldn't be happening!").\n2.  **State the Facts:** Remind yourself, "This is what happened. I cannot change it."\n3.  **Accept with Body & Mind:** Allow yourself to feel the disappointment or sadness, without letting it turn into bitterness or anger at reality itself.\n4.  **Focus on What's Next:** Ask, "Given that this is the reality, what is the wise thing for me to do now?"`
+        },
+        {
+            id: 'intervention-opposite-action',
+            title: 'Opposite Action in Micro',
+            category: 'Intervention',
+            subCategory: 'Core DBT Skills',
+            color: 'blue',
+            tags: ['dbt', 'emotions', 'action urge', 'behavior change'],
+            content: `### Core Rationale\nActing opposite to what an unhelpful emotion is urging you to do, especially when the emotion doesn't fit the facts or isn't helpful. This stops feeding the unhelpful emotion.\n\n### How to Practice\n1.  **Identify the Emotion:** What are you feeling? (e.g., Fear, Sadness, Anger).\n2.  **Identify the Action Urge:** What does this emotion make you want to do? (e.g., Avoid, Withdraw, Attack).\n3.  **Ask: Is this Emotion Justified/Helpful?** Does the intensity fit the facts? Will acting on this urge help you in the long run?\n4.  **Do the Opposite (in Micro):** If the emotion is not justified or helpful, act opposite to the urge in a very small way. (e.g., If you feel like shutting down, wiggle your fingers. If you feel like avoiding, look at a picture of what you're avoiding for 5 seconds).`
         },
         {
             id: 'intervention-dear-man',
@@ -221,7 +520,25 @@
             subCategory: 'Core DBT Skills',
             color: 'blue',
             tags: ['dbt', 'communication', 'assertiveness', 'boundaries', 'needs'],
-            content: `...`
+            content: `### Core Rationale\nA structured way to ask for something you want or to say "no" effectively and assertively.\n\n### D - Describe\n"Just the facts. What is the specific, objective situation? (e.g., 'The last three times we planned to meet, you cancelled on the day.')"\n\n### E - Express\n"Clearly state your feelings using 'I-statements'. (e.g., 'I feel frustrated and a bit hurt when this happens.')"\n\n### A - Assert\n"Clearly state what you need or want. Be direct. (e.g., 'I would like us to find a way to make our plans more reliable...')"\n\n### R - Reinforce\n"Explain the positive outcome if your request is met. (e.g., 'It would help me feel more secure in our friendship...')"\n\n### M - (Stay) Mindful\n"Keep your focus on your goal. Avoid getting sidetracked."\n\n### A - Appear Confident\n"Use a confident tone and body language, even if you feel nervous."\n\n### N - Negotiate\n"Be willing to listen and find a workable compromise, but don't give up on your core need."`
+        },
+        {
+            id: 'intervention-ifs-parts',
+            title: 'Acknowledging an Emotional Part',
+            category: 'Intervention',
+            subCategory: 'Internal Family Systems (IFS) Informed',
+            color: 'blue',
+            tags: ['ifs', 'parts work', 'internal family systems', 'self-compassion'],
+            content: `### Core Rationale\nThe Internal Family Systems (IFS) model suggests our minds are made up of multiple "parts," each with its own feelings and roles. Recognizing these as "parts" helps create distance and allows for a compassionate, curious relationship with our inner world.\n\n### How to Practice\n1.  **Identify the Part:** "It sounds like there's a part of you that feels very [angry/scared]. Can we get curious about it?"\n2.  **Locate it in the Body:** "Where do you feel that part in your body?"\n3.  **Ask it Questions:** "What does this part want you to know? What is it afraid would happen if it didn't feel/act this way?"\n4.  **Offer Understanding:** "How do you (from your calm, compassionate self) feel towards this part? Can we offer it some understanding?"`
+        },
+        {
+            id: 'intervention-somatic-anchors',
+            title: 'Simple Somatic Anchors',
+            category: 'Intervention',
+            subCategory: 'Somatic & Grounding',
+            color: 'blue',
+            tags: ['somatic', 'grounding', 'body', 'anxiety', 'dissociation'],
+            content: `### Core Rationale\nImmediate ways to connect with the present moment using bodily sensations. These anchors signal safety to the nervous system and pull your attention out of overwhelming internal states.\n\n* **Noticing Feet on Floor:** "Just bring your attention down to your feet. Can you feel them on the floor? Notice the sensation of contact."\n* **Butterfly Tapping:** "Cross your arms over your chest, with hands on opposite shoulders. Start gently tapping your hands, one after the other, in a slow, rhythmic way."\n* **Hand on Heart:** "If it feels comfortable, you might try placing a hand gently on your heart. Just notice the warmth and gentle pressure."\n* **Pressing Fingertips Together:** "Try gently pressing the tips of your fingers on one hand against the tips of your fingers on the other. Just notice the sensation."`
         },
         {
             id: 'intervention-54321',
@@ -230,7 +547,43 @@
             subCategory: 'Somatic & Grounding',
             color: 'blue',
             tags: ['grounding', 'anxiety', 'panic', 'senses', 'mindfulness'],
-            content: `...`
+            content: `### Core Rationale\nAnchoring in the present by noticing things through all five senses. This pulls your focus out of anxious thoughts and into your immediate, safe environment.\n\n### How to Practice\n"Let’s walk through your senses to ground you in the here and now."\n\n* **5 THINGS YOU CAN SEE:** Look around and name five things you see. (e.g., "I see a lamp, a blue pen, a window...")\n* **4 THINGS YOU CAN FEEL:** Notice four things you can feel with your body. (e.g., "I feel the chair under me, my feet on the floor...")\n* **3 THINGS YOU CAN HEAR:** Listen carefully and name three sounds. (e.g., "I hear the fan, a car outside...")\n* **2 THINGS YOU CAN SMELL:** Notice two scents. (e.g., "I can smell coffee, the soap on my hands...")\n* **1 THING YOU CAN TASTE:** Name one thing you can taste. (e.g., "I can taste my toothpaste," or just notice the taste in your mouth).`
+        },
+        {
+            id: 'intervention-act-defusion',
+            title: 'ACT Defusion: Distancing from Thoughts',
+            category: 'Intervention',
+            subCategory: 'Acceptance and Commitment Therapy (ACT) Informed',
+            color: 'blue',
+            tags: ['act', 'defusion', 'thoughts', 'mindfulness', 'acceptance'],
+            content: `### Core Rationale\nTechniques from Acceptance and Commitment Therapy (ACT) to change the way we relate to thoughts, rather than changing their content, to reduce their power and believability.\n\n* **"I'm having the thought that..."**: "When a difficult thought gets sticky, try adding this phrase at the beginning: 'I'm having the thought that...' So, 'I'm a failure' becomes, 'I'm having the thought that I'm a failure.' Notice if that creates any space."\n* **Thanking Your Mind**: "Acknowledge the thought and then gently thank your mind for offering it up. 'Thanks, mind, for that really interesting thought!'"\n* **Silly Voice / Singing the Thought**: "Try taking a powerful negative thought and saying it repeatedly in a silly voice, or singing it to the tune of 'Happy Birthday,' to strip away its seriousness."`
+        },
+        {
+            id: 'intervention-values-clarification',
+            title: 'Values Clarification & Committed Action',
+            category: 'Intervention',
+            subCategory: 'Acceptance and Commitment Therapy (ACT) Informed',
+            color: 'blue',
+            tags: ['act', 'values', 'purpose', 'motivation', 'goals'],
+            content: `### Core Rationale\nIdentifying core values and exploring small, concrete actions aligned with those values, even when difficult thoughts and feelings are present.\n\n### How to Practice\n1.  **Explore Values:** "When you think about the kind of person you want to be, what qualities are most important? (e.g., Kindness, Courage, Connection, Growth)." \n2.  **Brainstorm Committed Actions:** "Even with all the challenges, what's one small step you could take this week that would move you even 1% closer to living by that value of [Chosen Value]?"\n3.  **Set an Intention:** "Would you be willing to commit to taking that one small step this week?"`
+        },
+        {
+            id: 'intervention-thought-challenging',
+            title: 'Thought Challenging - cognitive restructuring',
+            category: 'Intervention',
+            subCategory: 'Cognitive & Reframing',
+            color: 'blue',
+            tags: ['cbt', 'thoughts', 'reframing', 'cognitive distortions'],
+            content: `### Core Rationale\nExamining the evidence for and against automatic negative thoughts and considering alternative, more balanced perspectives.\n\n### How to Practice\n1.  **Identify the Hot Thought:** "When you felt that strong emotion, what specific thought was going through your mind?"\n2.  **Examine the Evidence For:** "What evidence or experiences make you believe this thought is true?"\n3.  **Examine the Evidence Against:** "Now, let's play detective. What evidence suggests this thought isn't 100% true?"\n4.  **Consider Alternatives:** "If that thought isn't completely true, what's a more balanced or alternative way to think about this situation?"\n5.  **Assess the Impact:** "How does believing the hot thought affect you? How would believing the balanced thought change things?"`
+        },
+        {
+            id: 'intervention-sfbt-techniques',
+            title: 'Solution-Focused Brief Therapy (SFBT) Techniques',
+            category: 'Intervention',
+            subCategory: 'Motivational & Solution-Focused',
+            color: 'blue',
+            tags: ['sfbt', 'solution focused', 'hope', 'goals', 'future'],
+            content: `### Core Rationale\nA future-focused approach that helps clients describe their desired future in detail, bypassing problem-talk and highlighting strengths.\n\n### The Miracle Question\n"Imagine tonight while you're asleep, a miracle happens, and the problem that brought you here is completely solved... When you wake up tomorrow morning, what would be the very first small thing you would notice that would tell you the miracle occurred?"\n\n### Scaling Questions\n"On a scale of 0 to 10, where 10 is the miracle and 0 is the worst it's been, where are you today? ... What keeps you at a [number] instead of a zero? ... What would a [number + 1] look like?"\n\n### Coping Questions\n"Given how difficult things have been, how have you managed to keep going? What have you been doing to prevent things from getting even worse?"`
         },
         {
             id: 'intervention-self-compassion-break',
@@ -239,7 +592,7 @@
             subCategory: 'Self-Awareness & Self-Management',
             color: 'blue',
             tags: ['self-compassion', 'mindfulness', 'kindness', 'shame'],
-            content: `...`
+            content: `### Core Rationale\nA brief, structured practice to offer oneself kindness in moments of suffering, based on three core components.\n\n### How to Practice\n1.  **Acknowledge the Pain (Mindfulness):** "Right now, it sounds like you're really going through a hard time. Can we just pause and acknowledge that? 'This is a moment of suffering,' or 'This really hurts.'"\n2.  **Connect to Common Humanity:** "Now, can you remind yourself that suffering and feeling this way is part of being human? 'I'm not alone in feeling this way.'"\n3.  **Offer Self-Kindness:** "And now, if you feel comfortable, maybe place a hand on your heart. Ask yourself, 'What do I need to hear right now?' Try saying something gentle, like 'May I be kind to myself.'"`
         },
         {
             id: 'intervention-circles-of-control',
@@ -248,9 +601,71 @@
             subCategory: 'Self-Awareness & Self-Management',
             color: 'blue',
             tags: ['control', 'anxiety', 'worry', 'problem solving', 'acceptance'],
-            content: `...`
+            content: `### Core Rationale\nA visual tool to differentiate between what one can control, influence, or only be concerned about, helping to focus energy effectively.\n\n### How to Practice\n"Imagine three concentric circles."\n\n1.  **Inner Circle (Control):** "In the very middle, let's list the things you have direct control over. These are usually your own thoughts, attitudes, choices, actions, and responses."\n2.  **Middle Circle (Influence):** "In the next circle, let's put things you don't control, but you might be able to influence. This could be how others respond to you, or your relationships."\n3.  **Outer Circle (Concern/No Control):** "In the outermost circle, let's list the things that concern you but that you have little to no control over, like other people's choices, past events, or global issues."\n\n"Looking at this map, where are you spending most of your energy? What would it be like to shift more focus onto your Circle of Control?"`
         },
-        // NOTE: All interventions would be updated with a subCategory.
+        {
+            id: 'intervention-nvc',
+            title: 'Nonviolent Communication (NVC) Framework',
+            category: 'Intervention',
+            subCategory: 'Interpersonal & Communication Skills',
+            color: 'blue',
+            tags: ['nvc', 'communication', 'needs', 'feelings', 'requests'],
+            content: `### Core Rationale\nA communication framework focusing on expressing oneself honestly and receiving others empathically.\n\n### The Four Components\n1. **Observations:** State the concrete facts you are observing, without evaluation or judgment. (e.g., "When I see dirty socks on the floor...")\n2. **Feelings:** State the emotion you are feeling, without thought or story. (e.g., "...I feel irritated...")\n3. **Needs:** State the universal human need that is connected to your feeling. (e.g., "...because I need more order in the rooms we share.")\n4. **Requests:** Make a clear, positive, and concrete request for action. (e.g., "Would you be willing to put your socks in the laundry basket?")`
+        },
+        {
+            id: 'intervention-boundary-setting-exploration',
+            title: 'Boundary Setting Exploration & Practice',
+            category: 'Intervention',
+            subCategory: 'Interpersonal & Communication Skills',
+            color: 'blue',
+            tags: ['boundaries', 'assertiveness', 'relationships', 'self-respect'],
+            content: `### Core Rationale\nUnderstanding what boundaries are, identifying where they might be weak, and practicing communicating them respectfully but firmly.\n\n### Exploration\n* **Connect to Feelings:** "You mentioned feeling [resentful/exhausted]. Often, these feelings can be signals that a boundary might need to be set."\n* **Identify Boundary Types:** "Boundaries can be about different things - our time, our emotions, our physical space, our energy. Where do you feel yours are most often crossed?"\n\n### Practice\n* **Simple 'No' Statements:** "Let's practice some gentle but clear ways to say no. How might it feel to say: 'I need some time to think about that,' or 'Thank you for asking, but I won't be able to do that right now.'"\n* **Acknowledge Guilt/Fear:** "It's common to feel guilty when we first start setting boundaries. That doesn't mean it's wrong to set them."`
+        },
+        {
+            id: 'intervention-assertiveness-training',
+            title: 'Assertiveness Skills Training & Practice',
+            category: 'Intervention',
+            subCategory: 'Interpersonal & Communication Skills',
+            color: 'blue',
+            tags: ['assertiveness', 'communication', 'i-statements', 'self-respect'],
+            content: `### Core Rationale\nUnderstanding the difference between passive, aggressive, and assertive communication, and practicing skills to express needs, opinions, and boundaries clearly and respectfully.\n\n### Key Concepts\n* **Define Assertiveness:** "Assertiveness is about finding the middle ground between being passive (letting others walk over you) and being aggressive (walking over others). It's about expressing your truth respectfully."\n* **'I-Statements' Practice:** "To express a feeling assertively, try using an 'I-statement' like: 'I feel [Your Feeling] when [Objective Situation] because [Your Need].' This owns your feeling without blaming the other person."\n* **'Broken Record' Technique:** "When someone keeps pushing, calmly and clearly repeat your point or boundary. For example, 'I understand, but I won't be able to help with that today.' ... 'I hear you, and my answer is still that I can't help today.'"`
+        },
+        {
+            id: 'intervention-structured-problem-solving',
+            title: 'Structured Problem-Solving',
+            category: 'Intervention',
+            subCategory: 'Practical Life Skills & Goal Achievement',
+            color: 'blue',
+            tags: ['problem-solving', 'cbt', 'planning', 'decision-making'],
+            content: `### Core Rationale\nA step-by-step process to break down overwhelming problems, brainstorm solutions, evaluate them, and create an action plan.\n\n### The Steps\n1. **Define the Problem Clearly:** "Let's state the problem as clearly and specifically as possible."\n2. **Brainstorm All Options (No Judgment):** "Let's list every possible solution we can think of, without judging if they are good or bad yet."\n3. **Evaluate Pros & Cons:** "Now let's look at these options. For each one, what are the potential upsides and downsides?"\n4. **Choose One Step:** "Based on our evaluation, which option feels like the best first step to try?"\n5. **Create an Action Plan:** "What exactly will you do? When will you do it? How will you know you've done it?"\n6. **Plan for Obstacles:** "What might get in the way of taking this step? And if that happens, what's your backup plan?"`
+        },
+        {
+            id: 'intervention-smart-goals',
+            title: 'Structured Goal-Setting (e.g., SMART Goals)',
+            category: 'Intervention',
+            subCategory: 'Practical Life Skills & Goal Achievement',
+            color: 'blue',
+            tags: ['goals', 'planning', 'motivation', 'smart goals'],
+            content: `### Core Rationale\nA framework (Specific, Measurable, Achievable, Relevant, Time-bound) to turn vague ideas into actionable goals.\n\n### The SMART Framework\n* **S**pecific: "Let's get really clear on what you want to accomplish. Instead of 'get healthier,' what specifically does that mean to you?"\n* **M**easurable: "How will you know when you've achieved this goal, or how will you track your progress?"\n* **A**chievable: "Given your current circumstances, does this goal feel realistic and attainable? What might make it more achievable?"\n* **R**elevant: "Why is this goal important to you right now? How does it align with your bigger values?"\n* **T**ime-bound: "What's a realistic timeframe for achieving this goal? When do you want to start?"`
+        },
+        {
+            id: 'intervention-name-challenge-urge',
+            title: 'Name the Urge, Challenge the Urge',
+            category: 'Intervention',
+            subCategory: 'Core DBT Skills',
+            color: 'blue',
+            tags: ['dbt', 'urges', 'coping', 'self-control'],
+            content: `### Core Rationale\nA skill to create distance from an intense urge by first identifying it and then exploring alternative actions.\n\n### How to Practice\n1. **Name the Urge:** "When you feel a really strong urge, like an intense desire to [client's specific urge], the first step can be just to name it. Silently to yourself, or out loud with me, can you say, 'There's the urge to [specific urge]'?"\n2. **Get Curious:** "Okay, now that we've named it... let's get curious about it for a second, without judgment and without immediately acting on it."\n3. **Challenge the Urge:** "Ask yourself... If I don't follow this urge right now, what's one small thing I could do instead? What would be a more helpful choice?"`
+        },
+        {
+            id: 'intervention-cognitive-reframe-behavior-identity',
+            title: 'Cognitive Reframing: Behavior vs. Identity',
+            category: 'Intervention',
+            subCategory: 'Cognitive & Reframing',
+            color: 'blue',
+            tags: ['cbt', 'reframing', 'shame', 'identity', 'self-worth'],
+            content: `### Core Rationale\nA technique to challenge global, negative self-labels by reframing them as specific, isolated behaviors. This shift separates a person's inherent worth from their actions, making the problem feel more manageable.\n\n### How to Practice\n* **Identify the Identity Statement:** Notice when the client says something like "I am a failure," or "I am a bad person."\n* **Invite the Reframe:** "I hear you saying 'I'm a failure.' Let's try to look at this from a different perspective. Is it more accurate to say 'I made a mistake'? There's a big difference between *being* a failure and *doing* something that didn't work out."\n* **Explore the Impact:** "How does it feel to consider that this was something you *did*, rather than something you *are*?"`
+        }
     ];
 
     const scriptsData = [
@@ -260,7 +675,15 @@
             category: 'Script',
             color: 'indigo',
             tags: ['boundaries', 'role setting', 'containment', 'scripts'],
-            content: `...` // Content is unchanged
+            content: `### Standard Framing\n“Before we get started—my role isn’t for processing, but to make sure you’re safe and help get you grounded so you can rejoin group. We’ve got about 20 minutes, can you tell me what’s going on that brought you to reach out for support?”\n\n### For Clients Expecting Therapy\n“My role’s a bit different than a therapist’s—I’m not here to fully process, but I am here to check in on your safety and help you feel a little more steady before heading back to group. Want to tell me what’s weighing on you today?”\n\n### Quick Boundary Phrases\n* "I can’t go deep with you here, but I can help you feel safer and more grounded right now."\n* "Let’s slow it down together. I’m here to help steady things—not unpack everything."`
+        },
+        {
+            id: 'script-stabilize',
+            title: 'Stabilization Scripts',
+            category: 'Script',
+            color: 'indigo',
+            tags: ['stabilize', 'grounding', 'containment', 'validation', 'scripts'],
+            content: `### Validate & Contain\n“You’ve been dealing with a lot, and your mind and body are hitting a limit. That’s okay. There’s no rush to fix anything right now. We’re not trying to erase that heaviness — but to hold it in a way that feels manageable enough for this moment."\n\n### Slow Nervous System\n“Let’s take a moment to slow things down together. There’s no rush here and no pressure to fix anything. Let's try one slow breath together. Inhale and notice your lungs filling... hold it for a second... now exhale nice and slow."\n\n### Empower & Redirect\n“Your courage in acknowledging how intense this feels is really powerful. Remember, our goal isn’t to solve everything right now — it’s just to get you steady enough that you can leave here feeling a bit more centered.”`
         },
         {
             id: 'script-end-of-session',
@@ -268,9 +691,16 @@
             category: 'Script',
             color: 'indigo',
             tags: ['end of session', 'survey', 'closure', 'scripts'],
-            content: `...`
+            content: `### Survey\n“Before you go back to group, I do have a brief survey that I’m required to provide. It's very short, just a thumbs up or thumbs down. Do you see the link in the chat?”\n“Great! Let me know when you are done and then I will get you back into group.”\n\n### If Still Heavy\n"You’re still carrying a lot — I see that. We haven’t solved everything, and we’re not supposed to in these few minutes. I just want to make sure that what you’re feeling now is something you can handle for now. Does it feel safe enough for you to wrap up, even if it’s still heavy?"\n\n### If Still in Distress\n"I don’t want to send you back in this state. Why don’t we take another minute here? We can try another grounding technique or even get additional support if you need it. My priority is that you leave feeling safe enough. How are you feeling about continuing a bit longer until this eases?"`
         },
-        // ... all other scripts
+        {
+            id: 'script-trauma-dumping-containment',
+            title: 'Trauma-Dumping Containment Scripts',
+            category: 'Script',
+            color: 'indigo',
+            tags: ['trauma', 'containment', 'boundaries', 'safety', 'scripts'],
+            content: `### Mid-Session Redirect\n“I really hear that this is painful, and it makes sense that you’d want to process it. But because we only have a few minutes and I’m not in the role of a therapist, I want to be careful we don’t go too deep here and leave you feeling more overwhelmed.”\n\n### Gentle Wall for Immediate Flooding\n“I know it can feel urgent to get it all out, but my role is to support you in feeling safe—not to unpack everything. If we open something deep in this short space, there’s a chance you’ll end up carrying it alone after we disconnect—and I want to avoid that.”\n\n### Emergency Stop – Already Flooded\n“You’ve shared something really heavy, and I can tell this matters. But we’re in a short space right now, and going deeper might actually make things harder for you when I have to end the session. Let’s focus on helping you stabilize.”`
+        },
     ];
     
     const scratchpadTemplates = {
@@ -340,6 +770,7 @@
     function initializeDataMap() {
         const allContent = [...clinicalData, ...interventionsData, ...scriptsData];
         allContent.forEach(item => state.contentMap.set(item.id, item));
+        // Use a map to link intervention titles within content to their IDs
         interventionsData.forEach(item => state.interventionMap.set(item.title, item.id));
     }
 
@@ -373,6 +804,7 @@
     }
 
     function renderCardList(container, items, message, search_query = '') {
+        container.className = ''; // Reset class
         let headerHtml = '';
         if(search_query){
             headerHtml = `<div class="col-span-full mb-4 flex items-center gap-4">
@@ -402,7 +834,7 @@
         const zones = ['Red Zone', 'Orange Zone', 'Yellow Zone', 'Green Zone'];
         const zoneEmojis = {'Red Zone': '🔴', 'Orange Zone': '🟠', 'Yellow Zone': '🟨', 'Green Zone': '💚'};
         const quickAccessIds = ['script-boundary-setting', 'intervention-tipp', 'intervention-self-compassion-break', 'script-end-of-session'];
-        const quickAccessItems = quickAccessIds.map(id => state.contentMap.get(id));
+        const quickAccessItems = quickAccessIds.map(id => state.contentMap.get(id)).filter(Boolean);
 
         let dashboardHtml = `
             <div class="mb-10">
@@ -440,6 +872,7 @@
     }
     
     function renderCategorizedList(container, items, categoryTitle, message) {
+        container.className = ''; // Reset class
         const grouped = items.reduce((acc, item) => {
             const group = item.subCategory || 'General';
             if (!acc[group]) {
@@ -454,7 +887,8 @@
         if (Object.keys(grouped).length === 0) {
             html += `<div class="text-center text-gray-500 py-12">${message}</div>`;
         } else {
-            for (const groupName in grouped) {
+            const sortedGroupNames = Object.keys(grouped).sort();
+            for (const groupName of sortedGroupNames) {
                 html += `
                     <div class="mb-10">
                         <h2 class="text-xl font-bold mb-4 pb-2 border-b-2 border-gray-300 dark:border-gray-600">${groupName}</h2>
@@ -512,6 +946,7 @@
         // Process content for clickable insights
         let processedContent = scenario.content;
         state.interventionMap.forEach((id, title) => {
+            // Match the title when it's bolded in the markdown
             const regex = new RegExp(`\\*\\*(${title})\\*\\*`, 'g');
             processedContent = processedContent.replace(regex, `<button class="insight-link" data-id="${id}">$1</button>`);
         });
@@ -606,7 +1041,7 @@
             case 'interventions': return interventionsData;
             case 'scripts': return scriptsData;
             case 'dashboard': return clinicalData;
-            default: return [];
+            default: return Array.from(state.contentMap.values());
         }
     }
 
@@ -645,7 +1080,7 @@
                 items = state.recentlyViewed.map(id => state.contentMap.get(id)).filter(Boolean);
                 message = 'No recently viewed items.';
             } else if (viewId === 'scripts') {
-                items = Array.from(state.contentMap.values()).filter(item => item.category === 'Script');
+                items = scriptsData;
                 message = 'No scripts found.';
             }
             renderCardList(dom.contentArea, items, message);
@@ -672,7 +1107,16 @@
                 showToast('Added to favorites!', 'success');
             }
             saveState();
-            switchView(state.currentView);
+            // Re-render current view to reflect favorite change
+            if (state.currentView === 'favorites' || dom.searchBox.value) {
+                switchView(state.currentView);
+            } else {
+                // Just update the icon without full re-render for performance
+                const icon = favoriteBtn.querySelector('i');
+                icon.classList.toggle('text-yellow-500', !isFavorite);
+                icon.classList.toggle('fill-current', !isFavorite);
+                icon.classList.toggle('text-gray-400', isFavorite);
+            }
             return;
         }
         
@@ -755,7 +1199,11 @@
             return;
         }
         
-        const filtered = getCurrentList();
+        const filtered = Array.from(state.contentMap.values()).filter(item =>
+            item.title.toLowerCase().includes(q) ||
+            (item.content && item.content.toLowerCase().includes(q)) ||
+            (item.tags && item.tags.some(tag => tag.toLowerCase().includes(q)))
+        );
         renderCardList(dom.contentArea, filtered, 'No matches found for your search.', q);
     });
 
