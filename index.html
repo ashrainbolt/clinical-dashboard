@@ -183,6 +183,18 @@
         </div>
     </div>
     
+    <!-- Quick Access Add Modal -->
+    <div id="quick-access-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm items-center justify-center z-50 p-4 modal-hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-2xl w-full relative p-6 max-h-[90vh] flex flex-col modal-content opacity-0 scale-95">
+            <div class="flex items-center mb-4">
+                <h2 class="text-2xl font-bold flex-1">Add to Quick Access</h2>
+                <button id="close-quick-access-modal" class="p-2 rounded-full text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            <input id="quick-access-search" type="text" placeholder="Search all items..." class="w-full px-3 py-2 mb-4 rounded-lg border border-gray-300 dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            <div id="quick-access-list" class="flex-1 overflow-y-auto -mr-4 pr-4 space-y-2"></div>
+        </div>
+    </div>
+
     <!-- Confirmation Modal -->
     <div id="confirmation-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm items-center justify-center z-[60] p-4 modal-hidden">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-6 w-full max-w-sm modal-content opacity-0 scale-95">
@@ -867,7 +879,9 @@
             intervalId: null,
             elapsedSeconds: 0,
             isPaused: true,
-        }
+        },
+        isEditingQuickAccess: false,
+        quickAccessIds: [],
     };
 
     const colorMap = {
@@ -904,6 +918,10 @@
         sessionTimerContainer: document.getElementById('session-timer-container'),
         timerToggleBtn: document.getElementById('timer-toggle-btn'),
         timerResetBtn: document.getElementById('timer-reset-btn'),
+        quickAccessModal: document.getElementById('quick-access-modal'),
+        quickAccessList: document.getElementById('quick-access-list'),
+        quickAccessSearch: document.getElementById('quick-access-search'),
+        closeQuickAccessModal: document.getElementById('close-quick-access-modal'),
     };
 
     // ---- STATE PERSISTENCE ----
@@ -911,12 +929,15 @@
         localStorage.setItem('clinicalFavorites', JSON.stringify(state.favorites));
         localStorage.setItem('clinicalRecents', JSON.stringify(state.recentlyViewed));
         localStorage.setItem('clinicalScratchpad', state.scratchpadContent);
+        localStorage.setItem('clinicalQuickAccess', JSON.stringify(state.quickAccessIds));
     }
 
     function loadState() {
         state.favorites = JSON.parse(localStorage.getItem('clinicalFavorites') || '[]');
         state.recentlyViewed = JSON.parse(localStorage.getItem('clinicalRecents') || '[]');
         state.scratchpadContent = localStorage.getItem('clinicalScratchpad') || '';
+        const savedQuickAccess = localStorage.getItem('clinicalQuickAccess');
+        state.quickAccessIds = savedQuickAccess ? JSON.parse(savedQuickAccess) : ['script-boundary-setting', 'intervention-tipp', 'intervention-self-compassion-break', 'script-end-of-session'];
     }
 
     // ---- INITIALIZATION ----
@@ -1002,43 +1023,108 @@
         setTimeout(() => {
             const zones = ['Red Zone', 'Orange Zone', 'Yellow Zone', 'Green Zone'];
             const zoneEmojis = {'Red Zone': '🔴', 'Orange Zone': '🟠', 'Yellow Zone': '🟨', 'Green Zone': '💚'};
-            const quickAccessIds = ['script-boundary-setting', 'intervention-tipp', 'intervention-self-compassion-break', 'script-end-of-session'];
-            const quickAccessItems = quickAccessIds.map(id => state.contentMap.get(id)).filter(Boolean);
+            
+            const quickAccessItems = state.quickAccessIds.map(id => state.contentMap.get(id)).filter(Boolean);
 
-            let dashboardHtml = `
+            let editControls = '';
+            if (state.isEditingQuickAccess) {
+                editControls = `
+                    <button id="done-quick-access-btn" class="text-sm font-semibold text-green-600 dark:text-green-400 hover:underline">Done</button>
+                `;
+            } else {
+                editControls = `<button id="edit-quick-access-btn" class="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">Edit</button>`;
+            }
+
+            let quickAccessHtml = `
                 <div class="mb-10">
-                    <h2 class="text-2xl font-bold mb-4 pb-2 border-b-2 border-gray-300 dark:border-gray-600 flex items-center gap-2">
-                        <i data-lucide="zap" class="w-6 h-6 text-gray-500"></i> Quick Access
-                    </h2>
+                    <div class="flex justify-between items-center mb-4 pb-2 border-b-2 border-gray-300 dark:border-gray-600">
+                        <h2 class="text-2xl font-bold flex items-center gap-2">
+                            <i data-lucide="zap" class="w-6 h-6 text-gray-500"></i> Quick Access
+                        </h2>
+                        ${editControls}
+                    </div>
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
                         ${quickAccessItems.map(item => `
-                            <button class="view-btn p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-all text-left flex flex-col justify-between h-full border-l-4 ${colorMap[item.color]?.border || ''}" data-id="${item.id}">
-                                <span class="font-semibold text-gray-800 dark:text-gray-200">${item.title}</span>
-                                <span class="text-xs mt-2 ${colorMap[item.color]?.text || ''}">${item.category}</span>
-                            </button>
+                            <div class="relative">
+                                <button class="view-btn p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-all text-left flex flex-col justify-between h-full w-full border-l-4 ${colorMap[item.color]?.border || ''}" data-id="${item.id}">
+                                    <span class="font-semibold text-gray-800 dark:text-gray-200">${item.title}</span>
+                                    <span class="text-xs mt-2 ${colorMap[item.color]?.text || ''}">${item.category}</span>
+                                </button>
+                                ${state.isEditingQuickAccess ? `<button class="remove-quick-access-btn absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600" data-id="${item.id}"><i data-lucide="x" class="w-3 h-3"></i></button>` : ''}
+                            </div>
                         `).join('')}
+                        ${state.isEditingQuickAccess ? `
+                            <button id="add-quick-access-card" class="p-4 bg-gray-100 dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center border-2 border-dashed border-gray-400 dark:border-gray-600 text-gray-500 hover:text-indigo-500 hover:border-indigo-500">
+                                <i data-lucide="plus" class="w-8 h-8"></i>
+                            </button>
+                        ` : ''}
                     </div>
                 </div>
             `;
 
-            zones.forEach(zone => {
+            let zonesHtml = zones.map(zone => {
                 const itemsInZone = clinicalData.filter(item => item.category === zone);
-                if (itemsInZone.length > 0) {
-                    const zoneColor = itemsInZone[0].color;
-                    dashboardHtml += `
-                        <div class="mb-10">
-                            <h2 class="text-2xl font-bold mb-4 pb-2 border-b-2 border-${zoneColor}-500 text-${zoneColor}-600 dark:text-${zoneColor}-400">${zoneEmojis[zone]} ${zone}</h2>
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                ${itemsInZone.map(createScenarioCard).join('')}
-                            </div>
+                if (itemsInZone.length === 0) return '';
+                const zoneColor = itemsInZone[0].color;
+                return `
+                    <div class="mb-10">
+                        <h2 class="text-2xl font-bold mb-4 pb-2 border-b-2 border-${zoneColor}-500 text-${zoneColor}-600 dark:text-${zoneColor}-400">${zoneEmojis[zone]} ${zone}</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            ${itemsInZone.map(createScenarioCard).join('')}
                         </div>
-                    `;
-                }
-            });
+                    </div>
+                `;
+            }).join('');
 
-            dom.contentArea.innerHTML = dashboardHtml;
+            dom.contentArea.innerHTML = quickAccessHtml + zonesHtml;
             lucide.createIcons();
             dom.contentArea.style.opacity = '1';
+        }, 300);
+    }
+    
+    function renderQuickAccessAddModal(searchTerm = '') {
+        const allItems = Array.from(state.contentMap.values()).sort((a, b) => a.title.localeCompare(b.title));
+        const filteredItems = allItems.filter(item => 
+            !state.quickAccessIds.includes(item.id) &&
+            item.title.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+
+        if (filteredItems.length === 0) {
+            dom.quickAccessList.innerHTML = `<p class="text-center text-gray-500">No items found or all are added.</p>`;
+            return;
+        }
+
+        dom.quickAccessList.innerHTML = filteredItems.map(item => {
+            const colors = colorMap[item.color] || colorMap.indigo;
+            return `
+                <div class="flex items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <div class="flex-1">
+                        <p class="font-semibold text-gray-800 dark:text-gray-100">${item.title}</p>
+                        <p class="text-xs ${colors.text}">${item.category}</p>
+                    </div>
+                    <button class="add-quick-access-item-btn p-2 bg-green-500 text-white rounded-full hover:bg-green-600" data-id="${item.id}">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            `;
+        }).join('');
+        lucide.createIcons();
+    }
+
+    function openQuickAccessModal() {
+        renderQuickAccessAddModal();
+        dom.quickAccessModal.classList.remove('modal-hidden');
+        dom.quickAccessModal.classList.add('modal-visible');
+        setTimeout(() => {
+            dom.quickAccessModal.querySelector('.modal-content').classList.remove('opacity-0', 'scale-95');
+        }, 10);
+    }
+
+    function closeQuickAccessModal() {
+        dom.quickAccessModal.querySelector('.modal-content').classList.add('opacity-0', 'scale-95');
+        setTimeout(() => {
+            dom.quickAccessModal.classList.add('modal-hidden');
+            dom.quickAccessModal.classList.remove('modal-visible');
         }, 300);
     }
 
@@ -1298,7 +1384,7 @@
         const viewBtn = e.target.closest('.view-btn');
         if (viewBtn) {
             // Prevent nested button clicks from triggering multiple actions
-            if (e.target.closest('.remove-used-btn')) return;
+            if (e.target.closest('.remove-used-btn') || e.target.closest('.remove-quick-access-btn')) return;
             openModal(viewBtn.dataset.id);
             return;
         }
@@ -1362,6 +1448,36 @@
         
         if (e.target.closest('#copy-used-log-btn')) {
             copyUsedLogToScratchpad();
+            return;
+        }
+
+        // Quick Access Edit Logic
+        if (e.target.closest('#edit-quick-access-btn')) {
+            state.isEditingQuickAccess = true;
+            renderDashboard();
+            return;
+        }
+        if (e.target.closest('#done-quick-access-btn')) {
+            state.isEditingQuickAccess = false;
+            saveState();
+            renderDashboard();
+            return;
+        }
+        if (e.target.closest('.remove-quick-access-btn')) {
+            const id = e.target.closest('.remove-quick-access-btn').dataset.id;
+            state.quickAccessIds = state.quickAccessIds.filter(qaId => qaId !== id);
+            renderDashboard();
+            return;
+        }
+        if (e.target.closest('#add-quick-access-card')) {
+            openQuickAccessModal();
+            return;
+        }
+        if (e.target.closest('.add-quick-access-item-btn')) {
+            const id = e.target.closest('.add-quick-access-item-btn').dataset.id;
+            state.quickAccessIds.push(id);
+            renderQuickAccessAddModal(dom.quickAccessSearch.value); // Re-render list to remove added item
+            renderDashboard(); // Update dashboard in the background
             return;
         }
     }
@@ -1633,10 +1749,14 @@
         dom.timerResetBtn?.addEventListener('click', resetTimer);
         
         dom.closeModal.addEventListener('click', closeModal);
+        dom.closeQuickAccessModal.addEventListener('click', closeQuickAccessModal);
+        dom.quickAccessSearch.addEventListener('input', (e) => renderQuickAccessAddModal(e.target.value));
+
         dom.themeToggle?.addEventListener('click', () => {
-            const isDarkMode = document.documentElement.classList.toggle('dark');
-            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-            applyTheme(isDarkMode);
+            const isCurrentlyDark = document.documentElement.classList.contains('dark');
+            const newIsDark = !isCurrentlyDark;
+            localStorage.setItem('theme', newIsDark ? 'dark' : 'light');
+            applyTheme(newIsDark);
         });
         dom.copyModalContentBtn.addEventListener('click', () => {
             if (state.currentOpenScenario) {
