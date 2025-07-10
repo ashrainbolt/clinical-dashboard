@@ -928,7 +928,7 @@
                 dateStyle: 'short',
                 timeStyle: 'short'
             });
-            return `**${timestamp}**\n\n[Concern] CC request for Ct ___.\n[Intervention] CSSRS: ___. Ct ___.\n[Concern] Ct returned to group.`;
+            return `(${timestamp})\n\n[Concern] CC request for Ct ___.\n[Intervention] CSSRS: ___. Ct ___.\n[Outcome] Ct returned to group.`;
         }
     };
 
@@ -1282,13 +1282,8 @@
                 <button id="toggle-scratchpad-mode" class="text-sm px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600">
                     ${state.scratchpadMode === 'write' ? 'Preview' : 'Edit'}
                 </button>
-                <div id="template-dropdown-container" class="relative">
-                    <button id="template-btn" class="text-sm px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600">Templates</button>
-                    <div id="template-dropdown" class="hidden absolute left-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-md shadow-lg z-10">
-                        <a href="#" class="template-item block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600" data-template="safetyPlan">Safety Plan</a>
-                        <a href="#" class="template-item block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600" data-template="sessionNotes">Session Notes</a>
-                    </div>
-                </div>
+                <button class="template-item text-sm px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600" data-template="sessionNotes">Note</button>
+                <button class="template-item text-sm px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600" data-template="safetyPlan">Safety Plan</button>
                 <button id="clear-scratchpad" class="ml-auto text-sm text-red-500 hover:underline">Clear</button>
             </div>
             <div id="scratchpad-write-area" class="${state.scratchpadMode === 'write' ? '' : 'hidden'}">
@@ -1630,12 +1625,6 @@
         scratchpadBody.querySelector('#copy-scratchpad')?.addEventListener('click', () => copyToClipboard(state.scratchpadContent));
         scratchpadBody.querySelector('#download-scratchpad')?.addEventListener('click', downloadScratchpad);
         
-        const templateBtn = scratchpadBody.querySelector('#template-btn');
-        const templateDropdown = scratchpadBody.querySelector('#template-dropdown');
-        templateBtn?.addEventListener('click', (e) => {
-            e.stopPropagation();
-            templateDropdown.classList.toggle('hidden');
-        });
         scratchpadBody.querySelectorAll('.template-item').forEach(item => {
             item.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -1652,13 +1641,7 @@
                     textarea.dispatchEvent(new Event('input'));
                     textarea.scrollTop = textarea.scrollHeight;
                 }
-                templateDropdown.classList.add('hidden');
             });
-        });
-        document.addEventListener('click', (e) => {
-            if (!templateBtn?.contains(e.target)) {
-                templateDropdown?.classList.add('hidden');
-            }
         });
     }
     
