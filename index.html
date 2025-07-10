@@ -175,6 +175,7 @@
             <button class="sidebar-link w-full text-left px-4 py-2 rounded flex items-center hover:bg-indigo-100 dark:hover:bg-indigo-900" data-tab="dashboard"><i data-lucide="layout-dashboard" class="w-4 h-4 mr-3"></i>Dashboard</button>
             <button class="sidebar-link w-full text-left px-4 py-2 rounded flex items-center hover:bg-indigo-100 dark:hover:bg-indigo-900" data-tab="interventions"><i data-lucide="zap" class="w-4 h-4 mr-3"></i>Interventions</button>
             <button class="sidebar-link w-full text-left px-4 py-2 rounded flex items-center hover:bg-indigo-100 dark:hover:bg-indigo-900" data-tab="scripts"><i data-lucide="file-text" class="w-4 h-4 mr-3"></i>Scripts</button>
+            <button class="sidebar-link w-full text-left px-4 py-2 rounded flex items-center hover:bg-indigo-100 dark:hover:bg-indigo-900" data-tab="psychoeducation"><i data-lucide="book-open" class="w-4 h-4 mr-3"></i>Psychoed</button>
             <button class="sidebar-link w-full text-left px-4 py-2 rounded flex items-center hover:bg-indigo-100 dark:hover:bg-indigo-900" data-tab="favorites"><i data-lucide="star" class="w-4 h-4 mr-3"></i>Favorites</button>
             <button class="sidebar-link w-full text-left px-4 py-2 rounded flex items-center hover:bg-indigo-100 dark:hover:bg-indigo-900" data-tab="recents"><i data-lucide="history" class="w-4 h-4 mr-3"></i>Recently Viewed</button>
             <button id="scratchpad-toggle-btn" class="sidebar-link w-full text-left px-4 py-2 rounded flex items-center hover:bg-teal-100 dark:hover:bg-teal-900" data-tab="scratchpad"><i data-lucide="edit-3" class="w-4 h-4 mr-3"></i>Scratchpad</button>
@@ -299,7 +300,7 @@
             emoji: '🚩',
             color: 'red',
             tags: ['nssi', 'self-harm', 'urges', 'coping', 'safety', 'red'],
-            content: `### Direct Check-In\n“Thank you for telling me. I need to ask: Are you having urges to hurt yourself right now?”\n* **If yes (urge is present):** “On a scale from 1 to 10, how strong is the urge right now, 10 being the strongest?”\n* **If yes (recent self-harm action):** “What did you do, and how severe was it? Do you need any medical attention for that?”\n\n### Clarify Intent\n“When you self-harmed, was it because you wanted to die, or was it more about coping with pain or numbness?”\n\n### Validate & Normalize\n“That urge makes sense given what you’re carrying. A part of you is trying to survive and find relief, even if it’s doing it in a way that ends up hurting you. Let’s see if we can work with that part in a safer way.”\n\n### Offer Alternatives & Coping Strategies\n* **Intense Physical Sensations (**TIPP Skill for Rapid Distress Reduction**):** “Sometimes our body needs a very strong sensation to release that tension. We could try holding something frozen (like ice), doing a wall-sit or some push-ups, or splashing really cold water on your face.”\n* **“Urge Surfing” Technique (**Name the Urge, Challenge the Urge**):** “Remember, urges are like waves — they build, peak, and eventually fall. Let’s try to ride this wave out together.”\n* **Safe Physical Release:** “Would it help to rip up some paper, squeeze a stress ball, stomp your feet, or even scream into a pillow?”\n\n### Commitment to Safety\n“I know the urge is strong, but do you feel like you can stay safe tonight? Even if the urge comes back, can you promise me you’ll try these coping steps or reach out for help before doing anything to hurt yourself?”`
+            content: `### Direct Check-In\n“Thank you for telling me. I need to ask: Are you having urges to hurt yourself right now?”\n* **If yes (urge is present):** “On a scale from 1 to 10, how strong is the urge right now, 10 being the strongest?”\n* **If yes (recent self-harm action):** “What did you do, and how severe was it? Do you need any medical attention for that?”\n\n### Clarify Intent\n“When you self-harmed, was it because you wanted to die, or was it more about coping with pain or numbness?”\n\n### Validate & Normalize\n“That urge makes sense given what you’re carrying. A part of you is trying to survive and find relief, even if it’s doing it in a way that ends up hurting you. Let’s see if we can work with that part in a safer way.”\n\n### Offer Alternatives & Coping Strategies\n* **Intense Physical Sensations (**TIPP Skill for Rapid Distress Reduction**):** “Sometimes our body needs a very strong sensation to release that tension. We could try holding something frozen (like ice), doing a wall-sit or some push-ups, or splashing really cold water on your face.”\n* **“Urge Surfing” Technique (**Name the Urge, Challenge the Urge**):** “Remember, urges are like waves — they build, peak, and eventually fall. Let’s try to ride this wave out together.”\n* **Safe Physical Release:** “Would it help to rip up some paper, squeeze a stress ball, stomp your feet, or even scream into a pillow?”\n\n### Harm Reduction (If urge is overwhelming)\n"I hear that the urge feels too strong to resist completely right now. The priority is to keep you as safe as possible. Is there a way to get through this moment with less harm? For example, instead of [more severe method], could you try holding ice very tightly, or drawing on your skin with a red marker?"\n\n### Commitment to Safety\n“I know the urge is strong, but do you feel like you can stay safe tonight? Even if the urge comes back, can you promise me you’ll try these coping steps or reach out for help before doing anything to hurt yourself?”`
         },
         {
             id: 'red-hallucinations',
@@ -372,7 +373,7 @@
             emoji: '🟠',
             color: 'orange',
             tags: ['agitation', 'escalation', 'anger', 'distress', 'orange'],
-            content: `### Center and Slow the Moment\n“I can see (or hear) how agitated you are. Let’s take a pause for a second. I’m right here with you. You don’t have to go through this moment alone.”\n\n### Acknowledge the Anger/Frustration\n“That energy and anger you’re feeling right now — it makes sense. Something important is going on inside you and it’s demanding to be heard.”\n\n### Keep Voice Calm & Assuring\n“I’m not going anywhere. I know you’re really upset, and it’s okay. Let’s stay right here. You’re safe with me to let it out, as long as we keep each other safe.”\n\n### After Calming Slightly – Reflection\n“That was a lot. You did really well slowing down just now. This is hard stuff, and you’re handling it. When you’re ready, maybe we can figure out what you need next or how I can help further.”`
+            content: `### Center and Slow the Moment\n“I can see (or hear) how agitated you are. Let’s take a pause for a second. I’m right here with you. You don’t have to go through this moment alone.”\n\n### Acknowledge the Anger/Frustration\n“That energy and anger you’re feeling right now — it makes sense. Something important is going on inside you and it’s demanding to be heard.”\n\n### Explore the Underlying Need\n"Anger often acts as a protector for more vulnerable feelings. I wonder, if the anger could speak, what hurt or fear might be underneath it? What is it trying to tell us that you need right now?"\n\n### Keep Voice Calm & Assuring\n“I’m not going anywhere. I know you’re really upset, and it’s okay. Let’s stay right here. You’re safe with me to let it out, as long as we keep each other safe.”\n\n### After Calming Slightly – Reflection\n“That was a lot. You did really well slowing down just now. This is hard stuff, and you’re handling it. When you’re ready, maybe we can figure out what you need next or how I can help further.”`
         },
         {
             id: 'orange-panic-attack',
@@ -701,7 +702,7 @@
             subCategory: 'Distress Tolerance & Emotional Regulation',
             color: 'blue',
             tags: ['dbt', 'distress tolerance', 'regulation', 'panic', 'overwhelm'],
-            content: `### Core Rationale\nTIPP skills directly target the body's acute stress response, changing your body chemistry and creating a window to re-engage your thinking brain.\n\n### T - Temperature\n"First, let's try to change your body temperature. The idea is to create a sudden shift. If you can, go splash some cold water on your face - really let it cover your cheeks and the area under your eyes. This can help slow your heart rate down very quickly when you're agitated."\n\n### I - Intense Exercise\n"If you're feeling a lot of restless, built-up energy, a very short burst of exercise can help. Could you do some jumping jacks, run in place as fast as you can, or even just tense and release all your big muscle groups very hard and fast?"\n\n### P - Paced Breathing\n"Now, let's focus on slowing your breath. We're going to make your exhale longer than your inhale. Try breathing in deeply through your nose for 4 seconds, and then breathe out very slowly and gently through your mouth for 6 seconds."\n\n### P - Paired Muscle Relaxation\n"As you continue breathing slowly, when you breathe in, tense a group of muscles. Let's try that with your hands and arms; inhale through your nose, make tight fists. Hold that tension. Now as you exhale, slowly release the squeeze. Notice the difference."`
+            content: `### Core Rationale\nTIPP skills directly target the body's acute stress response, changing your body chemistry and creating a window to re-engage your thinking brain.\n\n### T - Temperature\n"First, let's try to change your body temperature. The idea is to create a sudden shift. If you can, go splash some cold water on your face - really let it cover your cheeks and the area under your eyes. This can help slow your heart rate down very quickly when you're agitated."\n\n### I - Intense Exercise\n"If you're feeling a lot of restless, built-up energy, a very short burst of exercise can help. Could you do some jumping jacks, run in place as fast as you can, or even just tense and release all your big muscle groups very hard and fast?"\n\n### P - Paced Breathing\n"Now, let's focus on slowing your breath. We're going to make your exhale longer than your inhale. Try breathing in deeply through your nose for 4 seconds, and then breathe out very slowly and gently through your mouth for 6 seconds."\n\n### P - Paired Muscle Relaxation\n"As you continue breathing slowly, when you breathe in, tense a group of muscles. Let's try that with your hands and arms; inhale through your nose, make tight fists. Hold that tension. Now as you exhale, slowly release the squeeze. Notice the difference."\n\n### Clinical Considerations\n* **When to Use:** Best for acute, physiological distress (panic, extreme agitation, intense urges).\n* **When to Avoid:** May not be suitable for individuals with certain medical conditions (e.g., heart problems, breathing issues). Always check for medical contraindications.`
         },
         {
             id: 'intervention-accepts',
@@ -746,7 +747,7 @@
             subCategory: 'Core DBT Skills',
             color: 'blue',
             tags: ['dbt', 'communication', 'assertiveness', 'boundaries', 'needs'],
-            content: `### Core Rationale\nA structured way to ask for something you want or to say "no" effectively and assertively.\n\n### D - Describe\n"Just the facts. What is the specific, objective situation? (e.g., 'The last three times we planned to meet, you cancelled on the day.')"\n\n### E - Express\n"Clearly state your feelings using 'I-statements'. (e.g., 'I feel frustrated and a bit hurt when this happens.')"\n\n### A - Assert\n"Clearly state what you need or want. Be direct. (e.g., 'I would like us to find a way to make our plans more reliable...')"\n\n### R - Reinforce\n"Explain the positive outcome if your request is met. (e.g., 'It would help me feel more secure in our friendship...')"\n\n### M - (Stay) Mindful\n"Keep your focus on your goal. Avoid getting sidetracked."\n\n### A - Appear Confident\n"Use a confident tone and body language, even if you feel nervous."\n\n### N - Negotiate\n"Be willing to listen and find a workable compromise, but don't give up on your core need."`
+            content: `### Core Rationale\nA structured way to ask for something you want or to say "no" effectively and assertively.\n\n### D - Describe\n"Just the facts. What is the specific, objective situation? (e.g., 'The last three times we planned to meet, you cancelled on the day.')"\n\n### E - Express\n"Clearly state your feelings using 'I-statements'. (e.g., 'I feel frustrated and a bit hurt when this happens.')"\n\n### A - Assert\n"Clearly state what you need or want. Be direct. (e.g., 'I would like us to find a way to make our plans more reliable...')"\n\n### R - Reinforce\n"Explain the positive outcome if your request is met. (e.g., 'It would help me feel more secure in our friendship...')"\n\n### M - (Stay) Mindful\n"Keep your focus on your goal. Avoid getting sidetracked."\n\n### A - Appear Confident\n"Use a confident tone and body language, even if you feel nervous."\n\n### N - Negotiate\n"Be willing to listen and find a workable compromise, but don't give up on your core need."\n\n### Clinical Considerations\n* For situations where maintaining the relationship is the primary goal (vs. getting your objective), consider the **GIVE** skill: be **G**entle, act **I**nterested, **V**alidate, and use an **E**asy manner.`
         },
         {
             id: 'intervention-ifs-parts',
@@ -885,6 +886,36 @@
         }
     ];
 
+    const psychoeducationData = [
+        {
+            id: 'psychoed-window-of-tolerance',
+            title: 'The Window of Tolerance',
+            category: 'Psychoeducation',
+            emoji: '🧠',
+            color: 'purple',
+            tags: ['regulation', 'arousal', 'nervous system', 'psychoed'],
+            content: `### What is the Window of Tolerance?\nImagine your nervous system has a "window" where you feel at your best. Inside this window, you can handle life's ups and downs. You feel calm, connected, and able to think clearly.\n\n### What happens when we leave the window?\nStress, triggers, or trauma can push us outside our window.\n\n* **Hyper-arousal (Above the Window):** This is the "fight or flight" response. You might feel anxious, overwhelmed, angry, or panicky. Your thoughts might race, and your body feels tense.\n* **Hypo-arousal (Below the Window):** This is the "freeze" or "shut down" response. You might feel numb, empty, disconnected, or have trouble thinking. Your body might feel heavy and tired.\n\n### The Goal\nThe goal isn't to never leave the window—that's impossible. The goal is to first notice when we've left it, and then to use skills (like grounding or TIPP) to gently guide ourselves back inside.`
+        },
+        {
+            id: 'psychoed-panic-vs-anxiety',
+            title: 'Panic Attack vs. Anxiety Attack',
+            category: 'Psychoeducation',
+            emoji: '🧠',
+            color: 'purple',
+            tags: ['panic', 'anxiety', 'definitions', 'psychoed'],
+            content: `### What's the Difference?\nWhile they feel similar, there are some key differences.\n\n* **Panic Attacks:** These are intense and sudden. They often have no clear trigger and peak within about 10 minutes. The physical symptoms (racing heart, shortness of breath, dizziness) are very strong and can make people feel like they're dying or losing control.\n* **Anxiety Attacks:** "Anxiety attack" isn't an official clinical term, but people use it to describe a period of intense anxiety. It usually builds up over time in response to a specific stressor. It can last much longer than a panic attack, but the physical symptoms might be less severe.\n\n### Why it Matters\nKnowing the difference can help you understand what's happening. A panic attack, while terrifying, is temporary and will pass. Recognizing it as panic can reduce the fear that something is medically wrong.`
+        },
+        {
+            id: 'psychoed-what-is-dbt',
+            title: 'What is DBT?',
+            category: 'Psychoeducation',
+            emoji: '🧠',
+            color: 'purple',
+            tags: ['dbt', 'therapy', 'skills', 'psychoed'],
+            content: `### What is Dialectical Behavior Therapy (DBT)?\nDBT is a type of therapy designed to help people who experience emotions very intensely. The "Dialectic" part means finding a balance between two things that seem like opposites: **Acceptance** and **Change**.\n\n### The Two Core Ideas\n1.  **Acceptance:** This means accepting yourself and your reality as they are right now, without judgment. Skills like mindfulness help with this.\n2.  **Change:** This means working to build a life you want to live by learning new, more effective ways of coping and interacting with others.\n\n### The Four Skill Modules\n* **Mindfulness:** Learning to be present in the moment.\n* **Distress Tolerance:** Learning to get through crisis moments without making things worse.\n* **Emotion Regulation:** Learning to understand and manage your emotions.\n* **Interpersonal Effectiveness:** Learning to get your needs met in relationships while maintaining self-respect.`
+        }
+    ];
+
     const scriptsData = [
         {
             id: 'script-boundary-setting',
@@ -960,6 +991,7 @@
         green: { border: "border-green-500", bg: "bg-green-50 dark:bg-green-900/20", text: "text-green-600 dark:text-green-400" },
         blue: { border: "border-blue-500", bg: "bg-blue-50 dark:bg-blue-900/20", text: "text-blue-600 dark:text-blue-400" },
         indigo: { border: "border-indigo-500", bg: "bg-indigo-50 dark:bg-indigo-900/20", text: "text-indigo-600 dark:text-indigo-400" },
+        purple: { border: "border-purple-500", bg: "bg-purple-50 dark:bg-purple-900/20", text: "text-purple-600 dark:text-purple-400" },
     };
 
     // ---- DOM REFERENCES ----
@@ -1023,7 +1055,7 @@
 
     // ---- INITIALIZATION ----
     function initializeDataMap() {
-        const allContent = [...clinicalData, ...interventionsData, ...scriptsData];
+        const allContent = [...clinicalData, ...interventionsData, ...scriptsData, ...psychoeducationData];
         allContent.forEach(item => state.contentMap.set(item.id, item));
         interventionsData.forEach(item => {
             state.interventionMap.set(item.title, item.id);
@@ -1785,6 +1817,7 @@
             case 'recents': return state.recentlyViewed.map(id => state.contentMap.get(id)).filter(Boolean);
             case 'interventions': return interventionsData;
             case 'scripts': return scriptsData;
+            case 'psychoeducation': return psychoeducationData;
             case 'dashboard': return clinicalData;
             default: return Array.from(state.contentMap.values());
         }
@@ -1802,6 +1835,7 @@
             link.classList.toggle('font-semibold', isSelected);
         });
         dom.scratchpadToggleBtn.classList.remove('bg-indigo-100', 'dark:bg-indigo-800', 'text-indigo-700', 'dark:text-indigo-200', 'font-semibold');
+        dom.scratchpadToggleBtn.classList.remove('bg-teal-100', 'dark:bg-teal-900', 'text-teal-700', 'dark:text-teal-200');
 
         if (dom.searchBox.value) {
             dom.searchBox.value = '';
@@ -1811,6 +1845,8 @@
             renderDashboard();
         } else if (viewId === 'interventions') {
             renderCategorizedList(dom.contentArea, interventionsData, 'Interventions', 'No interventions found.');
+        } else if (viewId === 'psychoeducation') {
+            renderCardList(dom.contentArea, psychoeducationData, 'No psychoeducation topics found.');
         } else {
             let items = [];
             let message = 'No items found.';
