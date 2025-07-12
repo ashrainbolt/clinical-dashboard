@@ -303,6 +303,15 @@
             content: `### Direct Check-In\n“Thank you for telling me. I need to ask: Are you having urges to hurt yourself right now?”\n* **If yes (urge is present):** “On a scale from 1 to 10, how strong is the urge right now, 10 being the strongest?”\n* **If yes (recent self-harm action):** “What did you do, and how severe was it? Do you need any medical attention for that?”\n\n### Clarify Intent\n“When you self-harmed, was it because you wanted to die, or was it more about coping with pain or numbness?”\n\n### Validate & Normalize\n“That urge makes sense given what you’re carrying. A part of you is trying to survive and find relief, even if it’s doing it in a way that ends up hurting you. Let’s see if we can work with that part in a safer way.”\n\n### Offer Alternatives & Coping Strategies\n* **Intense Physical Sensations:** “Sometimes our body needs a very strong sensation to release that tension. We could try the **TIPP Skill for Rapid Distress Reduction**.”\n* **“Urge Surfing” Technique:** “Remember, urges are like waves — they build, peak, and eventually fall. Let’s try to ride this wave out together using the **Name the Urge, Challenge the Urge** technique.”\n* **Safe Physical Release:** “Would it help to rip up some paper, squeeze a stress ball, stomp your feet, or even scream into a pillow?”\n\n### Harm Reduction (If urge is overwhelming)\n"I hear that the urge feels too strong to resist completely right now. The priority is to keep you as safe as possible. Is there a way to get through this moment with less harm? For example, instead of [more severe method], could you try holding ice very tightly, or drawing on your skin with a red marker?"\n\n### Commitment to Safety\n“I know the urge is strong, but do you feel like you can stay safe tonight? Even if the urge comes back, can you promise me you’ll try these coping steps or reach out for help before doing anything to hurt yourself?”`
         },
         {
+            id: 'red-imminent-risk',
+            title: 'Imminent Risk of Harm (Active Crisis)',
+            category: 'Red Zone',
+            emoji: '🚩',
+            color: 'red',
+            tags: ['imminent risk', 'active crisis', 'de-escalation', 'emergency', 'safety', 'red'],
+            content: `### Goal: Keep them engaged, slow the process, get help.\n"I am so glad you told me what's happening. I am here with you. Please stay on the line with me. We are going to figure this out together, one step at a time. My number one priority is your safety."\n\n### Step 1: Slow Things Down\n"I hear how much pain you're in. There is no rush to do anything right now. Can we just pause for a second? Just for one breath. Can you do that with me? Just one slow breath in... and out. Thank you. You're doing a great job."\n\n### Step 2: Express Empathy & Concern\n"It sounds like things have become completely unbearable. I can't imagine how much you must be hurting to get to this point. I am very, very concerned about you right now."\n\n### Step 3: Introduce the Idea of Help\n"You don't have to carry this all by yourself. Because I'm so concerned, I need to get you more support right now. I am going to contact emergency services to get someone to you. I will stay on the line with you the entire time. We will get through this together."\n\n### Step 4: If possible, create distance from means\n"While we wait for help to arrive, would you be willing to do something for me? It would help me feel a little less worried. Would you be willing to put the [pills/object] down, maybe just on the other side of the room? You don't have to get rid of them, just create a little space for a moment."\n\n### Intervention Insight\n* This entire process is an application of **The Seven-Stage Crisis Intervention Model** in real-time.\n* Use **Verbal De-escalation Techniques** throughout the conversation.`
+        },
+        {
             id: 'red-hallucinations',
             title: 'Hallucinations or Disturbing Perceptual Experiences',
             category: 'Red Zone',
@@ -732,6 +741,15 @@
 
     const interventionsData = [
         {
+            id: 'intervention-verbal-deescalation',
+            title: 'Verbal De-escalation Techniques',
+            category: 'Intervention',
+            subCategory: 'Crisis Management',
+            color: 'blue',
+            tags: ['de-escalation', 'crisis', 'anger', 'agitation', 'safety'],
+            content: `### Core Rationale\nTo lower the emotional temperature of a conversation, ensure safety, and build enough rapport to allow for problem-solving. The goal is not to "win" but to help the person regain control.\n\n### Key Principles\n1.  **Manage Your Own Non-Verbals:** Your calm is contagious. Keep your tone of voice low and slow. Speak calmly. If on video, keep your body language open and non-threatening (no crossed arms).\n2.  **Listen Actively & Reflect:** "Let the person vent. Don't interrupt. Reflect back what you hear to show you're listening: 'So what I'm hearing is you're furious because you feel like nobody is listening to you. Is that right?'"\n3.  **Validate, Validate, Validate:** "Validation doesn't mean you agree; it means you understand their feeling is real *for them*. Use phrases like: 'That makes sense,' 'I can see why you'd be so upset,' or 'That sounds incredibly frustrating.'"\n4.  **Avoid Power Struggles:** "Don't get into arguments about who is right or wrong. Avoid saying 'calm down' or 'but'. Instead of 'but', try using 'and': 'You're feeling angry, *and* we need to figure out a safe plan.'"\n5.  **Give Choices & Control:** "When people feel out of control, giving them choices can help. 'Would you rather we talk about X or Y first?' or 'Would it be more helpful to try a breathing exercise or just sit for a minute?'"\n6.  **Set Clear, Calm Limits:** "If behavior is escalating, set limits calmly and respectfully. 'I want to keep talking with you, and I can't do that if you're screaming. Can we try to continue in a calmer tone?'"`
+        },
+        {
             id: 'intervention-tipp',
             title: 'TIPP Skill for Rapid Distress Reduction',
             category: 'Intervention',
@@ -977,6 +995,15 @@
     ];
 
     const psychoeducationData = [
+        {
+            id: 'psychoed-crisis-intervention-model',
+            title: 'The Seven-Stage Crisis Intervention Model',
+            category: 'Psychoeducation',
+            emoji: '🧠',
+            color: 'purple',
+            tags: ['crisis', 'intervention', 'model', 'safety', 'psychoed'],
+            content: `### What is the Seven-Stage Model?\nDeveloped by Albert R. Roberts, this model provides a logical framework for navigating a crisis with a client. It's a roadmap to move from chaos to stability. The stages are a guide, not a rigid script.\n\n### The Stages\n1.  **Plan and Conduct a Thorough Assessment (including lethality):** This is the first and most critical step. It includes the immediate safety assessment (like the CSSRS) but also understanding the precipitating events and the client's coping skills.\n2.  **Make Psychological Contact and Rapidly Establish the Relationship:** The connection is the intervention. Use empathy, validation, and respect to build rapport quickly. The client needs to feel heard and understood.\n3.  **Identify the Major Problems (including "Last Straw" precipitants):** What brought the crisis to a head *right now*? Help the client separate the overwhelming problem into manageable parts.\n4.  **Encourage an Exploration of Feelings and Emotions:** Give the client space to vent and express their feelings without judgment. Use active listening and validation. (e.g., **Verbal De-escalation Techniques**).\n5.  **Generate and Explore New Coping Strategies and Alternatives:** Once the emotional intensity has decreased, collaboratively brainstorm options. "What have you tried so far? What's one small thing we could try next?"\n6.  **Restore Functioning through Implementation of an Action Plan:** Co-create a concrete, simple plan for the immediate future (the next few hours or the next day). This is about restoring a sense of control and agency.\n7.  **Plan Follow-up and Booster Sessions:** Arrange a follow-up to check in on the plan and the client's safety. This reinforces support and care.`
+        },
         {
             id: 'psychoed-window-of-tolerance',
             title: 'The Window of Tolerance',
