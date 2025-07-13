@@ -158,6 +158,19 @@
         #floating-scratchpad-modal .drag-handle {
             cursor: move;
         }
+
+        /* Session Planner Styles */
+        .plan-item.dragging {
+            opacity: 0.5;
+            background: #e0e7ff;
+        }
+        .dark .plan-item.dragging {
+            background: #3730a3;
+        }
+        .drag-over {
+            border-top: 2px dashed #4f46e5;
+        }
+
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen font-sans">
@@ -230,7 +243,7 @@
     <div id="quick-access-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm items-center justify-center z-50 p-4 modal-hidden">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-2xl w-full relative p-6 max-h-[90vh] flex flex-col modal-content opacity-0 scale-95">
             <div class="flex items-center mb-4">
-                <h2 class="text-2xl font-bold flex-1">Add to Quick Access</h2>
+                <h2 id="quick-access-modal-title" class="text-2xl font-bold flex-1">Add to Quick Access</h2>
                 <button id="close-quick-access-modal" class="p-2 rounded-full text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
             <input id="quick-access-search" type="text" placeholder="Search all items..." class="w-full px-3 py-2 mb-4 rounded-lg border border-gray-300 dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
@@ -952,6 +965,8 @@
         },
         isEditingQuickAccess: false,
         quickAccessIds: [],
+        sessionPlans: [],
+        currentPlanForAdding: null,
     };
 
     const colorMap = {
@@ -991,6 +1006,7 @@
         timerToggleBtn: document.getElementById('timer-toggle-btn'),
         timerResetBtn: document.getElementById('timer-reset-btn'),
         quickAccessModal: document.getElementById('quick-access-modal'),
+        quickAccessModalTitle: document.getElementById('quick-access-modal-title'),
         quickAccessList: document.getElementById('quick-access-list'),
         quickAccessSearch: document.getElementById('quick-access-search'),
         closeQuickAccessModal: document.getElementById('close-quick-access-modal'),
@@ -1012,6 +1028,7 @@
         localStorage.setItem('clinicalScratchpad', state.scratchpadContent);
         localStorage.setItem('clinicalQuickAccess', JSON.stringify(state.quickAccessIds));
         localStorage.setItem('clinicalAnnotations', JSON.stringify(state.annotations));
+        localStorage.setItem('clinicalSessionPlans', JSON.stringify(state.sessionPlans));
     }
 
     function loadState() {
@@ -1021,6 +1038,7 @@
         const savedQuickAccess = localStorage.getItem('clinicalQuickAccess');
         state.quickAccessIds = savedQuickAccess ? JSON.parse(savedQuickAccess) : ['script-boundary-setting', 'intervention-tipp', 'intervention-self-compassion-break', 'script-end-of-session'];
         state.annotations = JSON.parse(localStorage.getItem('clinicalAnnotations') || '{}');
+        state.sessionPlans = JSON.parse(localStorage.getItem('clinicalSessionPlans') || '[]');
     }
 
     // ---- INITIALIZATION ----
@@ -1126,46 +1144,11 @@
     function renderDashboard() {
         dom.contentArea.style.opacity = '0';
         setTimeout(() => {
+            const sessionPlannerHtml = renderSessionPlanner();
+            const quickAccessHtml = renderQuickAccess();
+            
             const zones = ['Red Zone', 'Orange Zone', 'Yellow Zone', 'Green Zone'];
             const zoneEmojis = {'Red Zone': '🔴', 'Orange Zone': '🟠', 'Yellow Zone': '🟨', 'Green Zone': '💚'};
-            
-            const quickAccessItems = state.quickAccessIds.map(id => state.contentMap.get(id)).filter(Boolean);
-
-            let editControls = '';
-            if (state.isEditingQuickAccess) {
-                editControls = `
-                    <button id="done-quick-access-btn" class="text-sm font-semibold text-green-600 dark:text-green-400 hover:underline">Done</button>
-                `;
-            } else {
-                editControls = `<button id="edit-quick-access-btn" class="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">Edit</button>`;
-            }
-
-            let quickAccessHtml = `
-                <div class="mb-10">
-                    <div class="flex justify-between items-center mb-4 pb-2 border-b-2 border-gray-300 dark:border-gray-600">
-                        <h2 class="text-2xl font-bold flex items-center gap-2">
-                            <i data-lucide="zap" class="w-6 h-6 text-gray-500"></i> Quick Access
-                        </h2>
-                        ${editControls}
-                    </div>
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        ${quickAccessItems.map(item => `
-                            <div class="relative">
-                                <button class="view-btn p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-all text-left flex flex-col justify-between h-full w-full border-l-4 ${colorMap[item.color]?.border || ''}" data-id="${item.id}">
-                                    <span class="font-semibold text-gray-800 dark:text-gray-200">${item.title}</span>
-                                    <span class="text-xs mt-2 ${colorMap[item.color]?.text || ''}">${item.category}</span>
-                                </button>
-                                ${state.isEditingQuickAccess ? `<button class="remove-quick-access-btn absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600" data-id="${item.id}"><i data-lucide="x" class="w-3 h-3"></i></button>` : ''}
-                            </div>
-                        `).join('')}
-                        ${state.isEditingQuickAccess ? `
-                            <button id="add-quick-access-card" class="p-4 bg-gray-100 dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center border-2 border-dashed border-gray-400 dark:border-gray-600 text-gray-500 hover:text-indigo-500 hover:border-indigo-500">
-                                <i data-lucide="plus" class="w-8 h-8"></i>
-                            </button>
-                        ` : ''}
-                    </div>
-                </div>
-            `;
 
             let zonesHtml = zones.map(zone => {
                 const itemsInZone = clinicalData.filter(item => item.category === zone);
@@ -1181,16 +1164,111 @@
                 `;
             }).join('');
 
-            dom.contentArea.innerHTML = quickAccessHtml + zonesHtml;
+            dom.contentArea.innerHTML = sessionPlannerHtml + quickAccessHtml + zonesHtml;
             lucide.createIcons();
             dom.contentArea.style.opacity = '1';
+            attachPlannerEventListeners();
         }, 300);
     }
+
+    function renderQuickAccess() {
+        const quickAccessItems = state.quickAccessIds.map(id => state.contentMap.get(id)).filter(Boolean);
+        let editControls = '';
+        if (state.isEditingQuickAccess) {
+            editControls = `<button id="done-quick-access-btn" class="text-sm font-semibold text-green-600 dark:text-green-400 hover:underline">Done</button>`;
+        } else {
+            editControls = `<button id="edit-quick-access-btn" class="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">Edit</button>`;
+        }
+
+        return `
+            <div class="mb-10">
+                <div class="flex justify-between items-center mb-4 pb-2 border-b-2 border-gray-300 dark:border-gray-600">
+                    <h2 class="text-2xl font-bold flex items-center gap-2">
+                        <i data-lucide="zap" class="w-6 h-6 text-gray-500"></i> Quick Access
+                    </h2>
+                    ${editControls}
+                </div>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    ${quickAccessItems.map(item => `
+                        <div class="relative">
+                            <button class="view-btn p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-all text-left flex flex-col justify-between h-full w-full border-l-4 ${colorMap[item.color]?.border || ''}" data-id="${item.id}">
+                                <span class="font-semibold text-gray-800 dark:text-gray-200">${item.title}</span>
+                                <span class="text-xs mt-2 ${colorMap[item.color]?.text || ''}">${item.category}</span>
+                            </button>
+                            ${state.isEditingQuickAccess ? `<button class="remove-quick-access-btn absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600" data-id="${item.id}"><i data-lucide="x" class="w-3 h-3"></i></button>` : ''}
+                        </div>
+                    `).join('')}
+                    ${state.isEditingQuickAccess ? `
+                        <button id="add-quick-access-card" class="p-4 bg-gray-100 dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center border-2 border-dashed border-gray-400 dark:border-gray-600 text-gray-500 hover:text-indigo-500 hover:border-indigo-500">
+                            <i data-lucide="plus" class="w-8 h-8"></i>
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    function renderSessionPlanner() {
+        const plansHtml = state.sessionPlans.map(plan => {
+            const planItemsHtml = plan.items.map(itemId => {
+                const item = state.contentMap.get(itemId);
+                if (!item) return '';
+                const colors = colorMap[item.color] || colorMap.indigo;
+                return `
+                    <div class="plan-item flex items-center justify-between p-3 bg-white dark:bg-gray-700 rounded-md shadow-sm cursor-grab" draggable="true" data-item-id="${item.id}" data-plan-id="${plan.id}">
+                        <div class="flex items-center flex-1 min-w-0">
+                             <i data-lucide="grip-vertical" class="w-5 h-5 text-gray-400 mr-2 flex-shrink-0"></i>
+                             <span class="font-semibold truncate view-btn" data-id="${item.id}" data-context="plan" data-plan-id="${plan.id}">${item.title}</span>
+                        </div>
+                        <button class="remove-plan-item-btn p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-800" data-item-id="${item.id}" data-plan-id="${plan.id}">
+                             <i data-lucide="x" class="w-4 h-4 text-red-500"></i>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg shadow-md">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200">${plan.title}</h3>
+                        <div class="flex items-center gap-2">
+                            <button class="add-to-plan-btn p-1.5 bg-green-500 text-white rounded-full hover:bg-green-600" data-plan-id="${plan.id}" title="Add Item">
+                                <i data-lucide="plus" class="w-4 h-4"></i>
+                            </button>
+                            <button class="delete-plan-btn p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600" data-plan-id="${plan.id}" title="Delete Plan">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="plan-items-container space-y-2" data-plan-id="${plan.id}">
+                        ${planItemsHtml || '<p class="text-sm text-gray-500 dark:text-gray-400 p-2">This plan is empty. Click the plus icon to add items.</p>'}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        return `
+            <div class="mb-10">
+                <div class="flex justify-between items-center mb-4 pb-2 border-b-2 border-gray-300 dark:border-gray-600">
+                    <h2 class="text-2xl font-bold flex items-center gap-2">
+                        <i data-lucide="clipboard-list" class="w-6 h-6 text-gray-500"></i> Session Plans
+                    </h2>
+                    <button id="add-new-plan-btn" class="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">New Plan</button>
+                </div>
+                <div id="session-plans-container" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                    ${plansHtml}
+                </div>
+            </div>
+        `;
+    }
     
-    function renderQuickAccessAddModal(searchTerm = '') {
+    function renderQuickAccessAddModal(searchTerm = '', forPlan = false) {
+        dom.quickAccessModalTitle.textContent = forPlan ? 'Add to Session Plan' : 'Add to Quick Access';
+        const currentListIds = forPlan ? state.sessionPlans.find(p => p.id === state.currentPlanForAdding)?.items || [] : state.quickAccessIds;
+
         const allItems = Array.from(state.contentMap.values()).sort((a, b) => a.title.localeCompare(b.title));
         const filteredItems = allItems.filter(item => 
-            !state.quickAccessIds.includes(item.id) &&
+            !currentListIds.includes(item.id) &&
             item.title.toLowerCase().includes(searchTerm.toLowerCase())
         );
 
@@ -1207,7 +1285,7 @@
                         <p class="font-semibold text-gray-800 dark:text-gray-100">${item.title}</p>
                         <p class="text-xs ${colors.text}">${item.category}</p>
                     </div>
-                    <button class="add-quick-access-item-btn p-2 bg-green-500 text-white rounded-full hover:bg-green-600" data-id="${item.id}">
+                    <button class="add-item-btn p-2 bg-green-500 text-white rounded-full hover:bg-green-600" data-id="${item.id}">
                         <i data-lucide="plus" class="w-4 h-4"></i>
                     </button>
                 </div>
@@ -1216,8 +1294,8 @@
         lucide.createIcons();
     }
 
-    function openQuickAccessModal() {
-        renderQuickAccessAddModal();
+    function openQuickAccessModal(forPlan = false) {
+        renderQuickAccessAddModal('', forPlan);
         dom.quickAccessModal.classList.remove('modal-hidden');
         dom.quickAccessModal.classList.add('modal-visible');
         setTimeout(() => {
@@ -1230,6 +1308,7 @@
         setTimeout(() => {
             dom.quickAccessModal.classList.add('modal-hidden');
             dom.quickAccessModal.classList.remove('modal-visible');
+            state.currentPlanForAdding = null; // Reset context
         }, 300);
     }
 
@@ -1328,11 +1407,11 @@
         attachScratchpadEvents();
     }
 
-    function openModal(scenarioId, searchQuery = '') {
+    function openModal(scenarioId, searchQuery = '', context = null, planId = null) {
         const scenario = state.contentMap.get(scenarioId);
         if (!scenario) return;
 
-        state.currentOpenScenario = scenario;
+        state.currentOpenScenario = { ...scenario, context, planId };
         
         const categoryColor = colorMap[scenario.color] || colorMap.indigo;
         const contextTags = (scenario.tags || []).map(tag => `<button class="tag-btn text-xs font-medium px-2 py-0.5 rounded-full bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors" data-tag="${tag}">${tag}</button>`).join('');
@@ -1467,10 +1546,10 @@
         dom.modalNext.disabled = currentIndex >= currentList.length - 1;
 
         dom.modalPrev.onclick = () => {
-            if (currentIndex > 0) openModal(currentList[currentIndex - 1].id, dom.searchBox.value);
+            if (currentIndex > 0) openModal(currentList[currentIndex - 1].id, dom.searchBox.value, state.currentOpenScenario.context, state.currentOpenScenario.planId);
         };
         dom.modalNext.onclick = () => {
-            if (currentIndex < currentList.length - 1) openModal(currentList[currentIndex + 1].id, dom.searchBox.value);
+            if (currentIndex < currentList.length - 1) openModal(currentList[currentIndex + 1].id, dom.searchBox.value, state.currentOpenScenario.context, state.currentOpenScenario.planId);
         };
     }
 
@@ -1525,7 +1604,9 @@
         const viewBtn = e.target.closest('.view-btn');
         if (viewBtn) {
             if (e.target.closest('.remove-used-btn') || e.target.closest('.remove-quick-access-btn')) return;
-            openModal(viewBtn.dataset.id, dom.searchBox.value);
+            const context = viewBtn.dataset.context || null;
+            const planId = viewBtn.dataset.planId || null;
+            openModal(viewBtn.dataset.id, dom.searchBox.value, context, planId);
             return;
         }
 
@@ -1610,14 +1691,25 @@
             return;
         }
         if (e.target.closest('#add-quick-access-card')) {
-            openQuickAccessModal();
+            openQuickAccessModal(false);
             return;
         }
-        if (e.target.closest('.add-quick-access-item-btn')) {
-            const id = e.target.closest('.add-quick-access-item-btn').dataset.id;
-            state.quickAccessIds.push(id);
-            renderQuickAccessAddModal(dom.quickAccessSearch.value);
-            renderDashboard();
+        if (e.target.closest('.add-item-btn')) {
+            const id = e.target.closest('.add-item-btn').dataset.id;
+            if (state.currentPlanForAdding) {
+                const plan = state.sessionPlans.find(p => p.id === state.currentPlanForAdding);
+                if (plan) {
+                    plan.items.push(id);
+                    saveState();
+                    renderQuickAccessAddModal(dom.quickAccessSearch.value, true);
+                    renderDashboard();
+                }
+            } else {
+                 state.quickAccessIds.push(id);
+                 saveState();
+                 renderQuickAccessAddModal(dom.quickAccessSearch.value, false);
+                 renderDashboard();
+            }
             return;
         }
     }
@@ -1805,6 +1897,11 @@
             );
         }
 
+        if (state.currentOpenScenario?.context === 'plan') {
+            const plan = state.sessionPlans.find(p => p.id === state.currentOpenScenario.planId);
+            return plan ? plan.items.map(id => state.contentMap.get(id)).filter(Boolean) : [];
+        }
+
         switch (state.currentView) {
             case 'favorites': return state.favorites.map(id => state.contentMap.get(id)).filter(Boolean);
             case 'recents': return state.recentlyViewed.map(id => state.contentMap.get(id)).filter(Boolean);
@@ -1895,6 +1992,115 @@
         }
     }
 
+    // ---- SESSION PLANNER LOGIC ----
+    function attachPlannerEventListeners() {
+        document.getElementById('add-new-plan-btn')?.addEventListener('click', () => {
+            const title = prompt("Enter a title for your new session plan:");
+            if (title) {
+                const newPlan = {
+                    id: `plan-${Date.now()}`,
+                    title: title,
+                    items: []
+                };
+                state.sessionPlans.push(newPlan);
+                saveState();
+                renderDashboard();
+            }
+        });
+
+        document.querySelectorAll('.delete-plan-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const planId = e.currentTarget.dataset.planId;
+                showConfirmationModal('Delete this plan?', 'This action cannot be undone.', () => {
+                    state.sessionPlans = state.sessionPlans.filter(p => p.id !== planId);
+                    saveState();
+                    renderDashboard();
+                    showToast('Plan deleted.', 'success');
+                });
+            });
+        });
+        
+        document.querySelectorAll('.add-to-plan-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                state.currentPlanForAdding = e.currentTarget.dataset.planId;
+                openQuickAccessModal(true);
+            });
+        });
+
+        document.querySelectorAll('.remove-plan-item-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const { planId, itemId } = e.currentTarget.dataset;
+                const plan = state.sessionPlans.find(p => p.id === planId);
+                if (plan) {
+                    plan.items = plan.items.filter(id => id !== itemId);
+                    saveState();
+                    renderDashboard();
+                }
+            });
+        });
+
+        // Drag and Drop
+        const containers = document.querySelectorAll('.plan-items-container');
+        containers.forEach(container => {
+            container.addEventListener('dragover', e => {
+                e.preventDefault();
+                const afterElement = getDragAfterElement(container, e.clientY);
+                const draggable = document.querySelector('.dragging');
+                if (afterElement == null) {
+                    container.appendChild(draggable);
+                } else {
+                    container.insertBefore(draggable, afterElement);
+                }
+            });
+        });
+
+        const draggables = document.querySelectorAll('.plan-item');
+        draggables.forEach(draggable => {
+            draggable.addEventListener('dragstart', () => {
+                draggable.classList.add('dragging');
+            });
+
+            draggable.addEventListener('dragend', () => {
+                draggable.classList.remove('dragging');
+                updatePlanOrder();
+            });
+        });
+    }
+
+    function getDragAfterElement(container, y) {
+        const draggableElements = [...container.querySelectorAll('.plan-item:not(.dragging)')];
+
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    function updatePlanOrder() {
+        const newPlansState = [];
+        document.querySelectorAll('.plan-items-container').forEach(container => {
+            const planId = container.dataset.planId;
+            const originalPlan = state.sessionPlans.find(p => p.id === planId);
+            const newItemIds = [];
+            container.querySelectorAll('.plan-item').forEach(itemEl => {
+                newItemIds.push(itemEl.dataset.itemId);
+            });
+            newPlansState.push({
+                id: planId,
+                title: originalPlan.title,
+                items: newItemIds
+            });
+        });
+        state.sessionPlans = newPlansState;
+        saveState();
+    }
+
+
     // ---- MAIN INITIALIZATION ----
     function main() {
         loadState();
@@ -1914,7 +2120,9 @@
         
         dom.closeModal.addEventListener('click', closeModal);
         dom.closeQuickAccessModal.addEventListener('click', closeQuickAccessModal);
-        dom.quickAccessSearch.addEventListener('input', (e) => renderQuickAccessAddModal(e.target.value));
+        dom.quickAccessSearch.addEventListener('input', (e) => {
+             renderQuickAccessAddModal(e.target.value, state.currentPlanForAdding !== null)
+        });
         
         // Click-out listeners
         dom.scenarioModal.addEventListener('click', (e) => { if (e.target === dom.scenarioModal) closeModal(); });
