@@ -24,23 +24,23 @@
         .prose ol { list-style-type: decimal; padding-left: 1.5em; }
         .prose strong { font-weight: 600; }
         .prose blockquote {
-            border-left: 0.25rem solid #4f46e5;
+            border-left: 0.25rem solid var(--theme-color-500);
             padding-left: 1em;
             font-style: italic;
             color: #4b5563;
         }
         .dark .prose blockquote {
-            border-left-color: #818cf8;
+            border-left-color: var(--theme-color-400);
             color: #d1d5db;
         }
         .prose .insight-link {
-            color: #4f46e5;
+            color: var(--theme-color-600);
             font-weight: 600;
             text-decoration: underline;
             cursor: pointer;
         }
         .dark .prose .insight-link {
-            color: #a5b4fc;
+            color: var(--theme-color-400);
         }
 
         .scratchpad-resize {
@@ -99,8 +99,8 @@
             border-color: #9ca3af;
         }
         .interactive-checklist li input[type="checkbox"]:checked + .checkbox-custom {
-            background-color: #4f46e5;
-            border-color: #4f46e5;
+            background-color: var(--theme-color-500);
+            border-color: var(--theme-color-500);
         }
         .interactive-checklist li input[type="checkbox"]:checked + .checkbox-custom::after {
             content: '✓';
@@ -159,16 +159,16 @@
             cursor: move;
         }
 
-        /* Session Planner Styles */
-        .plan-item.dragging {
+        /* Drag and Drop Styles */
+        .draggable.dragging {
             opacity: 0.5;
             background: #e0e7ff;
         }
-        .dark .plan-item.dragging {
+        .dark .draggable.dragging {
             background: #3730a3;
         }
         .drag-over {
-            border-top: 2px dashed #4f46e5;
+            border-top: 2px dashed var(--theme-color-500);
         }
 
         /* Edit Mode Toggle Switch */
@@ -206,7 +206,7 @@
             border-radius: 50%;
         }
         input:checked + .slider {
-            background-color: #4f46e5;
+            background-color: var(--theme-color-500);
         }
         input:checked + .slider:before {
             transform: translateX(16px);
@@ -219,22 +219,31 @@
     <!-- Sidebar -->
     <aside class="fixed left-0 top-0 h-full w-60 bg-white dark:bg-gray-800 shadow-lg flex flex-col z-40">
         <div class="flex items-center h-16 px-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-            <i data-lucide="activity" class="w-6 h-6 mr-2 text-indigo-500"></i>
+            <i data-lucide="activity" class="w-6 h-6 mr-2 text-[var(--theme-color-500)]"></i>
             <span class="font-bold text-lg">Clinical OS</span>
             <button id="theme-toggle" class="ml-auto p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Toggle Theme">
                 <i data-lucide="moon" class="w-5 h-5"></i>
             </button>
         </div>
         <nav class="sidebar-nav py-4 px-2 space-y-1">
-            <button class="sidebar-link w-full text-left px-4 py-2 rounded flex items-center hover:bg-indigo-100 dark:hover:bg-indigo-900" data-tab="dashboard"><i data-lucide="layout-dashboard" class="w-4 h-4 mr-3"></i>Dashboard</button>
-            <button class="sidebar-link w-full text-left px-4 py-2 rounded flex items-center hover:bg-indigo-100 dark:hover:bg-indigo-900" data-tab="interventions"><i data-lucide="zap" class="w-4 h-4 mr-3"></i>Interventions</button>
-            <button class="sidebar-link w-full text-left px-4 py-2 rounded flex items-center hover:bg-indigo-100 dark:hover:bg-indigo-900" data-tab="scripts"><i data-lucide="file-text" class="w-4 h-4 mr-3"></i>Scripts</button>
-            <button class="sidebar-link w-full text-left px-4 py-2 rounded flex items-center hover:bg-indigo-100 dark:hover:bg-indigo-900" data-tab="psychoeducation"><i data-lucide="book-open" class="w-4 h-4 mr-3"></i>Psychoed</button>
-            <button class="sidebar-link w-full text-left px-4 py-2 rounded flex items-center hover:bg-indigo-100 dark:hover:bg-indigo-900" data-tab="favorites"><i data-lucide="star" class="w-4 h-4 mr-3"></i>Favorites</button>
-            <button class="sidebar-link w-full text-left px-4 py-2 rounded flex items-center hover:bg-indigo-100 dark:hover:bg-indigo-900" data-tab="recents"><i data-lucide="history" class="w-4 h-4 mr-3"></i>Recently Viewed</button>
-            <button id="scratchpad-toggle-btn" class="sidebar-link w-full text-left px-4 py-2 rounded flex items-center hover:bg-teal-100 dark:hover:bg-teal-900" data-tab="scratchpad"><i data-lucide="edit-3" class="w-4 h-4 mr-3"></i>Scratchpad</button>
+            <button class="sidebar-link w-full text-left px-4 py-2 rounded flex items-center" data-tab="dashboard"><i data-lucide="layout-dashboard" class="w-4 h-4 mr-3"></i>Dashboard</button>
+            <button class="sidebar-link w-full text-left px-4 py-2 rounded flex items-center" data-tab="interventions"><i data-lucide="zap" class="w-4 h-4 mr-3"></i>Interventions</button>
+            <button class="sidebar-link w-full text-left px-4 py-2 rounded flex items-center" data-tab="scripts"><i data-lucide="file-text" class="w-4 h-4 mr-3"></i>Scripts</button>
+            <button class="sidebar-link w-full text-left px-4 py-2 rounded flex items-center" data-tab="psychoeducation"><i data-lucide="book-open" class="w-4 h-4 mr-3"></i>Psychoed</button>
+            <button class="sidebar-link w-full text-left px-4 py-2 rounded flex items-center" data-tab="favorites"><i data-lucide="star" class="w-4 h-4 mr-3"></i>Favorites</button>
+            <button class="sidebar-link w-full text-left px-4 py-2 rounded flex items-center" data-tab="recents"><i data-lucide="history" class="w-4 h-4 mr-3"></i>Recently Viewed</button>
+            <button id="scratchpad-toggle-btn" class="sidebar-link w-full text-left px-4 py-2 rounded flex items-center" data-tab="scratchpad"><i data-lucide="edit-3" class="w-4 h-4 mr-3"></i>Scratchpad</button>
         </nav>
         <div class="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0 space-y-4">
+            <div class="flex items-center justify-between">
+                <label for="theme-selector" class="text-sm font-medium text-gray-700 dark:text-gray-300">Theme</label>
+                <select id="theme-selector" class="text-sm rounded-md border-gray-300 dark:bg-gray-700 dark:border-gray-600 focus:ring-[var(--theme-color-500)] focus:border-[var(--theme-color-500)]">
+                    <option value="indigo">Clinical Indigo</option>
+                    <option value="green">Forest Green</option>
+                    <option value="orange">Sunset Orange</option>
+                    <option value="gray">Monochrome</option>
+                </select>
+            </div>
              <div class="flex items-center justify-between">
                 <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Edit Mode</span>
                 <label class="switch">
@@ -242,7 +251,7 @@
                     <span class="slider"></span>
                 </label>
             </div>
-            <input id="search-box" type="text" placeholder="Search scenarios..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            <input id="search-box" type="text" placeholder="Search scenarios..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-[var(--theme-color-500)]" />
         </div>
     </aside>
 
@@ -295,7 +304,7 @@
                 <h2 id="quick-access-modal-title" class="text-2xl font-bold flex-1">Add to Quick Access</h2>
                 <button id="close-quick-access-modal" class="p-2 rounded-full text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
-            <input id="quick-access-search" type="text" placeholder="Search all items..." class="w-full px-3 py-2 mb-4 rounded-lg border border-gray-300 dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            <input id="quick-access-search" type="text" placeholder="Search all items..." class="w-full px-3 py-2 mb-4 rounded-lg border border-gray-300 dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-[var(--theme-color-500)]" />
             <div id="quick-access-list" class="flex-1 overflow-y-auto -mr-4 pr-4 space-y-2"></div>
         </div>
     </div>
@@ -307,7 +316,7 @@
             <textarea id="annotation-textarea" class="w-full p-2 border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-lg text-sm" rows="6" placeholder="Your private notes for this item..."></textarea>
             <div class="flex justify-end gap-3 mt-4">
                 <button id="annotation-cancel" class="px-4 py-2 rounded-md text-sm font-medium bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600">Cancel</button>
-                <button id="annotation-save" class="px-4 py-2 rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">Save</button>
+                <button id="annotation-save" class="px-4 py-2 rounded-md text-sm font-medium text-white bg-[var(--theme-color-600)] hover:bg-[var(--theme-color-700)]">Save</button>
             </div>
         </div>
     </div>
@@ -319,15 +328,15 @@
             <div class="flex-1 overflow-y-auto pr-2 -mr-4 space-y-4">
                 <div>
                     <label for="edit-title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
-                    <input type="text" id="edit-title" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <input type="text" id="edit-title" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-[var(--theme-color-500)] focus:border-[var(--theme-color-500)] sm:text-sm">
                 </div>
                 <div>
                     <label for="edit-emoji" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Emoji</label>
-                    <input type="text" id="edit-emoji" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <input type="text" id="edit-emoji" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-[var(--theme-color-500)] focus:border-[var(--theme-color-500)] sm:text-sm">
                 </div>
                 <div>
                     <label for="edit-tags" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tags (comma-separated)</label>
-                    <input type="text" id="edit-tags" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <input type="text" id="edit-tags" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-[var(--theme-color-500)] focus:border-[var(--theme-color-500)] sm:text-sm">
                 </div>
                 <div>
                     <label for="edit-content-textarea" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Content (Markdown)</label>
@@ -338,7 +347,7 @@
                 <button id="edit-revert" class="px-4 py-2 rounded-md text-sm font-medium text-red-600 hover:bg-red-100 dark:hover:bg-red-900/50">Revert to Default</button>
                 <div class="flex gap-3">
                     <button id="edit-cancel" class="px-4 py-2 rounded-md text-sm font-medium bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600">Cancel</button>
-                    <button id="edit-save" class="px-4 py-2 rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">Save Changes</button>
+                    <button id="edit-save" class="px-4 py-2 rounded-md text-sm font-medium text-white bg-[var(--theme-color-600)] hover:bg-[var(--theme-color-700)]">Save Changes</button>
                 </div>
             </div>
         </div>
@@ -1050,6 +1059,18 @@
         quickAccessIds: [],
         sessionPlans: [],
         currentPlanForAdding: null,
+        theme: 'indigo',
+        dashboardLayout: {
+            zones: ['Red Zone', 'Orange Zone', 'Yellow Zone', 'Green Zone'],
+            cards: {}
+        }
+    };
+
+    const themes = {
+        indigo: { 500: '#4f46e5', 600: '#4338ca', 700: '#3730a3', 400: '#818cf8', 100: '#e0e7ff', 900: '#312e81' },
+        green: { 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 400: '#4ade80', 100: '#dcfce7', 900: '#14532d' },
+        orange: { 500: '#f97316', 600: '#ea580c', 700: '#c2410c', 400: '#fb923c', 100: '#ffedd5', 900: '#7c2d12' },
+        gray: { 500: '#6b7280', 600: '#4b5563', 700: '#374151', 400: '#9ca3af', 100: '#f3f4f6', 900: '#111827' },
     };
 
     const colorMap = {
@@ -1077,6 +1098,7 @@
         modalNext: document.getElementById('modal-next'),
         usedThisSessionContainer: document.getElementById('used-this-session-container'),
         themeToggle: document.getElementById('theme-toggle'),
+        themeSelector: document.getElementById('theme-selector'),
         copyModalContentBtn: document.getElementById('copy-modal-content-to-scratchpad'),
         addAnnotationBtn: document.getElementById('add-annotation-btn'),
         editContentBtn: document.getElementById('edit-content-btn'),
@@ -1124,6 +1146,8 @@
         localStorage.setItem('clinicalAnnotations', JSON.stringify(state.annotations));
         localStorage.setItem('clinicalSessionPlans', JSON.stringify(state.sessionPlans));
         localStorage.setItem('clinicalCustomContent', JSON.stringify(state.customContent));
+        localStorage.setItem('clinicalTheme', state.theme);
+        localStorage.setItem('clinicalDashboardLayout', JSON.stringify(state.dashboardLayout));
     }
 
     function loadState() {
@@ -1135,6 +1159,11 @@
         state.annotations = JSON.parse(localStorage.getItem('clinicalAnnotations') || '{}');
         state.sessionPlans = JSON.parse(localStorage.getItem('clinicalSessionPlans') || '[]');
         state.customContent = JSON.parse(localStorage.getItem('clinicalCustomContent') || '{}');
+        state.theme = localStorage.getItem('clinicalTheme') || 'indigo';
+        const savedLayout = localStorage.getItem('clinicalDashboardLayout');
+        if (savedLayout) {
+            state.dashboardLayout = JSON.parse(savedLayout);
+        }
     }
 
     // ---- INITIALIZATION ----
@@ -1196,9 +1225,10 @@
         ).join('');
 
         return `
-        <div class="scenario-card bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 flex flex-col border-l-4 ${colors.border}">
+        <div class="scenario-card draggable bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 flex flex-col border-l-4 ${colors.border}" draggable="true" data-id="${scenario.id}">
             <div class="p-4 flex-1 flex flex-col">
                 <h3 class="font-bold text-gray-800 dark:text-gray-100 flex items-center">
+                    <i data-lucide="grip-vertical" class="w-5 h-5 text-gray-400 mr-2 flex-shrink-0 edit-mode-item hidden cursor-grab"></i>
                     <span class="mr-2">${scenario.emoji || ''}</span>
                     <span class="flex-1">${scenario.title}</span>
                 </h3>
@@ -1206,7 +1236,7 @@
                     ${tagsHtml}
                 </div>
                 <div class="mt-4 flex justify-between items-center">
-                    <button class="view-btn text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline" data-id="${scenario.id}">View Details</button>
+                    <button class="view-btn text-sm font-semibold text-[var(--theme-color-600)] dark:text-[var(--theme-color-400)] hover:underline" data-id="${scenario.id}">View Details</button>
                     <div class="flex items-center">
                         <button class="edit-mode-item hidden edit-card-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" data-id="${scenario.id}" title="Edit Content">
                             <i data-lucide="file-pen-line" class="w-5 h-5 text-gray-400"></i>
@@ -1228,7 +1258,7 @@
             if(search_query){
                 headerHtml = `<div class="col-span-full mb-4 flex items-center gap-4">
                     <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-300">Showing ${items.length} results for "${search_query}"</h2>
-                    <button id="clear-search-btn" class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Clear</button>
+                    <button id="clear-search-btn" class="text-sm font-semibold text-[var(--theme-color-600)] dark:text-[var(--theme-color-400)] hover:underline">Clear</button>
                 </div>`;
             }
             
@@ -1252,27 +1282,33 @@
             const sessionPlannerHtml = renderSessionPlanner();
             const quickAccessHtml = renderQuickAccess();
             
-            const zones = ['Red Zone', 'Orange Zone', 'Yellow Zone', 'Green Zone'];
+            const zoneOrder = state.dashboardLayout.zones;
             const zoneEmojis = {'Red Zone': '🔴', 'Orange Zone': '🟠', 'Yellow Zone': '🟨', 'Green Zone': '💚'};
 
-            let zonesHtml = zones.map(zone => {
-                const itemsInZone = Array.from(state.contentMap.values()).filter(item => item.category === zone);
+            let zonesHtml = zoneOrder.map(zone => {
+                const cardOrder = state.dashboardLayout.cards[zone] || Array.from(state.contentMap.values()).filter(item => item.category === zone).map(item => item.id);
+                const itemsInZone = cardOrder.map(id => state.contentMap.get(id)).filter(Boolean);
+                
                 if (itemsInZone.length === 0) return '';
                 const zoneColor = itemsInZone[0].color;
                 return `
-                    <div class="mb-10">
-                        <h2 class="text-2xl font-bold mb-4 pb-2 border-b-2 border-${zoneColor}-500 text-${zoneColor}-600 dark:text-${zoneColor}-400">${zoneEmojis[zone]} ${zone}</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div class="zone-container draggable mb-10" draggable="true" data-zone="${zone}">
+                        <h2 class="text-2xl font-bold mb-4 pb-2 border-b-2 border-${zoneColor}-500 text-${zoneColor}-600 dark:text-${zoneColor}-400 flex items-center">
+                           <i data-lucide="grip-vertical" class="w-6 h-6 text-gray-400 mr-2 flex-shrink-0 edit-mode-item hidden cursor-grab"></i>
+                           ${zoneEmojis[zone]} ${zone}
+                        </h2>
+                        <div class="card-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" data-zone="${zone}">
                             ${itemsInZone.map(createScenarioCard).join('')}
                         </div>
                     </div>
                 `;
             }).join('');
 
-            dom.contentArea.innerHTML = sessionPlannerHtml + quickAccessHtml + zonesHtml;
+            dom.contentArea.innerHTML = sessionPlannerHtml + quickAccessHtml + `<div id="dashboard-zones">${zonesHtml}</div>`;
             lucide.createIcons();
             dom.contentArea.style.opacity = '1';
             attachPlannerEventListeners();
+            attachDashboardDragDropListeners();
             toggleEditMode(state.editMode);
         }, 300);
     }
@@ -1283,7 +1319,7 @@
         if (state.isEditingQuickAccess) {
             editControls = `<button id="done-quick-access-btn" class="text-sm font-semibold text-green-600 dark:text-green-400 hover:underline">Done</button>`;
         } else {
-            editControls = `<button id="edit-quick-access-btn" class="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">Edit</button>`;
+            editControls = `<button id="edit-quick-access-btn" class="text-sm font-semibold text-[var(--theme-color-600)] dark:text-[var(--theme-color-400)] hover:underline">Edit</button>`;
         }
 
         return `
@@ -1305,7 +1341,7 @@
                         </div>
                     `).join('')}
                     ${state.isEditingQuickAccess ? `
-                        <button id="add-quick-access-card" class="p-4 bg-gray-100 dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center border-2 border-dashed border-gray-400 dark:border-gray-600 text-gray-500 hover:text-indigo-500 hover:border-indigo-500">
+                        <button id="add-quick-access-card" class="p-4 bg-gray-100 dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center border-2 border-dashed border-gray-400 dark:border-gray-600 text-gray-500 hover:text-[var(--theme-color-500)] hover:border-[var(--theme-color-500)]">
                             <i data-lucide="plus" class="w-8 h-8"></i>
                         </button>
                     ` : ''}
@@ -1321,9 +1357,9 @@
                 if (!item) return '';
                 const colors = colorMap[item.color] || colorMap.indigo;
                 return `
-                    <div class="plan-item flex items-center justify-between p-3 bg-white dark:bg-gray-700 rounded-md shadow-sm cursor-grab" draggable="true" data-item-id="${item.id}" data-plan-id="${plan.id}">
+                    <div class="plan-item draggable flex items-center justify-between p-3 bg-white dark:bg-gray-700 rounded-md shadow-sm" draggable="true" data-item-id="${item.id}" data-plan-id="${plan.id}">
                         <div class="flex items-center flex-1 min-w-0">
-                             <i data-lucide="grip-vertical" class="w-5 h-5 text-gray-400 mr-2 flex-shrink-0"></i>
+                             <i data-lucide="grip-vertical" class="w-5 h-5 text-gray-400 mr-2 flex-shrink-0 cursor-grab"></i>
                              <span class="font-semibold truncate view-btn" data-id="${item.id}" data-context="plan" data-plan-id="${plan.id}">${item.title}</span>
                         </div>
                         <button class="remove-plan-item-btn p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-800" data-item-id="${item.id}" data-plan-id="${plan.id}">
@@ -1359,7 +1395,7 @@
                     <h2 class="text-2xl font-bold flex items-center gap-2">
                         <i data-lucide="clipboard-list" class="w-6 h-6 text-gray-500"></i> Session Plans
                     </h2>
-                    <button id="add-new-plan-btn" class="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">New Plan</button>
+                    <button id="add-new-plan-btn" class="text-sm font-semibold text-[var(--theme-color-600)] dark:text-[var(--theme-color-400)] hover:underline">New Plan</button>
                 </div>
                 <div id="session-plans-container" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                     ${plansHtml}
@@ -2033,15 +2069,14 @@
         // Update sidebar link styles
         document.querySelectorAll('.sidebar-link').forEach(link => {
             const isSelected = link.dataset.tab === viewId;
-            link.classList.toggle('bg-indigo-100', isSelected);
-            link.classList.toggle('dark:bg-indigo-800', isSelected);
-            link.classList.toggle('text-indigo-700', isSelected);
-            link.classList.toggle('dark:text-indigo-200', isSelected);
+            link.classList.toggle('bg-[var(--theme-color-100)]', isSelected);
+            link.classList.toggle('dark:bg-[var(--theme-color-900)]', isSelected);
+            link.classList.toggle('text-[var(--theme-color-700)]', isSelected);
+            link.classList.toggle('dark:text-[var(--theme-color-200)]', isSelected);
             link.classList.toggle('font-semibold', isSelected);
         });
-        dom.scratchpadToggleBtn.classList.remove('bg-indigo-100', 'dark:bg-indigo-800', 'text-indigo-700', 'dark:text-indigo-200', 'font-semibold');
-        dom.scratchpadToggleBtn.classList.remove('bg-teal-100', 'dark:bg-teal-900', 'text-teal-700', 'dark:text-teal-200');
-
+        dom.scratchpadToggleBtn.classList.remove('bg-[var(--theme-color-100)]', 'dark:bg-[var(--theme-color-900)]', 'text-[var(--theme-color-700)]', 'dark:text-[var(--theme-color-200)]', 'font-semibold');
+        
         if (dom.searchBox.value) {
             dom.searchBox.value = '';
         }
@@ -2070,7 +2105,21 @@
     }
 
     // ---- THEME ----
-    function applyTheme(isDark) {
+    function applyTheme(themeName) {
+        state.theme = themeName;
+        const theme = themes[themeName] || themes.indigo; // Fallback to indigo
+        const root = document.documentElement;
+        Object.keys(theme).forEach(key => {
+            root.style.setProperty(`--theme-color-${key}`, theme[key]);
+        });
+        
+        // Update sidebar link styles for the new theme
+        switchView(state.currentView);
+        saveState();
+    }
+
+    function applyDarkMode(isDark) {
+        localStorage.setItem('darkMode', isDark ? 'true' : 'false');
         document.documentElement.classList.toggle('dark', isDark);
         dom.themeToggle.innerHTML = isDark ? '<i data-lucide="sun" class="w-5 h-5"></i>' : '<i data-lucide="moon" class="w-5 h-5"></i>';
         lucide.createIcons();
@@ -2183,7 +2232,7 @@
     }
 
     function getDragAfterElement(container, y) {
-        const draggableElements = [...container.querySelectorAll('.plan-item:not(.dragging)')];
+        const draggableElements = [...container.querySelectorAll('.draggable:not(.dragging)')];
 
         return draggableElements.reduce((closest, child) => {
             const box = child.getBoundingClientRect();
@@ -2215,11 +2264,101 @@
         saveState();
     }
 
+    function attachDashboardDragDropListeners() {
+        if (!state.editMode) return;
+
+        const zoneContainer = document.getElementById('dashboard-zones');
+        const zones = zoneContainer.querySelectorAll('.zone-container');
+        
+        zones.forEach(zone => {
+            zone.addEventListener('dragstart', (e) => {
+                if (e.target.classList.contains('zone-container')) {
+                    e.target.classList.add('dragging');
+                }
+            });
+            zone.addEventListener('dragend', (e) => {
+                if (e.target.classList.contains('zone-container')) {
+                    e.target.classList.remove('dragging');
+                    updateZoneOrder();
+                }
+            });
+        });
+
+        zoneContainer.addEventListener('dragover', e => {
+            e.preventDefault();
+            const afterElement = getDragAfterElement(zoneContainer, e.clientY);
+            const draggable = document.querySelector('.zone-container.dragging');
+            if (draggable) {
+                if (afterElement == null) {
+                    zoneContainer.appendChild(draggable);
+                } else {
+                    zoneContainer.insertBefore(draggable, afterElement);
+                }
+            }
+        });
+        
+        const cardGrids = document.querySelectorAll('.card-grid');
+        cardGrids.forEach(grid => {
+            grid.addEventListener('dragover', e => {
+                e.preventDefault();
+                const afterElement = getDragAfterElement(grid, e.clientY);
+                const draggable = document.querySelector('.scenario-card.dragging');
+                if (draggable) {
+                    if (afterElement == null) {
+                        grid.appendChild(draggable);
+                    } else {
+                        grid.insertBefore(draggable, afterElement);
+                    }
+                }
+            });
+        });
+
+        document.querySelectorAll('.scenario-card').forEach(card => {
+            card.addEventListener('dragstart', (e) => {
+                if(state.editMode) {
+                    e.target.classList.add('dragging');
+                } else {
+                    e.preventDefault();
+                }
+            });
+            card.addEventListener('dragend', (e) => {
+                e.target.classList.remove('dragging');
+                updateCardOrder();
+            });
+        });
+    }
+
+    function updateZoneOrder() {
+        const newZoneOrder = [];
+        document.querySelectorAll('#dashboard-zones .zone-container').forEach(zoneEl => {
+            newZoneOrder.push(zoneEl.dataset.zone);
+        });
+        state.dashboardLayout.zones = newZoneOrder;
+        saveState();
+    }
+
+    function updateCardOrder() {
+        document.querySelectorAll('.card-grid').forEach(grid => {
+            const zone = grid.dataset.zone;
+            const newCardOrder = [];
+            grid.querySelectorAll('.scenario-card').forEach(cardEl => {
+                newCardOrder.push(cardEl.dataset.id);
+            });
+            state.dashboardLayout.cards[zone] = newCardOrder;
+        });
+        saveState();
+    }
+
+
     // ---- EDIT MODE LOGIC ----
     function toggleEditMode(isOn) {
         state.editMode = isOn;
+        document.body.classList.toggle('edit-mode-active', isOn);
         document.querySelectorAll('.edit-mode-item').forEach(el => {
             el.classList.toggle('hidden', !isOn);
+        });
+        document.querySelectorAll('.draggable').forEach(el => {
+            el.setAttribute('draggable', isOn);
         });
     }
 
@@ -2288,6 +2427,14 @@
     function main() {
         loadState();
         initializeDataMap();
+        
+        // Initial theme setup
+        applyTheme(state.theme);
+        dom.themeSelector.value = state.theme;
+
+        const savedDarkMode = localStorage.getItem('darkMode');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        applyDarkMode(savedDarkMode === 'true' || (savedDarkMode === null && prefersDark));
 
         // Event listeners
         document.querySelectorAll('.sidebar-link').forEach(link => {
@@ -2351,10 +2498,10 @@
 
         dom.themeToggle?.addEventListener('click', () => {
             const isCurrentlyDark = document.documentElement.classList.contains('dark');
-            const newIsDark = !isCurrentlyDark;
-            localStorage.setItem('theme', newIsDark ? 'dark' : 'light');
-            applyTheme(newIsDark);
+            applyDarkMode(!isCurrentlyDark);
         });
+        dom.themeSelector.addEventListener('change', (e) => applyTheme(e.target.value));
+
         dom.copyModalContentBtn.addEventListener('click', () => {
             if (state.currentOpenScenario) {
                 const contentToCopy = `### ${state.currentOpenScenario.title}\n\n${state.currentOpenScenario.content}`;
@@ -2397,11 +2544,6 @@
         dom.editSaveBtn.addEventListener('click', saveEditedContent);
         dom.editCancelBtn.addEventListener('click', closeEditModal);
         dom.editRevertBtn.addEventListener('click', revertContentToDefault);
-
-        // Initial theme setup
-        const savedTheme = localStorage.getItem('theme');
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        applyTheme(savedTheme === 'dark' || (savedTheme === null && prefersDark));
 
         // Initial view
         switchView(state.currentView || 'dashboard');
