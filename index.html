@@ -545,7 +545,7 @@
             id: 'orange-relational-rupture',
             title: 'Relational Rupture / Intense Interpersonal Conflict',
             category: 'Orange Zone',
-            emoji: '🟠',
+            emoji: '�',
             color: 'orange',
             tags: ['conflict', 'relationship', 'anger', 'betrayal', 'communication', 'orange'],
             content: `### Validate the Hurt/Anger\n“It sounds like you’re really hurt and angry about what happened. That’s completely understandable – when someone we care about [does X], it can feel awful and infuriating.”\n\n### Prevent Overwhelm or Shutdown\n“Let’s try to slow it just a bit so I can understand everything. I want to make sure I’m catching what’s most important to you in all of this.”\n\n### Brainstorm or Contain\n“Given how raw this is, it might be best not to confront them while you’re feeling this angry. We can work out what you want to say when you’re calmer. For now, maybe focus on what you need to feel a bit better.”\n\n### Intervention Insight\n* Prepare for a future conversation using **DEAR MAN: For Interpersonal Effectiveness**.\n* Use the **Nonviolent Communication (NVC) Framework** to clarify feelings and needs before communicating.`
@@ -2389,16 +2389,16 @@
     function openEditModal(itemId, category = null) {
         const isCreating = !itemId;
         const item = isCreating ? {} : state.contentMap.get(itemId);
-        if (!item) return;
+        if (!item && !isCreating) return;
 
-        dom.editContentModal.dataset.editingId = itemId;
+        dom.editContentModal.dataset.editingId = itemId || '';
         dom.editModalTitle.textContent = isCreating ? `Create New Card` : `Editing: ${item.title}`;
         dom.editTitleInput.value = item.title || '';
         dom.editEmojiInput.value = item.emoji || '';
         dom.editTagsInput.value = (item.tags || []).join(', ');
         dom.editContentTextarea.value = item.content || '';
-        dom.editContentModal.dataset.category = isCreating ? category : '';
-        dom.editRevertBtn.style.display = isCreating ? 'none' : 'block';
+        dom.editContentModal.dataset.category = isCreating ? category : item.category;
+        dom.editRevertBtn.style.display = isCreating || item.isCustom === undefined ? 'none' : 'block';
         
         dom.editContentModal.classList.remove('modal-hidden');
         dom.editContentModal.classList.add('modal-visible');
@@ -2419,8 +2419,9 @@
 
     function saveEditedContent() {
         const itemId = dom.editContentModal.dataset.editingId;
-        const isCreating = !itemId;
+        const isCreating = itemId === '';
         const newId = isCreating ? `custom-${Date.now()}` : itemId;
+        const originalItem = state.contentMap.get(itemId);
 
         const newContent = {
             id: newId,
@@ -2428,8 +2429,8 @@
             emoji: dom.editEmojiInput.value,
             tags: dom.editTagsInput.value.split(',').map(tag => tag.trim()).filter(Boolean),
             content: dom.editContentTextarea.value,
-            category: isCreating ? dom.editContentModal.dataset.category : state.contentMap.get(itemId).category,
-            color: isCreating ? 'purple' : state.contentMap.get(itemId).color, // Default color for custom cards
+            category: isCreating ? dom.editContentModal.dataset.category : originalItem.category,
+            color: isCreating ? 'purple' : originalItem.color, // Default color for custom cards
             isCustom: true
         };
 
@@ -2542,49 +2543,4 @@
                 saveState();
                 showToast('Copied to scratchpad!', 'success');
                 if (!dom.floatingScratchpadModal.classList.contains('modal-hidden')) {
-                    renderFloatingScratchpad();
-                }
-            }
-        });
-        
-        // Floating Scratchpad Logic
-        dom.scratchpadToggleBtn.addEventListener('click', () => {
-            const modal = dom.floatingScratchpadModal;
-            const isHidden = modal.classList.contains('modal-hidden');
-            if (isHidden) {
-                renderFloatingScratchpad();
-                modal.classList.remove('modal-hidden');
-                modal.classList.add('modal-visible');
-                setTimeout(() => {
-                    modal.querySelector('.modal-content').classList.remove('opacity-0', 'scale-95');
-                }, 10);
-            } else {
-                modal.querySelector('.modal-content').classList.add('opacity-0', 'scale-95');
-                setTimeout(() => {
-                    modal.classList.add('modal-hidden');
-                    modal.classList.remove('modal-visible');
-                }, 300);
-            }
-        });
-        dom.closeScratchpadBtn.addEventListener('click', () => dom.scratchpadToggleBtn.click());
-        makeDraggable(dom.floatingScratchpadModal, dom.floatingScratchpadModal.querySelector('.drag-handle'));
-
-        // Edit Mode Logic
-        dom.editModeToggle.addEventListener('change', (e) => toggleEditMode(e.target.checked));
-        dom.editContentBtn.addEventListener('click', () => {
-            if(state.currentOpenScenario) openEditModal(state.currentOpenScenario.id);
-        });
-        dom.editSaveBtn.addEventListener('click', saveEditedContent);
-        dom.editCancelBtn.addEventListener('click', closeEditModal);
-        dom.editRevertBtn.addEventListener('click', revertContentToDefault);
-
-        // Initial view
-        switchView(state.currentView || 'dashboard');
-        renderUsedThisSession();
-        lucide.createIcons();
-    }
-
-    document.addEventListener('DOMContentLoaded', main);
-    </script>
-</body>
-</html>
+                    ren�
