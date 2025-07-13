@@ -1180,6 +1180,13 @@
             state.contentMap.set(finalItem.id, finalItem);
         });
         
+        // Add any purely custom cards
+        Object.keys(state.customContent).forEach(id => {
+            if (!allDefaultContent.some(item => item.id === id)) {
+                state.contentMap.set(id, state.customContent[id]);
+            }
+        });
+
         interventionsData.forEach(item => {
             state.interventionMap.set(item.title, item.id);
             if (!item.referencedIn) {
@@ -1289,14 +1296,19 @@
                 const cardOrder = state.dashboardLayout.cards[zone] || Array.from(state.contentMap.values()).filter(item => item.category === zone).map(item => item.id);
                 const itemsInZone = cardOrder.map(id => state.contentMap.get(id)).filter(Boolean);
                 
-                if (itemsInZone.length === 0) return '';
-                const zoneColor = itemsInZone[0].color;
+                const zoneColor = colorMap[zone.split(' ')[0].toLowerCase()] || colorMap.indigo;
+                
                 return `
                     <div class="zone-container draggable mb-10" draggable="true" data-zone="${zone}">
-                        <h2 class="text-2xl font-bold mb-4 pb-2 border-b-2 border-${zoneColor}-500 text-${zoneColor}-600 dark:text-${zoneColor}-400 flex items-center">
-                           <i data-lucide="grip-vertical" class="w-6 h-6 text-gray-400 mr-2 flex-shrink-0 edit-mode-item hidden cursor-grab"></i>
-                           ${zoneEmojis[zone]} ${zone}
-                        </h2>
+                        <div class="flex justify-between items-center mb-4 pb-2 border-b-2" style="border-color: ${themes[state.theme][500]}">
+                            <h2 class="text-2xl font-bold flex items-center" style="color: ${themes[state.theme][600]}">
+                               <i data-lucide="grip-vertical" class="w-6 h-6 text-gray-400 mr-2 flex-shrink-0 edit-mode-item hidden cursor-grab"></i>
+                               ${zoneEmojis[zone]} ${zone}
+                            </h2>
+                            <button class="add-card-btn edit-mode-item hidden p-1.5 bg-green-500 text-white rounded-full hover:bg-green-600" data-category="${zone}" title="Add New Card">
+                                <i data-lucide="plus" class="w-4 h-4"></i>
+                            </button>
+                        </div>
                         <div class="card-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" data-zone="${zone}">
                             ${itemsInZone.map(createScenarioCard).join('')}
                         </div>
@@ -1466,7 +1478,13 @@
                 return acc;
             }, {});
 
-            let html = `<h1 class="text-3xl font-bold mb-8">${categoryTitle}</h1>`;
+            let html = `
+                <div class="flex justify-between items-center mb-8">
+                    <h1 class="text-3xl font-bold">${categoryTitle}</h1>
+                    <button class="add-card-btn edit-mode-item hidden p-2 bg-green-500 text-white rounded-full hover:bg-green-600" data-category="${categoryTitle}" title="Add New Card">
+                        <i data-lucide="plus" class="w-5 h-5"></i>
+                    </button>
+                </div>`;
             
             if (Object.keys(grouped).length === 0) {
                 html += `<div class="text-center text-gray-500 py-12">${message}</div>`;
@@ -1862,6 +1880,12 @@
             const id = editCardBtn.dataset.id;
             openEditModal(id);
             return;
+        }
+
+        const addCardBtn = e.target.closest('.add-card-btn');
+        if(addCardBtn) {
+            const category = addCardBtn.dataset.category;
+            openEditModal(null, category);
         }
     }
 
@@ -2362,16 +2386,19 @@
         });
     }
 
-    function openEditModal(itemId) {
-        const item = state.contentMap.get(itemId);
+    function openEditModal(itemId, category = null) {
+        const isCreating = !itemId;
+        const item = isCreating ? {} : state.contentMap.get(itemId);
         if (!item) return;
 
         dom.editContentModal.dataset.editingId = itemId;
-        dom.editModalTitle.textContent = `Editing: ${item.title}`;
-        dom.editTitleInput.value = item.title;
+        dom.editModalTitle.textContent = isCreating ? `Create New Card` : `Editing: ${item.title}`;
+        dom.editTitleInput.value = item.title || '';
         dom.editEmojiInput.value = item.emoji || '';
         dom.editTagsInput.value = (item.tags || []).join(', ');
-        dom.editContentTextarea.value = item.content;
+        dom.editContentTextarea.value = item.content || '';
+        dom.editContentModal.dataset.category = isCreating ? category : '';
+        dom.editRevertBtn.style.display = isCreating ? 'none' : 'block';
         
         dom.editContentModal.classList.remove('modal-hidden');
         dom.editContentModal.classList.add('modal-visible');
@@ -2386,26 +2413,32 @@
             dom.editContentModal.classList.add('modal-hidden');
             dom.editContentModal.classList.remove('modal-visible');
             dom.editContentModal.dataset.editingId = '';
+            dom.editContentModal.dataset.category = '';
         }, 300);
     }
 
     function saveEditedContent() {
         const itemId = dom.editContentModal.dataset.editingId;
-        if (!itemId) return;
+        const isCreating = !itemId;
+        const newId = isCreating ? `custom-${Date.now()}` : itemId;
 
-        const updatedContent = {
+        const newContent = {
+            id: newId,
             title: dom.editTitleInput.value,
             emoji: dom.editEmojiInput.value,
             tags: dom.editTagsInput.value.split(',').map(tag => tag.trim()).filter(Boolean),
             content: dom.editContentTextarea.value,
+            category: isCreating ? dom.editContentModal.dataset.category : state.contentMap.get(itemId).category,
+            color: isCreating ? 'purple' : state.contentMap.get(itemId).color, // Default color for custom cards
+            isCustom: true
         };
 
-        state.customContent[itemId] = updatedContent;
+        state.customContent[newId] = newContent;
         saveState();
-        initializeDataMap(); // Re-initialize map with custom content
-        switchView(state.currentView); // Re-render the current view
+        initializeDataMap(); 
+        switchView(state.currentView); 
         closeEditModal();
-        showToast('Content updated!', 'success');
+        showToast(isCreating ? 'Card created!' : 'Content updated!', 'success');
     }
 
     function revertContentToDefault() {
