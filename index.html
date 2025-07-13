@@ -976,7 +976,7 @@
             emoji: '🧠',
             color: 'purple',
             tags: ['grief', 'loss', 'disenfranchised', 'shame', 'validation', 'psychoed'],
-            content: `### What is Disenfranchised Grief?\nCoined by Dr. Kenneth Doka, disenfranchised grief is grief that is not openly acknowledged, socially sanctioned, or publicly mourned. It's a loss that society doesn't deem 'legitimate,' which can make the grieving process incredibly lonely and complicated.\n\n### When Does It Happen?\nDisenfranchised grief can occur when:\n\n1.  **The Relationship is Not Recognized:** This includes the loss of a partner in an extramarital affair, a same-sex partner when the relationship was not 'out,' an ex-spouse, or even a close online friend.\n\n2.  **The Loss is Not Seen as Significant:** Society often minimizes certain losses. This can include the death of a pet, a miscarriage, an abortion, or losing a job.\n\n3.  **The Griever is Not Seen as Capable of Grief:** This often happens to young children or individuals with developmental disabilities or mental illness, whose capacity to grieve is underestimated by those around them.\n\n4.  **The Cause of Death is Stigmatized:** Deaths by suicide, drug overdose, or AIDS can carry a stigma that prevents people from openly grieving or receiving support.\n\n### Why It's So Difficult\n* **Invalidation:** You are told, directly or indirectly, that your pain is not valid. This can lead to intense shame and self-doubt.\n* **Isolation:** You cannot share your pain openly, so you are forced to grieve alone.\n* **Lack of Rituals:** There are no funerals, sympathy cards, or social rituals to help you process the loss.\n\n### What Helps\n* **Name and Validate It:** Simply recognizing that you are experiencing disenfranchised grief can be a powerful first step. Your pain is real, even if others don't see it.\n* **Find a Witness:** Find at least one person—a friend, a therapist, a support group—who can listen to your story without judgment and validate your loss.\n* **Create Your Own Ritual:** You can create your own private ritual to honor your loss, such as writing a letter, planting a tree, or making a donation in their memory.`
+            content: `### What is Disenfranchised Grief?\nCoined by Dr. Kenneth Doka, disenfranchised grief is grief that is not openly acknowledged, socially sanctioned, or publicly mourned. It's a loss that society doesn't deem 'legitimate,' which can make the grieving process incredibly lonely and complicated.\n\n### When Does It Happen?\nDisenfranchised grief can occur when:\n\n1.  **The Relationship is Not Recognized:** This includes the loss of a partner in an extramarital affair, a same-sex partner when the relationship was not 'out,' an ex-spouse, or even a close online friend.\n\n2.  **The Loss is Not Seen as Significant:** Society often minimizes certain losses. This can include the death of a pet, a miscarriage, an abortion, or losing a job.\n\n3.  **The Griever is Not Seen as Capable of Grief:** This often happens to young children or individuals with developmental disabilities or mental illness, whose capacity to grieve is underestimated by those around them.\n\n4.  **The Cause of Death is Stigmatized:** Deaths by suicide, drug overdose, or AIDS can carry a stigma that prevents people from openly grieving or receiving support.\n\n### Why It's So Difficult\n* **Invalidation:** You are told, directly or indirectly, that your pain is not valid. This can lead to to intense shame and self-doubt.\n* **Isolation:** You cannot share your pain openly, so you are forced to grieve alone.\n* **Lack of Rituals:** There are no funerals, sympathy cards, or social rituals to help you process the loss.\n\n### What Helps\n* **Name and Validate It:** Simply recognizing that you are experiencing disenfranchised grief can be a powerful first step. Your pain is real, even if others don't see it.\n* **Find a Witness:** Find at least one person—a friend, a therapist, a support group—who can listen to your story without judgment and validate your loss.\n* **Create Your Own Ritual:** You can create your own private ritual to honor your loss, such as writing a letter, planting a tree, or making a donation in their memory.`
         },
         {
             id: 'psychoed-good-enough-parenting',
@@ -1258,18 +1258,27 @@
         `;
     }
 
-    function renderCardList(container, items, message, search_query = '') {
+    function renderCardList(container, items, categoryTitle, message, search_query = '') {
         container.style.opacity = '0';
         setTimeout(() => {
             let headerHtml = '';
-            if(search_query){
-                headerHtml = `<div class="col-span-full mb-4 flex items-center gap-4">
+            if (search_query) {
+                headerHtml = `<div class="mb-4">
                     <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-300">Showing ${items.length} results for "${search_query}"</h2>
-                    <button id="clear-search-btn" class="text-sm font-semibold text-[var(--theme-color-600)] dark:text-[var(--theme-color-400)] hover:underline">Clear</button>
+                    <button id="clear-search-btn" class="text-sm font-semibold text-[var(--theme-color-600)] dark:text-[var(--theme-color-400)] hover:underline">Clear Search</button>
                 </div>`;
+            } else if (categoryTitle) {
+                 headerHtml = `
+                    <div class="flex justify-between items-center mb-8">
+                        <h1 class="text-3xl font-bold">${categoryTitle}</h1>
+                        <button class="add-card-btn edit-mode-item hidden p-2 bg-green-500 text-white rounded-full hover:bg-green-600" data-category="${categoryTitle}" title="Add New Card">
+                            <i data-lucide="plus" class="w-5 h-5"></i>
+                        </button>
+                    </div>`;
             }
             
-            container.innerHTML = headerHtml + '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>';
+            const gridHtml = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>`;
+            container.innerHTML = headerHtml + gridHtml;
             const grid = container.querySelector('.grid');
 
             if (items.length === 0) {
@@ -2058,7 +2067,7 @@
             (item.content && item.content.toLowerCase().includes(q)) ||
             (item.tags && item.tags.some(tag => tag.toLowerCase().includes(q)))
         );
-        renderCardList(dom.contentArea, filtered, 'No matches found for your search.', q);
+        renderCardList(dom.contentArea, filtered, 'Search Results', 'No matches found for your search.', q);
     }, 300);
     
     // ---- TABS & VIEWS ----
@@ -2110,21 +2119,25 @@
         } else if (viewId === 'interventions') {
             renderCategorizedList(dom.contentArea, interventionsData, 'Interventions', 'No interventions found.');
         } else if (viewId === 'psychoeducation') {
-            renderCardList(dom.contentArea, psychoeducationData, 'No psychoeducation topics found.');
+            renderCardList(dom.contentArea, psychoeducationData, 'Psychoeducation', 'No psychoeducation topics found.');
         } else {
             let items = [];
             let message = 'No items found.';
+            let categoryTitle = '';
             if (viewId === 'favorites') {
                 items = state.favorites.map(id => state.contentMap.get(id)).filter(Boolean);
                 message = 'No favorites yet. Click the star on a card to add one.';
+                categoryTitle = 'Favorites';
             } else if (viewId === 'recents') {
                 items = state.recentlyViewed.map(id => state.contentMap.get(id)).filter(Boolean);
                 message = 'No recently viewed items.';
+                categoryTitle = 'Recently Viewed';
             } else if (viewId === 'scripts') {
                 items = scriptsData;
                 message = 'No scripts found.';
+                categoryTitle = 'Scripts';
             }
-            renderCardList(dom.contentArea, items, message);
+            renderCardList(dom.contentArea, items, categoryTitle, message);
         }
     }
 
