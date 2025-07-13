@@ -171,6 +171,47 @@
             border-top: 2px dashed #4f46e5;
         }
 
+        /* Edit Mode Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 24px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #4f46e5;
+        }
+        input:checked + .slider:before {
+            transform: translateX(16px);
+        }
+
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen font-sans">
@@ -193,7 +234,14 @@
             <button class="sidebar-link w-full text-left px-4 py-2 rounded flex items-center hover:bg-indigo-100 dark:hover:bg-indigo-900" data-tab="recents"><i data-lucide="history" class="w-4 h-4 mr-3"></i>Recently Viewed</button>
             <button id="scratchpad-toggle-btn" class="sidebar-link w-full text-left px-4 py-2 rounded flex items-center hover:bg-teal-100 dark:hover:bg-teal-900" data-tab="scratchpad"><i data-lucide="edit-3" class="w-4 h-4 mr-3"></i>Scratchpad</button>
         </nav>
-        <div class="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <div class="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0 space-y-4">
+             <div class="flex items-center justify-between">
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Edit Mode</span>
+                <label class="switch">
+                    <input type="checkbox" id="edit-mode-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
             <input id="search-box" type="text" placeholder="Search scenarios..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
     </aside>
@@ -231,6 +279,7 @@
             <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex items-center gap-2">
                  <button id="copy-modal-content-to-scratchpad" class="flex items-center text-xs px-3 py-1 bg-teal-100 dark:bg-teal-900 rounded-md text-teal-700 dark:text-teal-200 hover:bg-teal-200 dark:hover:bg-teal-800"><i data-lucide="plus-square" class="w-4 h-4 mr-1"></i>Copy to Scratchpad</button>
                  <button id="add-annotation-btn" class="flex items-center text-xs px-3 py-1 bg-yellow-100 dark:bg-yellow-900 rounded-md text-yellow-700 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-800"><i data-lucide="sticky-note" class="w-4 h-4 mr-1"></i>Add Note</button>
+                 <button id="edit-content-btn" class="hidden edit-mode-item flex items-center text-xs px-3 py-1 bg-blue-100 dark:bg-blue-900 rounded-md text-blue-700 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-800"><i data-lucide="edit" class="w-4 h-4 mr-1"></i>Edit</button>
                  <div class="ml-auto flex gap-2">
                     <button id="modal-prev" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
                     <button id="modal-next" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"><i data-lucide="arrow-right" class="w-5 h-5"></i></button>
@@ -263,8 +312,40 @@
         </div>
     </div>
 
+    <!-- Edit Content Modal -->
+    <div id="edit-content-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm items-center justify-center z-[60] p-4 modal-hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-6 w-full max-w-3xl modal-content opacity-0 scale-95 max-h-[95vh] flex flex-col">
+            <h3 id="edit-modal-title" class="text-xl font-semibold mb-4">Edit Content</h3>
+            <div class="flex-1 overflow-y-auto pr-2 -mr-4 space-y-4">
+                <div>
+                    <label for="edit-title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
+                    <input type="text" id="edit-title" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="edit-emoji" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Emoji</label>
+                    <input type="text" id="edit-emoji" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="edit-tags" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tags (comma-separated)</label>
+                    <input type="text" id="edit-tags" class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="edit-content-textarea" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Content (Markdown)</label>
+                    <textarea id="edit-content-textarea" class="mt-1 block w-full p-2 border border-gray-300 dark:bg-gray-700 dark:border-gray-600 rounded-lg text-sm font-mono" rows="15" placeholder="Enter content here..."></textarea>
+                </div>
+            </div>
+            <div class="flex justify-between items-center mt-6">
+                <button id="edit-revert" class="px-4 py-2 rounded-md text-sm font-medium text-red-600 hover:bg-red-100 dark:hover:bg-red-900/50">Revert to Default</button>
+                <div class="flex gap-3">
+                    <button id="edit-cancel" class="px-4 py-2 rounded-md text-sm font-medium bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600">Cancel</button>
+                    <button id="edit-save" class="px-4 py-2 rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Confirmation Modal -->
-    <div id="confirmation-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm items-center justify-center z-[60] p-4 modal-hidden">
+    <div id="confirmation-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm items-center justify-center z-[70] p-4 modal-hidden">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-6 w-full max-w-sm modal-content opacity-0 scale-95">
             <h3 id="confirmation-title" class="text-lg font-semibold mb-4">Are you sure?</h3>
             <div id="confirmation-message" class="text-sm text-gray-600 dark:text-gray-300 mb-6"></div>
@@ -954,6 +1035,8 @@
         contentMap: new Map(),
         interventionMap: new Map(),
         annotations: {},
+        customContent: {},
+        editMode: false,
         currentView: 'dashboard',
         currentOpenScenario: null,
         scratchpadContent: '',
@@ -996,6 +1079,7 @@
         themeToggle: document.getElementById('theme-toggle'),
         copyModalContentBtn: document.getElementById('copy-modal-content-to-scratchpad'),
         addAnnotationBtn: document.getElementById('add-annotation-btn'),
+        editContentBtn: document.getElementById('edit-content-btn'),
         confirmationModal: document.getElementById('confirmation-modal'),
         confirmationTitle: document.getElementById('confirmation-title'),
         confirmationMessage: document.getElementById('confirmation-message'),
@@ -1015,6 +1099,16 @@
         annotationTextarea: document.getElementById('annotation-textarea'),
         annotationSave: document.getElementById('annotation-save'),
         annotationCancel: document.getElementById('annotation-cancel'),
+        editContentModal: document.getElementById('edit-content-modal'),
+        editModalTitle: document.getElementById('edit-modal-title'),
+        editTitleInput: document.getElementById('edit-title'),
+        editEmojiInput: document.getElementById('edit-emoji'),
+        editTagsInput: document.getElementById('edit-tags'),
+        editContentTextarea: document.getElementById('edit-content-textarea'),
+        editSaveBtn: document.getElementById('edit-save'),
+        editCancelBtn: document.getElementById('edit-cancel'),
+        editRevertBtn: document.getElementById('edit-revert'),
+        editModeToggle: document.getElementById('edit-mode-toggle'),
         floatingScratchpadModal: document.getElementById('floating-scratchpad-modal'),
         floatingScratchpadBody: document.getElementById('floating-scratchpad-body'),
         closeScratchpadBtn: document.getElementById('close-scratchpad-btn'),
@@ -1029,6 +1123,7 @@
         localStorage.setItem('clinicalQuickAccess', JSON.stringify(state.quickAccessIds));
         localStorage.setItem('clinicalAnnotations', JSON.stringify(state.annotations));
         localStorage.setItem('clinicalSessionPlans', JSON.stringify(state.sessionPlans));
+        localStorage.setItem('clinicalCustomContent', JSON.stringify(state.customContent));
     }
 
     function loadState() {
@@ -1039,6 +1134,7 @@
         state.quickAccessIds = savedQuickAccess ? JSON.parse(savedQuickAccess) : ['script-boundary-setting', 'intervention-tipp', 'intervention-self-compassion-break', 'script-end-of-session'];
         state.annotations = JSON.parse(localStorage.getItem('clinicalAnnotations') || '{}');
         state.sessionPlans = JSON.parse(localStorage.getItem('clinicalSessionPlans') || '[]');
+        state.customContent = JSON.parse(localStorage.getItem('clinicalCustomContent') || '{}');
     }
 
     // ---- INITIALIZATION ----
@@ -1047,10 +1143,13 @@
         state.contentMap.clear();
         state.interventionMap.clear();
 
-        const allContent = [...clinicalData, ...interventionsData, ...scriptsData, ...psychoeducationData];
-        const uniqueContent = Array.from(new Set(allContent.map(a => a.id))).map(id => allContent.find(a => a.id === id));
-
-        uniqueContent.forEach(item => state.contentMap.set(item.id, item));
+        const allDefaultContent = [...clinicalData, ...interventionsData, ...scriptsData, ...psychoeducationData];
+        
+        allDefaultContent.forEach(defaultItem => {
+            const customItem = state.customContent[defaultItem.id];
+            const finalItem = customItem ? { ...defaultItem, ...customItem } : defaultItem;
+            state.contentMap.set(finalItem.id, finalItem);
+        });
         
         interventionsData.forEach(item => {
             state.interventionMap.set(item.title, item.id);
@@ -1108,9 +1207,14 @@
                 </div>
                 <div class="mt-4 flex justify-between items-center">
                     <button class="view-btn text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline" data-id="${scenario.id}">View Details</button>
-                    <button class="favorite-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" data-id="${scenario.id}" title="Add to favorites">
-                        <i data-lucide="star" class="w-5 h-5 ${isFavorite ? 'text-yellow-500 fill-current' : 'text-gray-400'}"></i>
-                    </button>
+                    <div class="flex items-center">
+                        <button class="edit-mode-item hidden edit-card-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" data-id="${scenario.id}" title="Edit Content">
+                            <i data-lucide="file-pen-line" class="w-5 h-5 text-gray-400"></i>
+                        </button>
+                        <button class="favorite-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" data-id="${scenario.id}" title="Add to favorites">
+                            <i data-lucide="star" class="w-5 h-5 ${isFavorite ? 'text-yellow-500 fill-current' : 'text-gray-400'}"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1138,6 +1242,7 @@
             }
             lucide.createIcons();
             container.style.opacity = '1';
+            toggleEditMode(state.editMode);
         }, 300);
     }
 
@@ -1151,7 +1256,7 @@
             const zoneEmojis = {'Red Zone': '🔴', 'Orange Zone': '🟠', 'Yellow Zone': '🟨', 'Green Zone': '💚'};
 
             let zonesHtml = zones.map(zone => {
-                const itemsInZone = clinicalData.filter(item => item.category === zone);
+                const itemsInZone = Array.from(state.contentMap.values()).filter(item => item.category === zone);
                 if (itemsInZone.length === 0) return '';
                 const zoneColor = itemsInZone[0].color;
                 return `
@@ -1168,6 +1273,7 @@
             lucide.createIcons();
             dom.contentArea.style.opacity = '1';
             attachPlannerEventListeners();
+            toggleEditMode(state.editMode);
         }, 300);
     }
 
@@ -1344,6 +1450,7 @@
             container.innerHTML = html;
             lucide.createIcons();
             container.style.opacity = '1';
+            toggleEditMode(state.editMode);
         }, 300);
     }
 
@@ -1465,6 +1572,7 @@
         
         updateModalNav();
         lucide.createIcons();
+        toggleEditMode(state.editMode);
     }
     
     function makeChecklistsInteractive(container) {
@@ -1710,6 +1818,13 @@
                  renderQuickAccessAddModal(dom.quickAccessSearch.value, false);
                  renderDashboard();
             }
+            return;
+        }
+
+        const editCardBtn = e.target.closest('.edit-card-btn');
+        if (editCardBtn) {
+            const id = editCardBtn.dataset.id;
+            openEditModal(id);
             return;
         }
     }
@@ -2100,6 +2215,74 @@
         saveState();
     }
 
+    // ---- EDIT MODE LOGIC ----
+    function toggleEditMode(isOn) {
+        state.editMode = isOn;
+        document.querySelectorAll('.edit-mode-item').forEach(el => {
+            el.classList.toggle('hidden', !isOn);
+        });
+    }
+
+    function openEditModal(itemId) {
+        const item = state.contentMap.get(itemId);
+        if (!item) return;
+
+        dom.editContentModal.dataset.editingId = itemId;
+        dom.editModalTitle.textContent = `Editing: ${item.title}`;
+        dom.editTitleInput.value = item.title;
+        dom.editEmojiInput.value = item.emoji || '';
+        dom.editTagsInput.value = (item.tags || []).join(', ');
+        dom.editContentTextarea.value = item.content;
+        
+        dom.editContentModal.classList.remove('modal-hidden');
+        dom.editContentModal.classList.add('modal-visible');
+        setTimeout(() => {
+            dom.editContentModal.querySelector('.modal-content').classList.remove('opacity-0', 'scale-95');
+        }, 10);
+    }
+
+    function closeEditModal() {
+        dom.editContentModal.querySelector('.modal-content').classList.add('opacity-0', 'scale-95');
+        setTimeout(() => {
+            dom.editContentModal.classList.add('modal-hidden');
+            dom.editContentModal.classList.remove('modal-visible');
+            dom.editContentModal.dataset.editingId = '';
+        }, 300);
+    }
+
+    function saveEditedContent() {
+        const itemId = dom.editContentModal.dataset.editingId;
+        if (!itemId) return;
+
+        const updatedContent = {
+            title: dom.editTitleInput.value,
+            emoji: dom.editEmojiInput.value,
+            tags: dom.editTagsInput.value.split(',').map(tag => tag.trim()).filter(Boolean),
+            content: dom.editContentTextarea.value,
+        };
+
+        state.customContent[itemId] = updatedContent;
+        saveState();
+        initializeDataMap(); // Re-initialize map with custom content
+        switchView(state.currentView); // Re-render the current view
+        closeEditModal();
+        showToast('Content updated!', 'success');
+    }
+
+    function revertContentToDefault() {
+        const itemId = dom.editContentModal.dataset.editingId;
+        if (!itemId) return;
+
+        showConfirmationModal('Revert to Default?', 'This will discard all your custom changes for this item. This cannot be undone.', () => {
+            delete state.customContent[itemId];
+            saveState();
+            initializeDataMap();
+            switchView(state.currentView);
+            closeEditModal();
+            showToast('Content reverted to default.', 'info');
+        });
+    }
+
 
     // ---- MAIN INITIALIZATION ----
     function main() {
@@ -2129,6 +2312,7 @@
         dom.quickAccessModal.addEventListener('click', (e) => { if (e.target === dom.quickAccessModal) closeQuickAccessModal(); });
         dom.annotationModal.addEventListener('click', (e) => { if (e.target === dom.annotationModal) dom.annotationCancel.click(); });
         dom.confirmationModal.addEventListener('click', (e) => { if (e.target === dom.confirmationModal) dom.confirmationCancel.click(); });
+        dom.editContentModal.addEventListener('click', (e) => { if (e.target === dom.editContentModal) closeEditModal(); });
 
         dom.addAnnotationBtn.addEventListener('click', () => {
             if (state.currentOpenScenario) {
@@ -2204,6 +2388,15 @@
         });
         dom.closeScratchpadBtn.addEventListener('click', () => dom.scratchpadToggleBtn.click());
         makeDraggable(dom.floatingScratchpadModal, dom.floatingScratchpadModal.querySelector('.drag-handle'));
+
+        // Edit Mode Logic
+        dom.editModeToggle.addEventListener('change', (e) => toggleEditMode(e.target.checked));
+        dom.editContentBtn.addEventListener('click', () => {
+            if(state.currentOpenScenario) openEditModal(state.currentOpenScenario.id);
+        });
+        dom.editSaveBtn.addEventListener('click', saveEditedContent);
+        dom.editCancelBtn.addEventListener('click', closeEditModal);
+        dom.editRevertBtn.addEventListener('click', revertContentToDefault);
 
         // Initial theme setup
         const savedTheme = localStorage.getItem('theme');
