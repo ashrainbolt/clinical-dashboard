@@ -2420,24 +2420,47 @@
     function saveEditedContent() {
         const itemId = dom.editContentModal.dataset.editingId;
         const isCreating = itemId === '';
-        const newId = isCreating ? `custom-${Date.now()}` : itemId;
-        const originalItem = state.contentMap.get(itemId);
+        
+        const newTitle = dom.editTitleInput.value;
+        if (!newTitle.trim()) {
+            showToast('Title cannot be empty.', 'error');
+            return;
+        }
 
-        const newContent = {
-            id: newId,
-            title: dom.editTitleInput.value,
-            emoji: dom.editEmojiInput.value,
-            tags: dom.editTagsInput.value.split(',').map(tag => tag.trim()).filter(Boolean),
-            content: dom.editContentTextarea.value,
-            category: isCreating ? dom.editContentModal.dataset.category : originalItem.category,
-            color: isCreating ? 'purple' : originalItem.color, // Default color for custom cards
-            isCustom: true
-        };
+        if (isCreating) {
+            const newId = `custom-${Date.now()}`;
+            const newCard = {
+                id: newId,
+                title: newTitle,
+                emoji: dom.editEmojiInput.value,
+                tags: dom.editTagsInput.value.split(',').map(tag => tag.trim()).filter(Boolean),
+                content: dom.editContentTextarea.value,
+                category: dom.editContentModal.dataset.category,
+                color: 'purple', // Default color for custom cards
+                isCustom: true
+            };
+            state.customContent[newId] = newCard;
+        } else {
+            const originalItem = state.contentMap.get(itemId);
+            if (!originalItem) {
+                console.error('Could not find item to update:', itemId);
+                showToast('Error: Could not find item to update.', 'error');
+                return;
+            }
+            const updatedCard = {
+                ...originalItem,
+                title: newTitle,
+                emoji: dom.editEmojiInput.value,
+                tags: dom.editTagsInput.value.split(',').map(tag => tag.trim()).filter(Boolean),
+                content: dom.editContentTextarea.value,
+                isCustom: true
+            };
+            state.customContent[itemId] = updatedCard;
+        }
 
-        state.customContent[newId] = newContent;
         saveState();
-        initializeDataMap(); 
-        switchView(state.currentView); 
+        initializeDataMap();
+        switchView(state.currentView);
         closeEditModal();
         showToast(isCreating ? 'Card created!' : 'Content updated!', 'success');
     }
@@ -2543,4 +2566,67 @@
                 saveState();
                 showToast('Copied to scratchpad!', 'success');
                 if (!dom.floatingScratchpadModal.classList.contains('modal-hidden')) {
-                    ren�
+                    renderFloatingScratchpad();
+                }
+            }
+        });
+
+        dom.editContentBtn.addEventListener('click', () => {
+            if (state.currentOpenScenario) {
+                closeModal();
+                openEditModal(state.currentOpenScenario.id);
+            }
+        });
+        dom.editSaveBtn.addEventListener('click', saveEditedContent);
+        dom.editCancelBtn.addEventListener('click', closeEditModal);
+        dom.editRevertBtn.addEventListener('click', revertContentToDefault);
+        
+        dom.editModeToggle.addEventListener('change', (e) => {
+            toggleEditMode(e.target.checked);
+            // Re-render the current view to attach/detach draggable listeners and show/hide controls
+            switchView(state.currentView);
+        });
+
+        dom.scratchpadToggleBtn.addEventListener('click', () => {
+            const scratchpad = dom.floatingScratchpadModal;
+            const isHidden = scratchpad.classList.contains('modal-hidden');
+            if (isHidden) {
+                renderFloatingScratchpad();
+                scratchpad.classList.remove('modal-hidden');
+                scratchpad.classList.add('modal-visible');
+                setTimeout(() => scratchpad.querySelector('.modal-content').classList.remove('opacity-0', 'scale-95'), 10);
+            } else {
+                scratchpad.querySelector('.modal-content').classList.add('opacity-0', 'scale-95');
+                setTimeout(() => {
+                    scratchpad.classList.add('modal-hidden');
+                    scratchpad.classList.remove('modal-visible');
+                }, 300);
+            }
+        });
+        dom.closeScratchpadBtn.addEventListener('click', () => dom.scratchpadToggleBtn.click());
+        makeDraggable(dom.floatingScratchpadModal, dom.floatingScratchpadModal.querySelector('.drag-handle'));
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+                closeQuickAccessModal();
+                dom.annotationCancel.click();
+                closeEditModal();
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                e.preventDefault();
+                dom.searchBox.focus();
+            }
+        });
+        
+        // Initial view
+        switchView('dashboard');
+        lucide.createIcons();
+    }
+
+    // Run on load
+    document.addEventListener('DOMContentLoaded', main);
+    </script>
+</body>
+</html>
